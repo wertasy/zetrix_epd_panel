@@ -59,9 +59,9 @@ static void button_confirm_click_cb(void* arg, void* usr_data) {
 }
 
 static void clock_timer_callback(TimerHandle_t xTimer) {
-    if (s_current_page == 2) {
-        draw_page();
-    }
+    (void)xTimer;
+    /* No-op: RTC page no longer auto-refreshes to avoid slow 4-color EPD cycles.
+     * The user presses BOOT to trigger a manual refresh. */
 }
 
 static void draw_page(void) {
@@ -145,8 +145,8 @@ static void draw_page(void) {
         rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 50, 85, "RTC Time:", &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_YELLOW);
         rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 170, 85, clock_buf, &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_WHITE);
 
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 165, "Press BOOT button to trigger a FULL refresh.", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 195, "Flashing clears panel ghosting.", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
+        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 165, "Press BOOT to refresh the clock.", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
+        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 185, "Auto-refresh is disabled (slow 4-color).", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
 
         rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 260, "Page 3 of 3 (UP/DOWN to navigate)", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
     }
