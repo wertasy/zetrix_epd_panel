@@ -97,6 +97,13 @@ void rawdraw_draw_text(uint8_t* fb, int w, int h, int x, int y, const char* text
     int cursor_y = y;
     const char* p = text;
 
+    /* Letter spacing for proportional ASCII rendering with CJK fonts.
+     * CJK fonts assign uniform cell-width adv_w to ALL characters,
+     * which causes overlaps (W, M) and huge gaps (I, l) for Latin text.
+     * For ASCII chars we compute: box_w + ofs_x + spacing. */
+    const int letter_spacing = (font->line_height + 8) / 16; /* ~2px at 24px, ~1px at 16px */
+    const int space_width = font->line_height / 4;
+
     while (*p) {
         uint32_t ch = utf8_next(&p);
         if (ch == 0) break;
@@ -104,6 +111,12 @@ void rawdraw_draw_text(uint8_t* fb, int w, int h, int x, int y, const char* text
         if (ch == '\n') {
             cursor_x = x;
             cursor_y += font->line_height;
+            continue;
+        }
+
+        /* Handle space explicitly (box_w=0 in many fonts) */
+        if (ch == ' ') {
+            cursor_x += space_width;
             continue;
         }
 
@@ -142,6 +155,16 @@ void rawdraw_draw_text(uint8_t* fb, int w, int h, int x, int y, const char* text
             }
         }
 
-        cursor_x += g.adv_w;
+        /* Advance: use proportional width for ASCII, original adv_w for CJK.
+         * Proportional: visual extent (box_w + ofs_x) + letter_spacing.
+         * This prevents wide glyphs (W, M) from overlapping the next char,
+         * and tightens narrow glyphs (I, l, i) that had CJK cell-width gaps. */
+        if (ch >= 0x20 && ch <= 0x7E) {
+            int prop_adv = (int)g.box_w + (int)g.ofs_x + letter_spacing;
+            if (prop_adv < 2) prop_adv = 2;
+            cursor_x += prop_adv;
+        } else {
+            cursor_x += g.adv_w;
+        }
     }
 }
