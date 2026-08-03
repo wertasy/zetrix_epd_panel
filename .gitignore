@@ -1,0 +1,22 @@
+# ESP-IDF build directory
+build/
+
+# ESP-IDF auto-generated config backup
+sdkconfig.old
+
+# ESP-IDF Component Manager downloaded components
+managed_components/
+
+# VS Code config (contains user-specific paths)
+.vscode/
+
+# Clangd configuration/index
+.clangd/
+.clangd
+
+# Compiled host test binaries and logs
+test_host
+boot_log.txt
+
+# System Files
+.DS_Store
