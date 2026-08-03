@@ -44,6 +44,7 @@ typedef struct _lv_font_t {
     bool (*get_glyph_dsc)(const struct _lv_font_t * font, lv_font_glyph_dsc_t * dsc_out,
                           uint32_t letter, uint32_t letter_next);
     const void * (*get_glyph_bitmap)(lv_font_glyph_dsc_t * g_dsc, struct _lv_draw_buf_t * draw_buf);
+    void (*release_glyph)(const struct _lv_font_t * font, lv_font_glyph_dsc_t * g_dsc);
     int32_t line_height;
     int32_t base_line;
     uint8_t subpx : 2;

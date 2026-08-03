@@ -79,21 +79,22 @@ static void draw_page(void) {
 
         rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 90, "Pure C Firmware Port", &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_BLACK);
         
-        char wifi_buf[128];
+        char ssid_str[48];
         char ip_address[32];
         wifi_manager_get_ip(ip_address, sizeof(ip_address));
         if (wifi_manager_is_connected()) {
             char ssid[32];
             wifi_manager_get_ssid(ssid, sizeof(ssid));
-            snprintf(wifi_buf, sizeof(wifi_buf), "Wi-Fi: Connected (SSID: %s, IP: %s)", ssid, ip_address);
+            snprintf(ssid_str, sizeof(ssid_str), "Wi-Fi: %s", ssid);
         } else {
-            snprintf(wifi_buf, sizeof(wifi_buf), "Wi-Fi: Disconnected (IP: %s)", ip_address);
+            snprintf(ssid_str, sizeof(ssid_str), "Wi-Fi: Disconnected");
         }
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 120, wifi_buf, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
+        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 120, ssid_str, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
+        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 140, ip_address, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
 
         char nfc_buf[128];
         snprintf(nfc_buf, sizeof(nfc_buf), "NFC Field: %s", nfc_has_field() ? "Present (Field Seen)" : "Idle (No Field)");
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 142, nfc_buf, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
+        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 160, nfc_buf, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
 
         charge_snapshot_t snap = charge_status_get(&s_charge_status);
         const char* status_str = "Discharging";
