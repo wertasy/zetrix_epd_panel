@@ -102,11 +102,11 @@ static void draw_page(void) {
         if (snap.full) status_str = "Full";
         if (snap.no_battery) status_str = "No Battery";
 
-        rawdraw_draw_round_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 172, EXAMPLE_LCD_WIDTH - 40, 68, 8, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_YELLOW, 2);
+        rawdraw_draw_round_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 185, EXAMPLE_LCD_WIDTH - 40, 55, 8, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_YELLOW, 2);
         
         char buf[128];
         snprintf(buf, sizeof(buf), "Battery Status: %s", status_str);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 35, 195, buf, &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_BLACK);
+        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 35, 205, buf, &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_BLACK);
 
         rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 260, "Page 1 of 3 (UP/DOWN to navigate)", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
 
