@@ -8,9 +8,11 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/semphr.h>
+#include <esp_sleep.h>
 #include <freertos/timers.h>
 #include <iot_button.h>
 #include <button_gpio.h>
+#include "nvs_state.h"
 
 #include "config.h"
 #include "board.h"
@@ -22,146 +24,175 @@
 #include "settings.h"
 #include "audio_player.h"
 #include "wifi_manager.h"
-
-static const char* TAG = "main_app";
+#include "bluetooth_manager.h"
+#include "ble_gatt_service.h"
+#include "ble_image_receiver.h"
+#include "application.h"
+#include "ui_manager.h"
+static const char *TAG = "main_app";
 
 static charge_status_t s_charge_status;
-static int s_current_page = 0;
-#define TOTAL_PAGES 3
+static TimerHandle_t   s_clock_timer = NULL;
 
-static TimerHandle_t s_clock_timer = NULL;
+/* ------------------------------------------------------------------ */
+/* Button callbacks (routed to the Application singleton)              */
+static void application_main_task(void *arg);
 
-static void draw_page(void);
-static void navigate_page(int direction);
+/* ------------------------------------------------------------------ */
 
-static void button_up_click_cb(void* arg, void* usr_data) {
-    ESP_LOGI(TAG, "UP button clicked");
-    navigate_page(-1);
-    board_flash_activity_led();
-    audio_player_play_tone(400, 80);
+static bool s_suppress_next_up_click   = false;
+static bool s_suppress_next_down_click = false;
+
+static void button_up_click_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    if (s_suppress_next_up_click) {
+        s_suppress_next_up_click = false;
+        return;
+    }
+    application_on_up_click();
 }
 
-static void button_down_click_cb(void* arg, void* usr_data) {
-    ESP_LOGI(TAG, "DOWN button clicked");
-    navigate_page(1);
-    board_flash_activity_led();
-    audio_player_play_tone(600, 80);
+static void button_down_click_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    if (s_suppress_next_down_click) {
+        s_suppress_next_down_click = false;
+        return;
+    }
+    application_on_down_click();
+}
+static void button_confirm_click_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    application_on_boot_click();
 }
 
-static void button_confirm_click_cb(void* arg, void* usr_data) {
-    ESP_LOGI(TAG, "BOOT/CONFIRM button clicked -> Force full refresh");
-    draw_page();
-    request_urgent_full_refresh();
-    board_flash_activity_led();
-    audio_player_play_tone(800, 80);
-    vTaskDelay(pdMS_TO_TICKS(100));
-    audio_player_play_tone(1000, 80);
+static void button_up_long_press_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    s_suppress_next_up_click = true;
+    application_on_up_long_press();
 }
 
-static void clock_timer_callback(TimerHandle_t xTimer) {
+static void button_down_long_press_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    s_suppress_next_down_click = true;
+    application_on_down_long_press();
+}
+
+static void button_boot_long_press_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    application_on_boot_long_press();
+}
+
+static void button_boot_double_click_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    application_on_boot_double_click();
+}
+static void button_up_double_click_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    application_on_up_double_click();
+}
+static void button_down_double_click_cb(void *arg, void *usr_data)
+{
+    (void)arg;
+    (void)usr_data;
+    application_on_down_double_click();
+}
+
+static void clock_timer_callback(TimerHandle_t xTimer)
+{
     (void)xTimer;
-    /* No-op: RTC page no longer auto-refreshes to avoid slow 4-color EPD cycles.
-     * The user presses BOOT to trigger a manual refresh. */
+    /* No-op: the 4-color EPD avoids periodic refreshes; the UI manager's
+     * PumpClockRefresh handles deferred page re-renders. */
 }
 
-static void draw_page(void) {
+/**
+ * @brief Bridge BLE-completed images to photo_storage (Touch & Go push).
+ *
+ * Called by the GATT service when a phone finishes pushing a background image.
+ */
+static void ble_image_ready_cb(const uint8_t *data, uint16_t size, void *user_data)
+{
+    (void)user_data;
+    ESP_LOGI(TAG, "BLE image ready: %u bytes", (unsigned)size);
+    if (ble_image_receiver_save_to_storage() != 0) {
+        ESP_LOGE(TAG, "Failed to save BLE image to storage");
+    }
+}
+
+/**
+ * @brief Adapter matching bluetooth_nfc_ndef_writer_t; forwards to the NFC
+ *        driver's raw NDEF writer (Touch & Go tag programming).
+ */
+static int nfc_raw_ndef_writer_cb(const uint8_t *data, size_t len, void *user_data)
+{
+    (void)user_data;
+    if (!nfc_power_on()) {
+        ESP_LOGE(TAG, "NFC power-on failed; cannot publish Touch & Go NDEF");
+        return -1;
+    }
+    esp_err_t ret = nfc_write_raw_ndef(data, len);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "NDEF write failed: %s", esp_err_to_name(ret));
+        return (int)ret;
+    }
+    return 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Render + refresh integration                                        */
+/*                                                                     */
+/* The UI manager renders all 19 pages into the shared 2bpp framebuffer;
+ * the 4-color SSD2683 panel requires a full refresh for every update.  */
+/* ------------------------------------------------------------------ */
+
+static void render_ui_and_refresh(bool force_full)
+{
     SemaphoreHandle_t mutex = get_display_mutex();
-    if (!mutex) return;
+    if (!mutex)
+        return;
 
     xSemaphoreTake(mutex, portMAX_DELAY);
-
     epd_clear();
-    uint8_t* fb = get_framebuffer();
-
-    if (s_current_page == 0) {
-        rawdraw_draw_round_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 10, 10, EXAMPLE_LCD_WIDTH - 20, 60, 10, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, 0);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 25, 28, "ZECTRIX BWRY 4-COLOR", &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_WHITE);
-
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 90, "Pure C Firmware Port", &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_BLACK);
-        
-        char ssid_str[48];
-        char ip_address[32];
-        wifi_manager_get_ip(ip_address, sizeof(ip_address));
-        if (wifi_manager_is_connected()) {
-            char ssid[32];
-            wifi_manager_get_ssid(ssid, sizeof(ssid));
-            snprintf(ssid_str, sizeof(ssid_str), "Wi-Fi: %s", ssid);
-        } else {
-            snprintf(ssid_str, sizeof(ssid_str), "Wi-Fi: Disconnected");
-        }
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 120, ssid_str, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 140, ip_address, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-
-        char nfc_buf[128];
-        snprintf(nfc_buf, sizeof(nfc_buf), "NFC Field: %s", nfc_has_field() ? "Present (Field Seen)" : "Idle (No Field)");
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 160, nfc_buf, &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-
-        charge_snapshot_t snap = charge_status_get(&s_charge_status);
-        const char* status_str = "Discharging";
-        if (snap.charging) status_str = "Charging";
-        if (snap.full) status_str = "Full";
-        if (snap.no_battery) status_str = "No Battery";
-
-        rawdraw_draw_round_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 185, EXAMPLE_LCD_WIDTH - 40, 55, 8, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_YELLOW, 2);
-        
-        char buf[128];
-        snprintf(buf, sizeof(buf), "Battery Status: %s", status_str);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 35, 205, buf, &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_BLACK);
-
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 260, "Page 1 of 3 (UP/DOWN to navigate)", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-
-    } else if (s_current_page == 1) {
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 20, "4-Color Palette Showcase", &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_RED);
-
-        rawdraw_draw_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 60, 70, 50, RAWDRAW_COLOR_BLACK);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 25, 120, "Black", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-
-        rawdraw_draw_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 110, 60, 70, 50, RAWDRAW_COLOR_RED);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 125, 120, "Red", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_RED);
-
-        rawdraw_draw_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 200, 60, 70, 50, RAWDRAW_COLOR_YELLOW);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 210, 120, "Yellow", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_YELLOW);
-
-        rawdraw_draw_round_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 290, 60, 70, 50, 4, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, 1);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 305, 120, "White", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 160, "Dithered gray area (checkerboard pattern):", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-        rawdraw_draw_dither_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 185, 360, 45);
-
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 260, "Page 2 of 3 (UP/DOWN to navigate)", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-
-    } else if (s_current_page == 2) {
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 20, "RTC Clock & Interactive Refresh", &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_YELLOW);
-
-        time_t now;
-        time(&now);
-        struct tm timeinfo;
-        localtime_r(&now, &timeinfo);
-        
-        char clock_buf[64];
-        snprintf(clock_buf, sizeof(clock_buf), "Clock: %02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-        
-        rawdraw_draw_round_rect(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 60, EXAMPLE_LCD_WIDTH - 40, 80, 12, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_RED, 3);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 50, 85, "RTC Time:", &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_YELLOW);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 170, 85, clock_buf, &SourceHanSansSC_Medium_slim, RAWDRAW_COLOR_WHITE);
-
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 165, "Press BOOT to refresh the clock.", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 185, "Auto-refresh is disabled (slow 4-color).", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
-
-        rawdraw_draw_text(fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT, 20, 260, "Page 3 of 3 (UP/DOWN to navigate)", &BUILTIN_TEXT_FONT, RAWDRAW_COLOR_BLACK);
+    uint8_t      *fb  = get_framebuffer();
+    ui_manager_t *mgr = (ui_manager_t *)application_get_ui_manager();
+    if (mgr && fb) {
+        ui_manager_render_all(mgr, fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT);
     }
-
     xSemaphoreGive(mutex);
-    request_urgent_refresh();
+    if (force_full) {
+        request_urgent_full_refresh();
+    } else {
+        request_urgent_refresh();
+    }
 }
 
-static void navigate_page(int direction) {
-    s_current_page = (s_current_page + direction + TOTAL_PAGES) % TOTAL_PAGES;
-    ESP_LOGI(TAG, "Switched to page %d", s_current_page);
-    draw_page();
+/* Refresh callback wired into the UI manager (called after HandleInput /
+ * page switches / data updates). Renders the framebuffer and triggers the
+ * EPD update. */
+static void ui_refresh_cb(rawdraw_rect_t rect, bool urgent, void *user_data)
+{
+    (void)rect;
+    (void)user_data;
+    render_ui_and_refresh(urgent);
 }
 
-void app_main(void) {
+void app_main(void)
+{
     ESP_LOGI(TAG, "Starting ZecTrix EPD Panel C Firmware");
 
     esp_err_t ret = nvs_flash_init();
@@ -170,6 +201,12 @@ void app_main(void) {
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+
+    /* Initialize the nvs_state module's shared handle so all
+     * nvs_state_get/set_* calls become functional. Without this,
+     * theme persistence, last-page restore, and calendar navigation
+     * persistence are all silent no-ops. */
+    nvs_state_init();
 
     charge_status_init(&s_charge_status, CHARGE_DETECT_GPIO, CHARGE_FULL_GPIO, esp_timer_get_time() / 1000);
 
@@ -185,54 +222,91 @@ void app_main(void) {
     ESP_LOGI(TAG, "Board Power Rails and I2C initialized");
 
     pcf8563_init(RTC_INT_GPIO);
-    
+
     struct tm rtc_tm = {0};
     if (pcf8563_get_time(&rtc_tm)) {
         time_t t = mktime(&rtc_tm);
         if (t != -1) {
-            struct timeval tv = { .tv_sec = t, .tv_usec = 0 };
+            struct timeval tv = {.tv_sec = t, .tv_usec = 0};
             settimeofday(&tv, NULL);
-            ESP_LOGI(TAG, "System time synchronized with RTC: %02d:%02d:%02d", rtc_tm.tm_hour, rtc_tm.tm_min, rtc_tm.tm_sec);
+            ESP_LOGI(TAG, "System time synchronized with RTC: %02d:%02d:%02d", rtc_tm.tm_hour, rtc_tm.tm_min,
+                     rtc_tm.tm_sec);
         }
     } else {
         ESP_LOGW(TAG, "RTC read failed; using system time");
     }
 
     nfc_init(NFC_PWR_GPIO, NFC_FD_GPIO, NFC_FD_ACTIVE_LEVEL);
+    bluetooth_manager_init();
+    ble_gatt_service_set_image_ready_callback(ble_image_ready_cb, NULL);
+    bluetooth_manager_set_nfc_writer(nfc_raw_ndef_writer_cb, NULL);
+    bluetooth_manager_enable();
+    bluetooth_manager_publish_touch_and_go();
     audio_player_init();
     wifi_manager_init();
 
     audio_player_play_tone(1000, 100);
 
-    settings_handle_t wifi_handle = settings_open("wifi", false);
+    settings_handle_t wifi_handle  = settings_open("wifi", false);
+    char              ssid[32]     = {0};
+    char              password[64] = {0};
     if (wifi_handle) {
-        char ssid[32] = {0};
-        char password[64] = {0};
         settings_get_string(wifi_handle, "ssid", ssid, sizeof(ssid), "");
         settings_get_string(wifi_handle, "password", password, sizeof(password), "");
         settings_close(wifi_handle);
-        if (strlen(ssid) > 0) {
-            wifi_manager_connect(ssid, password);
-        } else {
-            settings_handle_t wifi_wr = settings_open("wifi", true);
-            if (wifi_wr) {
-                settings_set_string(wifi_wr, "ssid", "ZecTrix-AP");
-                settings_set_string(wifi_wr, "password", "12345678");
-                settings_close(wifi_wr);
-                ESP_LOGI(TAG, "No Wi-Fi credentials found. Saved default 'ZecTrix-AP' to NVS settings.");
+    }
+
+    const char *kconfig_ssid     = CONFIG_DEFAULT_WIFI_SSID;
+    const char *kconfig_password = CONFIG_DEFAULT_WIFI_PASSWORD;
+    if (strlen(kconfig_ssid) == 0) {
+        kconfig_ssid     = "ZecTrix-AP";
+        kconfig_password = "12345678";
+    }
+
+    if (strlen(ssid) == 0 || (strcmp(ssid, "ZecTrix-AP") == 0 && strcmp(kconfig_ssid, "ZecTrix-AP") != 0)) {
+        settings_handle_t wifi_wr = settings_open("wifi", true);
+        if (wifi_wr) {
+            settings_set_string(wifi_wr, "ssid", kconfig_ssid);
+            settings_set_string(wifi_wr, "password", kconfig_password);
+            settings_close(wifi_wr);
+            ESP_LOGI(TAG, "Saved default Wi-Fi '%s' to NVS settings.", kconfig_ssid);
+            strncpy(ssid, kconfig_ssid, sizeof(ssid) - 1);
+            strncpy(password, kconfig_password, sizeof(password) - 1);
+        }
+    }
+
+    /* Check if this is an RTC slideshow wakeup (to save massive battery by skipping WiFi). */
+    bool is_rtc_slideshow_wakeup = false;
+    esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
+    if (cause == ESP_SLEEP_WAKEUP_EXT1) {
+        uint64_t pin_mask = esp_sleep_get_ext1_wakeup_status();
+        if (pin_mask & (1ULL << RTC_INT_GPIO)) {
+            settings_handle_t gallery_nvs = settings_open("gallery", false);
+            int32_t slideshow_interval = 5;
+            if (gallery_nvs) {
+                slideshow_interval = (int32_t)settings_get_int(gallery_nvs, "slide_min", 5);
+                settings_close(gallery_nvs);
+            }
+            if (slideshow_interval > 0) {
+                is_rtc_slideshow_wakeup = true;
+                ESP_LOGI(TAG, "RTC slideshow wakeup: skipping Wi-Fi connection to save battery.");
             }
         }
     }
 
+    if (strlen(ssid) > 0 && !is_rtc_slideshow_wakeup) {
+        wifi_manager_connect(ssid, password);
+    }
+
     custom_lcd_spi_t spi_data = {
-        .cs = EPD_CS_PIN,
-        .dc = EPD_DC_PIN,
-        .rst = EPD_RST_PIN,
-        .busy = EPD_BUSY_PIN,
-        .mosi = EPD_MOSI_PIN,
-        .scl = EPD_SCK_PIN,
-        .power = EPD_PWR_PIN,
-        .spi_host = EPD_SPI_NUM,
+        .cs         = EPD_CS_PIN,
+        .dc         = EPD_DC_PIN,
+        .rst        = EPD_RST_PIN,
+        .busy       = EPD_BUSY_PIN,
+        .mosi       = EPD_MOSI_PIN,
+        .scl        = EPD_SCK_PIN,
+        .power      = EPD_PWR_PIN,
+        .spi_host   = EPD_SPI_NUM,
         .buffer_len = ((EXAMPLE_LCD_WIDTH * 2 + 7) / 8) * EXAMPLE_LCD_HEIGHT,
         .panel_type = EPD_PANEL_4COLOR_SSD2683,
     };
@@ -241,25 +315,24 @@ void app_main(void) {
 
     button_config_t btn_cfg = {
         .long_press_time = 1000,
-        .short_press_time = 50,
     };
 
     button_gpio_config_t up_gpio_cfg = {
-        .gpio_num = TODO_UP_BUTTON_GPIO,
+        .gpio_num     = TODO_UP_BUTTON_GPIO,
         .active_level = 0,
     };
     button_handle_t up_btn;
     ESP_ERROR_CHECK(iot_button_new_gpio_device(&btn_cfg, &up_gpio_cfg, &up_btn));
 
     button_gpio_config_t down_gpio_cfg = {
-        .gpio_num = TODO_DOWN_BUTTON_GPIO,
+        .gpio_num     = TODO_DOWN_BUTTON_GPIO,
         .active_level = 0,
     };
     button_handle_t down_btn;
     ESP_ERROR_CHECK(iot_button_new_gpio_device(&btn_cfg, &down_gpio_cfg, &down_btn));
 
     button_gpio_config_t confirm_gpio_cfg = {
-        .gpio_num = TODO_CONFIRM_BUTTON_GPIO,
+        .gpio_num     = TODO_CONFIRM_BUTTON_GPIO,
         .active_level = 0,
     };
     button_handle_t confirm_btn;
@@ -268,15 +341,42 @@ void app_main(void) {
     iot_button_register_cb(up_btn, BUTTON_SINGLE_CLICK, NULL, button_up_click_cb, NULL);
     iot_button_register_cb(down_btn, BUTTON_SINGLE_CLICK, NULL, button_down_click_cb, NULL);
     iot_button_register_cb(confirm_btn, BUTTON_SINGLE_CLICK, NULL, button_confirm_click_cb, NULL);
+    iot_button_register_cb(up_btn, BUTTON_LONG_PRESS_START, NULL, button_up_long_press_cb, NULL);
+    iot_button_register_cb(down_btn, BUTTON_LONG_PRESS_START, NULL, button_down_long_press_cb, NULL);
+    iot_button_register_cb(confirm_btn, BUTTON_LONG_PRESS_START, NULL, button_boot_long_press_cb, NULL);
+    iot_button_register_cb(confirm_btn, BUTTON_DOUBLE_CLICK, NULL, button_boot_double_click_cb, NULL);
+    iot_button_register_cb(up_btn, BUTTON_DOUBLE_CLICK, NULL, button_up_double_click_cb, NULL);
+    iot_button_register_cb(down_btn, BUTTON_DOUBLE_CLICK, NULL, button_down_double_click_cb, NULL);
 
-    ESP_LOGI(TAG, "Buttons configured: UP (39), DOWN (18), BOOT (0)");
+    /* Initialize the Application singleton (UI manager + settings menu). */
+    application_init();
+    /* WiFi may have connected before the app callback registered; resync. */
+    application_notify_wifi_if_connected();
 
-    draw_page();
+    /* Wire the EPD refresh callback into the UI manager. */
+    ui_manager_t *mgr = (ui_manager_t *)application_get_ui_manager();
+    if (mgr) {
+        ui_manager_set_refresh_callback(mgr, ui_refresh_cb, NULL);
+    }
+
+    /* Initial render. */
+    application_update_status_bar();
+    render_ui_and_refresh(true);
 
     s_clock_timer = xTimerCreate("clock_timer", pdMS_TO_TICKS(1000), pdTRUE, NULL, clock_timer_callback);
     if (s_clock_timer) {
         xTimerStart(s_clock_timer, 0);
     }
 
+    /* Main UI loop (deferred page refreshes, slideshow, clock pump). */
+    xTaskCreatePinnedToCore(application_main_task, "app_main_loop", 8192, NULL, 5, NULL, 0);
+
     ESP_LOGI(TAG, "Main Application running");
+}
+
+/* Main UI loop task: pumps deferred refreshes and periodic timers. */
+static void application_main_task(void *arg)
+{
+    (void)arg;
+    application_run();
 }

@@ -2,6 +2,7 @@
 build/
 
 # ESP-IDF auto-generated config backup
+sdkconfig
 sdkconfig.old
 
 # ESP-IDF Component Manager downloaded components
@@ -20,3 +21,6 @@ boot_log.txt
 
 # System Files
 .DS_Store
+
+# Local photo index
+spiffs/photos.idx

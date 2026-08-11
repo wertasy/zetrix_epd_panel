@@ -1,4 +1,8 @@
-menu "Xiaozhi Assistant"
+menu "ZecTrix E-Paper Panel"
+
+# =========================================================================
+# Rendering / board selection (ported from the original C++ Kconfig.projbuild)
+# =========================================================================
 
 config USE_EMOTE_MESSAGE_STYLE
     bool "Use rawdraw 1bpp rendering (no LVGL)"
@@ -40,5 +44,175 @@ config ZECTRIX_EPD_4COLOR_BOOT_TEST_PATTERN
     help
         Show black/white/red/yellow vertical bars once during display
         initialization so a newly connected 4-color panel can be verified.
+
+# =========================================================================
+# Compile-time defaults (avoid re-provisioning WiFi after every flash)
+#
+# These mirror the original build.sh CONFIG_DEFAULT_WIFI_* injections. When
+# the NVS SSID list is empty at first boot, the firmware falls back to these.
+# Leave blank to require runtime provisioning.
+# =========================================================================
+
+menu "Default WiFi (compile-time preset)"
+
+config DEFAULT_WIFI_SSID
+    string "Default WiFi SSID"
+    default "$(WIFI_SSID)"
+    help
+        Preset WiFi SSID injected at build time. Used as the fallback
+        when no SSID has been saved to NVS. Leave blank to require
+        runtime AP/portal provisioning.
+
+config DEFAULT_WIFI_PASSWORD
+    string "Default WiFi password"
+    default "$(WIFI_PASSWORD)"
+    help
+        Preset WiFi password for DEFAULT_WIFI_SSID.
+
+endmenu
+
+# =========================================================================
+# Cloud / service endpoints
+# =========================================================================
+
+menu "Server & API"
+
+config SERVER_ADDRESS
+    string "Server base address"
+    default "$(SERVER_ADDRESS)"
+    help
+        Base URL of the companion cloud server (photo sync, firmware
+        assets, etc.). Used by the photo downloader and AP transfer
+        server.
+
+config WEATHER_API_KEY
+    string "QWeather (和风天气) v1 API key"
+    default "$(WEATHER_API_KEY)"
+    help
+        API key for the QWeather v1 service. Sent in the X-QW-Api-Key
+        header. Leave blank to disable weather fetching.
+
+config WEATHER_DEFAULT_LOCATION
+    string "Default weather location (lat,lon)"
+    default "34.16,108.95"
+    help
+        Default latitude,longitude for QWeather v1 API queries.
+        Users can override this at runtime via NVS, or enable IP
+        geolocation auto-detect (weather_api_detect_location).
+
+config QWEATHER_API_HOST
+    string "QWeather v1 API host"
+    default "mg3aarxm84.re.qweatherapi.com"
+    help
+        Hostname for the QWeather v1 REST API endpoints.
+        Override via NVS key "weather_host" if using a custom domain.
+
+config XIAOZHI_WSS_URL
+    string "Xiaozhi conversation service WebSocket URL"
+    default ""
+    help
+        The WebSocket URL for the LLM streaming chat protocol.
+
+config CODING_PLAN_API_TOKEN
+    string "Zhipu BigModel Coding Plan API token"
+    default "$(CODING_PLAN_API_TOKEN)"
+    help
+        Bearer token sent in the "authorization" header for the Coding
+        Plan usage API (open.bigmodel.cn). Leave blank to disable usage
+        fetching; override at runtime via NVS key "coding_plan_token".
+
+config CODING_PLAN_API_ORG
+    string "Zhipu BigModel organization id"
+    default "org-c0fb217715454D74b92930fE336e7BAd"
+    help
+        Sent in the "bigmodel-organization" header.
+        Override via NVS key "coding_plan_org".
+
+config CODING_PLAN_API_PROJECT
+    string "Zhipu BigModel project id"
+    default "proj_f0a4484835804c13Bca7473E0563C567"
+    help
+        Sent in the "bigmodel-project" header.
+        Override via NVS key "coding_plan_project".
+
+endmenu
+
+# =========================================================================
+# Bluetooth
+# =========================================================================
+
+menu "Bluetooth"
+
+config BLE_DEVICE_NAME
+    string "BLE device name"
+    default "InkScreen"
+    help
+        Advertised BLE device name used by the bluetooth manager.
+
+config BLE_ENABLED_DEFAULT
+    bool "Enable BLE by default"
+    default n
+    help
+        Initial BLE power state when no NVS preference has been saved.
+
+endmenu
+
+# =========================================================================
+# Misc runtime presets
+# =========================================================================
+
+menu "Misc"
+
+config CAR_MOVE_PHONE_NUMBER
+    string "Car-move notification phone number"
+    default "$(CAR_MOVE_PHONE_NUMBER)"
+    help
+        Phone number to notify on a car-move event (e.g. when the NFC
+        tag detects a vehicle trigger). Leave blank to disable.
+
+config THEME_DEFAULT
+    int "Default UI theme index"
+    default 0
+    range 0 15
+    help
+        Zero-based index of the default UI theme selected at first boot.
+
+menu "Pages"
+
+config PAGE_EBOOK_ENABLE
+    bool "Enable ebook page"
+    default n
+
+config PAGE_FONT_DEBUG_ENABLE
+    bool "Enable font debug page"
+    default n
+
+config PAGE_FONT_METRICS_ENABLE
+    bool "Enable font metrics page"
+    default n
+
+config PAGE_CAR_MOVE_ENABLE
+    bool "Enable car-move (QR code) page"
+    default n
+
+config PAGE_LIFEBAR_ENABLE
+    bool "Enable lifebar page"
+    default n
+
+config PAGE_LOG_ENABLE
+    bool "Enable log page"
+    default n
+
+config PAGE_NEWS_ENABLE
+    bool "Enable news page"
+    default n
+
+config PAGE_YEARPROGRESS_ENABLE
+    bool "Enable year progress page"
+    default n
+
+endmenu
+
+endmenu
 
 endmenu

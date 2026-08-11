@@ -1,0 +1,119 @@
+# .clang-format
+# Style: 4-space ESP-IDF + Linux Kernel flavor
+# Compatible with clang-format >= 10
+
+BasedOnStyle: LLVM
+
+# ===========================
+# Indentation (ESP-IDF style)
+# ===========================
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# ===========================
+# Line length (Kernel style)
+# ===========================
+ColumnLimit: 120
+
+# ===========================
+# Pointer alignment (Kernel style)
+# ===========================
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+# ===========================
+# Braces (Kernel K&R variant)
+# ===========================
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+# ===========================
+# Alignment
+# ===========================
+AlignAfterOpenBracket: Align
+AlignOperands: true
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+AlignTrailingComments: false
+
+# ===========================
+# Spacing & Breaks (Strict Kernel)
+# ===========================
+SpaceBeforeParens: ControlStatementsExceptForEachMacros
+SpaceAfterCStyleCast: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+
+# ===========================
+# Language & Macros
+# ===========================
+Standard: Cpp03
+
+SortIncludes: false
+IncludeBlocks: Preserve
+ReflowComments: false
+MaxEmptyLinesToKeep: 1
+
+# Preprocessor indentation
+IndentPPDirectives: AfterHash
+
+# ============================================
+# 循环宏 (确保 for-each 类宏正确缩进)
+# ============================================
+ForEachMacros:
+  - LIST_FOR_EACH
+  - LIST_FOR_EACH_SAFE
+  - SLIST_FOREACH
+  - SLIST_FOREACH_PREVPTR
+  - STAILQ_FOREACH
+  - TAILQ_FOREACH
+  - TAILQ_FOREACH_REVERSE
+  - portENTER_CRITICAL
+  - portEXIT_CRITICAL
+  - taskENTER_CRITICAL
+  - taskEXIT_CRITICAL
+
+# ============================================
+# 语句宏 (关键：防止 ESP_LOG* / CHECK 换行)
+# ============================================
+StatementMacros:
+  - ESP_ERROR_CHECK
+  - ESP_ERROR_CHECK_WITHOUT_ABORT
+  - ESP_RETURN_ON_ERROR
+  - ESP_RETURN_ON_FALSE
+  - ESP_RETURN_ON_TRUE
+  - ESP_GOTO_ON_ERROR
+  - ESP_GOTO_ON_FALSE
+  - ESP_LOGD
+  - ESP_LOGI
+  - ESP_LOGW
+  - ESP_LOGE
+  - ESP_LOGV
+  - ESP_LOG_BUFFER_HEXDUMP
+  - ESP_LOG_WRITE
+  - CONFIG_ASSERT
+  - assert

@@ -5,13 +5,14 @@
 #include "../main/rawdraw.h"
 
 // Copy display driver math for verification
-static inline uint8_t pack_2bpp_row_to_1bpp_byte(const uint8_t* row_2bpp, int pixel_x) {
+static inline uint8_t pack_2bpp_row_to_1bpp_byte(const uint8_t *row_2bpp, int pixel_x)
+{
     uint8_t out = 0x00;
     for (int bit = 0; bit < 8; ++bit) {
-        const int x = pixel_x + bit;
+        const int     x      = pixel_x + bit;
         const uint8_t packed = row_2bpp[x >> 2];
-        const uint8_t shift = (uint8_t)(6 - ((x & 0x03) << 1));
-        const uint8_t color = (packed >> shift) & 0x03;
+        const uint8_t shift  = (uint8_t)(6 - ((x & 0x03) << 1));
+        const uint8_t color  = (packed >> shift) & 0x03;
         if (color == 1) { // 1 = WHITE
             out |= (uint8_t)(1U << (7 - bit));
         }
@@ -19,11 +20,12 @@ static inline uint8_t pack_2bpp_row_to_1bpp_byte(const uint8_t* row_2bpp, int pi
     return out;
 }
 
-static inline uint16_t bit_interleave(uint8_t bytes1, uint8_t bytes2) {
+static inline uint16_t bit_interleave(uint8_t bytes1, uint8_t bytes2)
+{
     uint16_t result = 0;
     for (int i = 0; i < 8; i++) {
-        const int src_bit = 7 - i;
-        const int dst_bit0 = 2 * src_bit;     // bytes2
+        const int src_bit  = 7 - i;
+        const int dst_bit0 = 2 * src_bit; // bytes2
         const int dst_bit1 = 2 * src_bit + 1; // bytes1
 
         result |= (uint16_t)(((bytes1 >> src_bit) & 1u) << dst_bit1);
@@ -34,22 +36,23 @@ static inline uint16_t bit_interleave(uint8_t bytes1, uint8_t bytes2) {
 
 typedef struct {
     size_t diff_bits;
-    float diff_ratio;
+    float  diff_ratio;
 } frame_diff_result_t;
 
-static frame_diff_result_t analyze_frame_diff(const uint8_t* prev_buffer, const uint8_t* tx_buf, int width, int height) {
+static frame_diff_result_t analyze_frame_diff(const uint8_t *prev_buffer, const uint8_t *tx_buf, int width, int height)
+{
     frame_diff_result_t result = {0};
     if (!prev_buffer || !tx_buf || width <= 0 || height <= 0) {
         return result;
     }
 
-    const int bytes_per_row = (width * 2 + 7) >> 3;
-    const size_t total_bytes = bytes_per_row * height;
-    const size_t total_bits = total_bytes * 8;
+    const int    bytes_per_row = (width * 2 + 7) >> 3;
+    const size_t total_bytes   = bytes_per_row * height;
+    const size_t total_bits    = total_bytes * 8;
 
     for (int y = 0; y < height; ++y) {
-        const uint8_t* prow = prev_buffer + y * bytes_per_row;
-        const uint8_t* crow = tx_buf + y * bytes_per_row;
+        const uint8_t *prow = prev_buffer + y * bytes_per_row;
+        const uint8_t *crow = tx_buf + y * bytes_per_row;
         for (int xb = 0; xb < bytes_per_row; ++xb) {
             uint8_t x = prow[xb] ^ crow[xb];
             if (x != 0) {
@@ -62,13 +65,14 @@ static frame_diff_result_t analyze_frame_diff(const uint8_t* prev_buffer, const 
     return result;
 }
 
-void test_pixel_packing(void) {
+void test_pixel_packing(void)
+{
     printf("Running test_pixel_packing...\n");
-    int width = 400;
-    int height = 300;
+    int width      = 400;
+    int height     = 300;
     int buffer_len = ((width * 2 + 7) / 8) * height; // 30,000 bytes
 
-    uint8_t* fb = malloc(buffer_len);
+    uint8_t *fb = malloc(buffer_len);
     assert(fb != NULL);
     memset(fb, 0x00, buffer_len); // Start with solid black
 
@@ -103,13 +107,14 @@ void test_pixel_packing(void) {
     printf("test_pixel_packing passed!\n");
 }
 
-void test_dither_pattern(void) {
+void test_dither_pattern(void)
+{
     printf("Running test_dither_pattern...\n");
-    int width = 400;
-    int height = 300;
+    int width      = 400;
+    int height     = 300;
     int buffer_len = ((width * 2 + 7) / 8) * height;
 
-    uint8_t* fb = malloc(buffer_len);
+    uint8_t *fb = malloc(buffer_len);
     memset(fb, 0x55, buffer_len); // start with white
 
     // Draw dither pattern on 10x10 area
@@ -118,10 +123,10 @@ void test_dither_pattern(void) {
     // Verify checkerboard: (x + y) % 2 == 0 -> Black (0), otherwise White (1)
     for (int y = 0; y < 10; y++) {
         for (int x = 0; x < 10; x++) {
-            uint32_t index = y * 100 + (x >> 2);
-            uint8_t shift = (uint8_t)(6 - ((x & 0x03) << 1));
-            uint8_t color = (fb[index] >> shift) & 0x03;
-            uint8_t expected = ((x + y) & 1) ? 1 : 0;
+            uint32_t index    = y * 100 + (x >> 2);
+            uint8_t  shift    = (uint8_t)(6 - ((x & 0x03) << 1));
+            uint8_t  color    = (fb[index] >> shift) & 0x03;
+            uint8_t  expected = ((x + y) & 1) ? 1 : 0;
             assert(color == expected);
         }
     }
@@ -130,14 +135,15 @@ void test_dither_pattern(void) {
     printf("test_dither_pattern passed!\n");
 }
 
-void test_frame_diff(void) {
+void test_frame_diff(void)
+{
     printf("Running test_frame_diff...\n");
-    int width = 400;
-    int height = 300;
+    int width      = 400;
+    int height     = 300;
     int buffer_len = ((width * 2 + 7) / 8) * height;
 
-    uint8_t* prev = malloc(buffer_len);
-    uint8_t* curr = malloc(buffer_len);
+    uint8_t *prev = malloc(buffer_len);
+    uint8_t *curr = malloc(buffer_len);
 
     memset(prev, 0x55, buffer_len);
     memset(curr, 0x55, buffer_len);
@@ -152,7 +158,7 @@ void test_frame_diff(void) {
     curr[0] &= ~0x40;
     res = analyze_frame_diff(prev, curr, width, height);
     assert(res.diff_bits == 1);
-    
+
     float expected_ratio = 1.0f / (buffer_len * 8.0f);
     assert(res.diff_ratio == expected_ratio);
 
@@ -161,7 +167,8 @@ void test_frame_diff(void) {
     printf("test_frame_diff passed!\n");
 }
 
-void test_partial_encoding(void) {
+void test_partial_encoding(void)
+{
     printf("Running test_partial_encoding...\n");
     // Verify that pack_2bpp_row_to_1bpp_byte and bit_interleave function correctly
     uint8_t row_2bpp[100];
@@ -175,7 +182,7 @@ void test_partial_encoding(void) {
     // Change pixel 0 to black (0) and pixel 1 to yellow (2).
     // row_2bpp[0] byte: bits 7-6 = 00 (black), bits 5-4 = 10 (yellow) -> 0x20
     row_2bpp[0] = 0x20;
-    b1 = pack_2bpp_row_to_1bpp_byte(row_2bpp, 0);
+    b1          = pack_2bpp_row_to_1bpp_byte(row_2bpp, 0);
     // Pixels 4-7 are still white (1), pixels 2-3 are black (0).
     // Result binary: 0b00001111 = 0x0F.
     assert(b1 == 0x0F);
@@ -196,7 +203,8 @@ void test_partial_encoding(void) {
     printf("test_partial_encoding passed!\n");
 }
 
-int main(void) {
+int main(void)
+{
     printf("Starting Host Verification Tests...\n");
     test_pixel_packing();
     test_dither_pattern();
