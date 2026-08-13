@@ -73,20 +73,17 @@ const char *ui_manager_get_page_title(ui_page_id_t page)
 /* Quick switch items                                                  */
 /* ------------------------------------------------------------------ */
 
-
 /* ------------------------------------------------------------------ */
 /* Static helpers                                                      */
 /* ------------------------------------------------------------------ */
 
-
 static int current_local_minute_key(void)
 {
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm_buf;
     localtime_r(&now, &tm_buf);
     return tm_buf.tm_year * 366 * 24 * 60 + tm_buf.tm_yday * 24 * 60 + tm_buf.tm_hour * 60 + tm_buf.tm_min;
 }
-
 
 /* ------------------------------------------------------------------ */
 /* Renderer registry                                                   */
@@ -110,7 +107,6 @@ static void init_renderer(ui_manager_t *mgr, ui_page_id_t page)
 /* ------------------------------------------------------------------ */
 /* Status bar                                                          */
 /* ------------------------------------------------------------------ */
-
 
 static void draw_global_page_frame(uint8_t *fb, int width, int height)
 {
@@ -197,7 +193,7 @@ void ui_manager_request_active_page_refresh(ui_manager_t *mgr)
 void ui_manager_set_data_refresh_cb(ui_manager_t *mgr, void (*cb)(ui_page_id_t page, void *ctx), void *ctx)
 {
     if (mgr) {
-        mgr->data_refresh_cb  = cb;
+        mgr->data_refresh_cb = cb;
         mgr->data_refresh_ctx = ctx;
     }
 }
@@ -227,7 +223,7 @@ void ui_manager_set_refresh_callback(ui_manager_t *mgr, ui_manager_refresh_cb_t 
 {
     if (!mgr)
         return;
-    mgr->refresh_cb  = cb;
+    mgr->refresh_cb = cb;
     mgr->refresh_ctx = user_data;
 }
 
@@ -243,19 +239,19 @@ void ui_manager_init(ui_manager_t *mgr, ui_manager_refresh_cb_t refresh_cb, void
         return;
     memset(mgr, 0, sizeof(*mgr));
     page_registry_init();
-    mgr->quick_count                        = page_registry_quick_switch_items(mgr->quick_items, UI_PAGE_COUNT);
-    mgr->width                              = STYLE_SCREEN_WIDTH;
-    mgr->height                             = STYLE_SCREEN_HEIGHT;
-    mgr->current_page                       = UI_PAGE_GALLERY;
+    mgr->quick_count = page_registry_quick_switch_items(mgr->quick_items, UI_PAGE_COUNT);
+    mgr->width = STYLE_SCREEN_WIDTH;
+    mgr->height = STYLE_SCREEN_HEIGHT;
+    mgr->current_page = UI_PAGE_GALLERY;
     /* P0: Restore last-viewed page from RTC memory on deep-sleep wake. */
     if (s_rtc_page_magic == RTC_PAGE_MAGIC && s_rtc_last_page < (uint32_t)UI_PAGE_COUNT) {
         mgr->current_page = (ui_page_id_t)s_rtc_last_page;
     }
-    mgr->refresh_cb                         = refresh_cb;
-    mgr->refresh_ctx                        = user_data;
-    mgr->quick_switch_open                  = false;
-    mgr->quick_switch_index                 = 0;
-    mgr->last_clock_minute_key              = current_local_minute_key();
+    mgr->refresh_cb = refresh_cb;
+    mgr->refresh_ctx = user_data;
+    mgr->quick_switch_open = false;
+    mgr->quick_switch_index = 0;
+    mgr->last_clock_minute_key = current_local_minute_key();
     mgr->gallery_slideshow_interval_minutes = 0;
 
     /* Theme from NVS. */
@@ -276,19 +272,18 @@ void ui_manager_init(ui_manager_t *mgr, ui_manager_refresh_cb_t refresh_cb, void
     /* Status bar defaults. */
     strncpy(mgr->status_bar.page_title, ui_manager_get_page_title(mgr->current_page),
             sizeof(mgr->status_bar.page_title) - 1);
-    mgr->status_bar.wifi_connected   = false;
+    mgr->status_bar.wifi_connected = false;
     mgr->status_bar.server_connected = false;
-    mgr->status_bar.battery_level    = -1;
+    mgr->status_bar.battery_level = -1;
     mgr->status_bar.battery_charging = false;
     mgr->status_bar.battery_vertical = false;
-    mgr->status_bar.date_format[0]   = '\0';
+    mgr->status_bar.date_format[0] = '\0';
 
     set_on_refresh_idle(on_display_refresh_idle_cb, mgr);
 
     ESP_LOGI(TAG, "RawDraw UI Manager initialized: %dx%d, page=%s", mgr->width, mgr->height,
              ui_manager_get_page_title(mgr->current_page));
 }
-
 
 /* ------------------------------------------------------------------ */
 /* Page switching                                                      */
@@ -427,7 +422,7 @@ void ui_manager_render_all(ui_manager_t *mgr, uint8_t *fb, int width, int height
      * active_page_refresh_pending set, and the next pump tick refreshes the
      * panel again — visible as a double flash, especially on RTC wake. */
     mgr->active_page_refresh_pending = false;
-    mgr->transient_refresh_pending   = false;
+    mgr->transient_refresh_pending = false;
 }
 
 /* ------------------------------------------------------------------ */
@@ -464,7 +459,6 @@ bool ui_manager_handle_input(ui_manager_t *mgr, const ui_button_event_t *event)
      * loop and processed serially. The EPD refresh runs asynchronously
      * in the display task; multiple rapid inputs just update the
      * framebuffer and the latest frame is sent on the next refresh. */
-
 
     if (event->type == BTN_BOOT_DOUBLE_CLICK) {
         mgr->quick_switch_open = !mgr->quick_switch_open;
@@ -794,7 +788,7 @@ void ui_manager_set_gallery_slideshow_interval_minutes(ui_manager_t *mgr, int mi
     if (!mgr)
         return;
     mgr->gallery_slideshow_interval_minutes = (minutes > 0) ? minutes : 0;
-    mgr->gallery_slideshow_pending          = false;
+    mgr->gallery_slideshow_pending = false;
     arm_gallery_slideshow_timer(mgr);
 }
 
@@ -825,14 +819,13 @@ void ui_manager_pump_clock_refresh(ui_manager_t *mgr)
         mgr->gallery_slideshow_pending = false;
         advance_gallery_slideshow(mgr);
     }
-    bool page_pending                = mgr->active_page_refresh_pending;
+    bool page_pending = mgr->active_page_refresh_pending;
     mgr->active_page_refresh_pending = false;
-    bool transient_pending           = mgr->transient_refresh_pending;
-    mgr->transient_refresh_pending   = false;
+    bool transient_pending = mgr->transient_refresh_pending;
+    mgr->transient_refresh_pending = false;
 
     if (page_pending || transient_pending) {
-        ESP_LOGI(TAG, "pump: consuming page_pending=%d transient=%d", page_pending ? 1 : 0,
-                 transient_pending ? 1 : 0);
+        ESP_LOGI(TAG, "pump: consuming page_pending=%d transient=%d", page_pending ? 1 : 0, transient_pending ? 1 : 0);
         if (mgr->refresh_cb) {
             mgr->refresh_cb((rawdraw_rect_t){0, 0, mgr->width, mgr->height}, false, mgr->refresh_ctx);
         }
@@ -902,7 +895,6 @@ void ui_manager_set_page_switch_callback(ui_manager_t *mgr, ui_manager_page_swit
 {
     if (!mgr)
         return;
-    mgr->page_switch_cb  = cb;
+    mgr->page_switch_cb = cb;
     mgr->page_switch_ctx = user_data;
 }
-

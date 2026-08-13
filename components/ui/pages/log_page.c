@@ -24,9 +24,9 @@
 #    define PROJECT_VER "3.8.0"
 #endif
 
-static const lv_font_t *const kLogFont      = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kLogFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kLogTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kLogIconFont  = &font_zectrix_16_1;
+static const lv_font_t *const kLogIconFont = &font_zectrix_16_1;
 
 /* ------------------------------------------------------------------ */
 /* Internal helpers                                                    */
@@ -35,7 +35,7 @@ static const lv_font_t *const kLogIconFont  = &font_zectrix_16_1;
 static void add_log_entry(log_page_t *r, const char *tag, const char *message)
 {
     log_page_entry_t *entry = &r->entries[r->head];
-    entry->time             = time(NULL);
+    entry->time = time(NULL);
     strncpy(entry->tag, tag, sizeof(entry->tag) - 1);
     entry->tag[sizeof(entry->tag) - 1] = '\0';
     strncpy(entry->message, message, sizeof(entry->message) - 1);
@@ -50,16 +50,16 @@ static void add_log_entry(log_page_t *r, const char *tag, const char *message)
 static void collect_log_entries(log_page_t *r)
 {
     r->count = 0;
-    r->head  = 0;
+    r->head = 0;
 
     /* Boot event */
     add_log_entry(r, "BOOT", "系统启动");
 
     /* Memory stats */
-    size_t free_heap  = 0;
+    size_t free_heap = 0;
     size_t free_psram = 0;
 #ifdef ESP_PLATFORM
-    free_heap  = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+    free_heap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
     free_psram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 #endif
     char mem_buf[64];
@@ -91,10 +91,10 @@ static void clamp_scroll_offset(log_page_t *r)
         r->scroll_offset = 0;
         return;
     }
-    const int content_h  = r->base.height - STYLE_STATUS_BAR_HEIGHT - STYLE_SPACING_XXS;
-    const int line_h     = r->font->line_height + STYLE_SPACING_XS;
-    const int visible    = content_h / line_h;
-    int       max_offset = r->count - visible;
+    const int content_h = r->base.height - STYLE_STATUS_BAR_HEIGHT - STYLE_SPACING_XXS;
+    const int line_h = r->font->line_height + STYLE_SPACING_XS;
+    const int visible = content_h / line_h;
+    int max_offset = r->count - visible;
     if (max_offset < 0)
         max_offset = 0;
     r->scroll_offset = RD_MAX(0, RD_MIN(r->scroll_offset, max_offset));
@@ -102,12 +102,12 @@ static void clamp_scroll_offset(log_page_t *r)
 
 static void draw_title_bar(log_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t bar_style     = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
-    const rawdraw_color_t       text          = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary     = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border        = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const int                   title_y_start = STYLE_STATUS_BAR_HEIGHT;
-    const int                   title_bar_h   = LOG_PAGE_TITLE_BAR_H;
+    const rawdraw_paint_style_t bar_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const int title_y_start = STYLE_STATUS_BAR_HEIGHT;
+    const int title_bar_h = LOG_PAGE_TITLE_BAR_H;
 
     /* Clear title bar area (separate from status bar above) */
     rawdraw_draw_styled_rect(fb, width, height, (rawdraw_rect_t){0, title_y_start, width, title_bar_h}, &bar_style);
@@ -138,17 +138,17 @@ static void draw_title_bar(log_page_t *r, uint8_t *fb, int width, int height)
 
 void log_page_init(page_renderer_t *self, int width, int height)
 {
-    log_page_t *r                   = (log_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    log_page_t *r = (log_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->selected_index               = 0;
-    r->scroll_offset                = 0;
-    r->font                         = kLogFont;
-    r->title_font                   = kLogTitleFont;
-    r->icon_font                    = kLogIconFont;
-    r->count                        = 0;
-    r->head                         = 0;
+    r->selected_index = 0;
+    r->scroll_offset = 0;
+    r->font = kLogFont;
+    r->title_font = kLogTitleFont;
+    r->icon_font = kLogIconFont;
+    r->count = 0;
+    r->head = 0;
     collect_log_entries(r);
     clamp_scroll_offset(r);
 }
@@ -163,31 +163,31 @@ void log_page_render(page_renderer_t *self, uint8_t *fb, int width, int height)
     draw_title_bar(r, fb, width, height);
 
     /* === Content area === */
-    const int content_top    = STYLE_STATUS_BAR_HEIGHT + LOG_PAGE_TITLE_BAR_H + STYLE_SPACING_XS;
+    const int content_top = STYLE_STATUS_BAR_HEIGHT + LOG_PAGE_TITLE_BAR_H + STYLE_SPACING_XS;
     const int content_bottom = height - STYLE_SPACING_SM;
     const int content_height = content_bottom - content_top;
-    const int content_left   = STYLE_SPACING_MD;
-    const int content_right  = width - STYLE_SPACING_MD;
+    const int content_left = STYLE_SPACING_MD;
+    const int content_right = width - STYLE_SPACING_MD;
 
     /* Collect fresh log entries */
     collect_log_entries(r);
 
     if (r->count == 0) {
         const char *empty_text = "暂无日志";
-        const int   text_w     = rawdraw_measure_text_width(empty_text, r->font);
-        const int   text_x     = (width - text_w) / 2;
-        const int   text_y     = content_top + (content_height / 2);
+        const int text_w = rawdraw_measure_text_width(empty_text, r->font);
+        const int text_x = (width - text_w) / 2;
+        const int text_y = content_top + (content_height / 2);
         rawdraw_draw_text(fb, width, height, text_x, text_y, empty_text, r->font,
                           rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY));
         r->base.needs_full_refresh_flag = false;
         return;
     }
 
-    const int line_h        = r->font->line_height + STYLE_SPACING_XS;
-    const int tag_w         = rawdraw_measure_text_width("WWWWW", r->font) + STYLE_SPACING_SM;
+    const int line_h = r->font->line_height + STYLE_SPACING_XS;
+    const int tag_w = rawdraw_measure_text_width("WWWWW", r->font) + STYLE_SPACING_SM;
     const int visible_items = content_height / line_h;
 
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
 
     int y = content_top;
@@ -195,8 +195,8 @@ void log_page_render(page_renderer_t *self, uint8_t *fb, int width, int height)
         if (y + line_h > content_bottom)
             break;
 
-        const log_page_entry_t *entry    = &r->entries[i];
-        const bool              selected = (i == r->selected_index);
+        const log_page_entry_t *entry = &r->entries[i];
+        const bool selected = (i == r->selected_index);
 
         /* Selected: inverted background */
         if (selected) {
@@ -219,15 +219,15 @@ void log_page_render(page_renderer_t *self, uint8_t *fb, int width, int height)
     if (r->count > visible_items) {
         const int bar_w = STYLE_SCROLLBAR_WIDTH;
         const int bar_x = width - bar_w - STYLE_SCROLL_MARGIN;
-        int       bar_h = (content_height * visible_items) / r->count;
+        int bar_h = (content_height * visible_items) / r->count;
         if (bar_h < STYLE_SCROLLBAR_MIN_H)
             bar_h = STYLE_SCROLLBAR_MIN_H;
         const int bar_offset = (r->scroll_offset * content_height) / r->count;
-        int       bar_y      = content_top + bar_offset;
+        int bar_y = content_top + bar_offset;
         if (bar_y + bar_h > content_bottom)
             bar_h = content_bottom - bar_y;
 
-        const rawdraw_color_t       thumb = rawdraw_theme_color_for(THEME_TOKEN_SELECTED);
+        const rawdraw_color_t thumb = rawdraw_theme_color_for(THEME_TOKEN_SELECTED);
         const rawdraw_paint_style_t thumb_style =
             rawdraw_make_paint(thumb, thumb, thumb, DITHER_NONE, 0, REFRESH_STATIC_SAFE);
         rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){bar_x, bar_y, bar_w, bar_h},
@@ -259,8 +259,8 @@ bool log_page_handle_input(page_renderer_t *self, const ui_button_event_t *event
         if (r->selected_index < r->count - 1) {
             r->selected_index++;
             const int content_h = r->base.height - STYLE_STATUS_BAR_HEIGHT - STYLE_SPACING_XXS;
-            const int line_h    = r->font->line_height + STYLE_SPACING_XS;
-            int       visible   = content_h / line_h;
+            const int line_h = r->font->line_height + STYLE_SPACING_XS;
+            int visible = content_h / line_h;
             if (visible < 1)
                 visible = 1;
             int max_offset = r->count - visible;
@@ -277,8 +277,8 @@ bool log_page_handle_input(page_renderer_t *self, const ui_button_event_t *event
     case BTN_BOOT_LONG_PRESS:
         /* Refresh log data */
         collect_log_entries(r);
-        r->selected_index               = 0;
-        r->scroll_offset                = 0;
+        r->selected_index = 0;
+        r->scroll_offset = 0;
         r->base.needs_full_refresh_flag = true;
         return true;
 
@@ -297,8 +297,8 @@ void log_page_refresh(page_renderer_t *self)
 {
     log_page_t *r = (log_page_t *)self;
     collect_log_entries(r);
-    r->selected_index               = 0;
-    r->scroll_offset                = 0;
+    r->selected_index = 0;
+    r->scroll_offset = 0;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -309,17 +309,16 @@ void log_page_refresh(page_renderer_t *self)
 EXT_RAM_BSS_ATTR log_page_t s_log_instance;
 
 const page_renderer_ops_t log_page_ops = {
-    .init                    = log_page_init,
-    .render                  = log_page_render,
-    .handle_input            = log_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = log_page_init,
+    .render = log_page_render,
+    .handle_input = log_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_LOG, "日志", NULL, true, 130, &log_page_ops,
-              &s_log_instance.base);
+PAGE_REGISTER(UI_PAGE_LOG, "日志", NULL, true, 130, &log_page_ops, &s_log_instance.base);

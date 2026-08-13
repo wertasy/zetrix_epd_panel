@@ -47,16 +47,16 @@ typedef struct {
     calendar_page_selected_date_t selected_date;
 
     /* Almanac sub-view state. */
-    bool                              show_almanac;
-    int                               alm_year;
-    int                               alm_month;
-    int                               alm_day;
-    int                               alm_weekday;
-    widget_calendar_lunar_date_t      alm_lunar;
-    char                              alm_lunar_year_name[16];
-    const char                       *alm_solar_term;
-    const char                       *alm_yi[4];
-    const char                       *alm_ji[3];
+    bool show_almanac;
+    int alm_year;
+    int alm_month;
+    int alm_day;
+    int alm_weekday;
+    widget_calendar_lunar_date_t alm_lunar;
+    char alm_lunar_year_name[16];
+    const char *alm_solar_term;
+    const char *alm_yi[4];
+    const char *alm_ji[3];
 } calendar_page_t;
 
 /* PageRenderer vtable entry points. */
@@ -66,8 +66,8 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
 
 /* Data interface. */
 calendar_page_selected_date_t calendar_page_get_selected_date(const page_renderer_t *self);
-int                           calendar_page_get_year(const page_renderer_t *self);
-int                           calendar_page_get_month(const page_renderer_t *self);
+int calendar_page_get_year(const page_renderer_t *self);
+int calendar_page_get_month(const page_renderer_t *self);
 
 /**
  * @brief Write the formatted voice query context string into @p out.

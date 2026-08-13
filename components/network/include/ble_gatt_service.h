@@ -42,18 +42,18 @@ extern "C" {
 
 /* Image control commands (written to 0xF002). */
 typedef enum {
-    BLE_GATT_CMD_START        = 0x01, /**< begin transfer: [cmd, size_hi, size_lo] */
-    BLE_GATT_CMD_CANCEL       = 0x02, /**< abort current transfer                */
-    BLE_GATT_CMD_COMPLETE     = 0x03, /**< mark done, trigger display            */
+    BLE_GATT_CMD_START = 0x01, /**< begin transfer: [cmd, size_hi, size_lo] */
+    BLE_GATT_CMD_CANCEL = 0x02, /**< abort current transfer                */
+    BLE_GATT_CMD_COMPLETE = 0x03, /**< mark done, trigger display            */
     BLE_GATT_CMD_QUERY_STATUS = 0x04, /**< poll status (handled by Read)         */
 } ble_gatt_cmd_t;
 
 /* Image transfer status (read from 0xF002, mirrors image receiver). */
 typedef enum {
-    BLE_GATT_STATUS_IDLE      = 0x00,
+    BLE_GATT_STATUS_IDLE = 0x00,
     BLE_GATT_STATUS_RECEIVING = 0x01,
-    BLE_GATT_STATUS_COMPLETE  = 0x02,
-    BLE_GATT_STATUS_ERROR     = 0xFF,
+    BLE_GATT_STATUS_COMPLETE = 0x02,
+    BLE_GATT_STATUS_ERROR = 0xFF,
 } ble_gatt_status_t;
 
 /**

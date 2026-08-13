@@ -54,7 +54,7 @@ typedef enum {
 
 typedef struct {
     const char *photo_id;
-    bool       *out_success;
+    bool *out_success;
     SemaphoreHandle_t done_sem;
 } show_photo_event_data_t;
 
@@ -79,17 +79,17 @@ typedef struct {
 /* ------------------------------------------------------------------ */
 
 typedef struct {
-    device_state_t     state;
-    bool               wifi_connected;
-    bool               need_weather_fetch;
-    bool               need_coding_plan_refresh;
-    bool               need_holiday_fetch;
-    ui_manager_t      *ui_mgr;
+    device_state_t state;
+    bool wifi_connected;
+    bool need_weather_fetch;
+    bool need_coding_plan_refresh;
+    bool need_holiday_fetch;
+    ui_manager_t *ui_mgr;
     esp_timer_handle_t sleep_timer;
-    protocol_t         protocol;
-    stream_pipeline_t  pipeline;
-    QueueHandle_t      event_queue;
-    bool               rtc_wakeup;
+    protocol_t protocol;
+    stream_pipeline_t pipeline;
+    QueueHandle_t event_queue;
+    bool rtc_wakeup;
 } application_t;
 
 extern application_t s_app;
@@ -105,17 +105,17 @@ extern int s_cp_refresh_counter;
 /* NVS keys and constants                                              */
 /* ------------------------------------------------------------------ */
 
-#define APP_SYNC_NS                "sync"
-#define APP_SYNC_INTERVAL_KEY      "sync_interval"
-#define APP_GALLERY_NS             "gallery"
-#define APP_SLIDESHOW_KEY          "slide_min"
+#define APP_SYNC_NS "sync"
+#define APP_SYNC_INTERVAL_KEY "sync_interval"
+#define APP_GALLERY_NS "gallery"
+#define APP_SLIDESHOW_KEY "slide_min"
 
-#define APP_SETTINGS_SLIDESHOW_INDEX    3
-#define APP_SETTINGS_WIFI_INDEX         5
-#define APP_SETTINGS_HTTP_SERVER_INDEX  6
-#define APP_SETTINGS_LAN_IP_INDEX       7
+#define APP_SETTINGS_SLIDESHOW_INDEX 3
+#define APP_SETTINGS_WIFI_INDEX 5
+#define APP_SETTINGS_HTTP_SERVER_INDEX 6
+#define APP_SETTINGS_LAN_IP_INDEX 7
 
-#define APP_DEFAULT_SYNC_INTERVAL_MIN   30
+#define APP_DEFAULT_SYNC_INTERVAL_MIN 30
 
 /* 30-minute coding-plan refresh cadence (application_run ticks 1/s). */
 #define APP_CODING_PLAN_REFRESH_SECONDS (30 * 60)

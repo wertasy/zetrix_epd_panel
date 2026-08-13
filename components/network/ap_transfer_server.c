@@ -322,8 +322,8 @@ static void copy_json_string(cJSON *root, const char *key, char *out, size_t out
 
 typedef struct {
     ap_transfer_server_t *server;
-    bool                  stop_wifi;
-    bool                  enter_sleep;
+    bool stop_wifi;
+    bool enter_sleep;
 } deferred_control_request_t;
 
 static void deferred_control_task(void *arg)
@@ -359,10 +359,10 @@ static void schedule_deferred_control(ap_transfer_server_t *server, bool stop_wi
         ESP_LOGE(TAG, "Failed to allocate deferred control request");
         return;
     }
-    request->server      = server;
-    request->stop_wifi   = stop_wifi;
+    request->server = server;
+    request->stop_wifi = stop_wifi;
     request->enter_sleep = enter_sleep;
-    BaseType_t ok        = xTaskCreate(&deferred_control_task, "ap_web_control", 4096, request, 4, NULL);
+    BaseType_t ok = xTaskCreate(&deferred_control_task, "ap_web_control", 4096, request, 4, NULL);
     if (ok != pdPASS) {
         ESP_LOGE(TAG, "Failed to create deferred control task");
         free(request);
@@ -409,12 +409,12 @@ static esp_err_t upload_handler(httpd_req_t *req)
         notify_state(self, AP_SERVER_STATE_K_RECEIVING_IMAGE, "Receiving image...");
     }
 
-    char query[96]  = {0};
+    char query[96] = {0};
     char format[16] = {0};
     if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
         httpd_query_key_value(query, "format", format, sizeof(format));
     }
-    const bool   is_2bpp       = strcmp(format, "bwry2bpp") == 0 || strcmp(format, "2bpp") == 0;
+    const bool is_2bpp = strcmp(format, "bwry2bpp") == 0 || strcmp(format, "2bpp") == 0;
     const size_t expected_size = is_2bpp ? AP_IMAGE_2BPP_SIZE : AP_IMAGE_1BPP_SIZE;
 
     if ((size_t)req->content_len != expected_size) {
@@ -454,18 +454,18 @@ static esp_err_t upload_handler(httpd_req_t *req)
     photo_info_t info;
     memset(&info, 0, sizeof(info));
     const uint32_t now = (uint32_t)time(NULL);
-    const uint64_t ms  = (uint64_t)(esp_timer_get_time() / 1000);
+    const uint64_t ms = (uint64_t)(esp_timer_get_time() / 1000);
     snprintf(info.id, sizeof(info.id), "ap%011llu", (unsigned long long)(ms % 100000000000ULL));
     snprintf(info.title, sizeof(info.title), is_2bpp ? "WiFi四色图片" : "WiFi黑白图片");
     snprintf(info.location, sizeof(info.location), "WiFi AP");
     snprintf(info.body, sizeof(info.body), is_2bpp ? "手机 WiFi 传图 · 2 BP 四色" : "手机 WiFi 传图 · 1 BP 黑白");
-    info.width     = AP_SCREEN_WIDTH;
-    info.height    = AP_SCREEN_HEIGHT;
+    info.width = AP_SCREEN_WIDTH;
+    info.height = AP_SCREEN_HEIGHT;
     info.file_size = (uint32_t)expected_size;
     info.timestamp = now > 0 ? now : (uint32_t)(ms / 1000);
 
     if (now > 0) {
-        time_t    t = now;
+        time_t t = now;
         struct tm tm_info;
         localtime_r(&t, &tm_info);
         strftime(info.date, sizeof(info.date), "%Y-%m-%d", &tm_info);
@@ -515,11 +515,11 @@ static esp_err_t upload_handler(httpd_req_t *req)
 static esp_err_t status_handler(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
-    const char           *mode = "ap";
-    const char           *ip   = AP_IP;
+    const char *mode = "ap";
+    const char *ip = AP_IP;
     if (self != NULL) {
         mode = self->mode == AP_SERVER_MODE_LAN ? "lan" : "ap";
-        ip   = self->ap_ip[0] != '\0' ? self->ap_ip : AP_IP;
+        ip = self->ap_ip[0] != '\0' ? self->ap_ip : AP_IP;
     }
     char response[128];
     snprintf(response, sizeof(response), "{\"status\":\"ready\",\"mode\":\"%s\",\"ip\":\"%s\",\"url\":\"http://%s/\"}",
@@ -531,16 +531,16 @@ static esp_err_t status_handler(httpd_req_t *req)
 static esp_err_t settings_handler(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
-    nvs_handle_t          nvs  = 0;
-    bool                  nvs_open_ok =
+    nvs_handle_t nvs = 0;
+    bool nvs_open_ok =
         nvs_open(GALLERY_NAMESPACE, req->method == HTTP_POST ? NVS_READWRITE : NVS_READONLY, &nvs) == ESP_OK;
     int32_t interval = 5;
     if (nvs_open_ok) {
         nvs_get_i32(nvs, SLIDESHOW_INTERVAL_KEY, &interval);
     }
     bool close_service = false;
-    bool stop_wifi     = false;
-    bool enter_sleep   = false;
+    bool stop_wifi = false;
+    bool enter_sleep = false;
 
     if (req->method == HTTP_POST) {
         cJSON *root = read_json_body(req);
@@ -575,8 +575,8 @@ static esp_err_t settings_handler(httpd_req_t *req)
         cJSON *sleep_item = cJSON_GetObjectItemCaseSensitive(root, "sleep");
         if (cJSON_IsBool(sleep_item) && cJSON_IsTrue(sleep_item)) {
             close_service = true;
-            stop_wifi     = true;
-            enter_sleep   = true;
+            stop_wifi = true;
+            enter_sleep = true;
         }
         if (close_service || stop_wifi || enter_sleep) {
             if (!is_authorized(req)) {
@@ -595,10 +595,10 @@ static esp_err_t settings_handler(httpd_req_t *req)
     }
 
     const char *mode = "ap";
-    const char *ip   = AP_IP;
+    const char *ip = AP_IP;
     if (self != NULL) {
         mode = self->mode == AP_SERVER_MODE_LAN ? "lan" : "ap";
-        ip   = self->ap_ip[0] != '\0' ? self->ap_ip : AP_IP;
+        ip = self->ap_ip[0] != '\0' ? self->ap_ip : AP_IP;
     }
     char response[256];
     snprintf(response, sizeof(response),
@@ -618,7 +618,7 @@ static esp_err_t settings_handler(httpd_req_t *req)
 
 static esp_err_t photos_handler(httpd_req_t *req)
 {
-    cJSON *root   = cJSON_CreateObject();
+    cJSON *root = cJSON_CreateObject();
     cJSON *photos = cJSON_CreateArray();
     if (!root || !photos) {
         if (root)
@@ -670,7 +670,7 @@ static esp_err_t photo_handler(httpd_req_t *req)
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
 
     char query[64] = {0};
-    char id[16]    = {0};
+    char id[16] = {0};
     if (httpd_req_get_url_query_str(req, query, sizeof(query)) != ESP_OK ||
         httpd_query_key_value(query, "id", id, sizeof(id)) != ESP_OK || id[0] == '\0') {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing id");
@@ -698,7 +698,7 @@ static esp_err_t photo_handler(httpd_req_t *req)
 
     photo_info_t info;
     memset(&info, 0, sizeof(info));
-    bool      found = false;
+    bool found = false;
     const int count = photo_get_count();
     for (int i = 0; i < count && i < PHOTO_MAX_PHOTOS; ++i) {
         if (photo_get_by_index(i, &info) == 0 && strcmp(info.id, id) == 0) {
@@ -743,7 +743,7 @@ static esp_err_t photo_meta_handler(httpd_req_t *req)
     copy_json_string(root, "id", id, sizeof(id));
     photo_info_t info;
     memset(&info, 0, sizeof(info));
-    bool      found = false;
+    bool found = false;
     const int count = photo_get_count();
     for (int i = 0; i < count && i < PHOTO_MAX_PHOTOS; ++i) {
         if (photo_get_by_index(i, &info) == 0 && strcmp(info.id, id) == 0) {
@@ -764,7 +764,7 @@ static esp_err_t photo_meta_handler(httpd_req_t *req)
     cJSON_Delete(root);
 
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
-    const bool            ok   = photo_update_info(id, &info) == 0;
+    const bool ok = photo_update_info(id, &info) == 0;
     if (ok && self && self->photos_changed_cb) {
         self->photos_changed_cb(self->photos_changed_cb_ctx);
     }
@@ -785,12 +785,12 @@ static esp_err_t photo_move_handler(httpd_req_t *req)
     }
     char id[16] = {0};
     copy_json_string(root, "id", id, sizeof(id));
-    cJSON    *delta_item = cJSON_GetObjectItemCaseSensitive(root, "delta");
-    const int delta      = cJSON_IsNumber(delta_item) ? delta_item->valueint : 0;
+    cJSON *delta_item = cJSON_GetObjectItemCaseSensitive(root, "delta");
+    const int delta = cJSON_IsNumber(delta_item) ? delta_item->valueint : 0;
     cJSON_Delete(root);
 
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
-    const bool            ok   = photo_move(id, delta) == 0;
+    const bool ok = photo_move(id, delta) == 0;
     if (ok && self && self->photos_changed_cb) {
         self->photos_changed_cb(self->photos_changed_cb_ctx);
     }
@@ -810,7 +810,7 @@ static esp_err_t photo_show_handler(httpd_req_t *req)
     cJSON_Delete(root);
 
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
-    const bool            ok   = self && self->show_photo_cb && self->show_photo_cb(id, self->show_photo_cb_ctx);
+    const bool ok = self && self->show_photo_cb && self->show_photo_cb(id, self->show_photo_cb_ctx);
     send_json(req, ok ? "{\"success\":true}" : "{\"success\":false,\"error\":\"not_found\"}");
     return ok ? ESP_OK : ESP_FAIL;
 }
@@ -821,12 +821,12 @@ static esp_err_t photo_show_handler(httpd_req_t *req)
 
 static bool start_http_server(ap_transfer_server_t *self)
 {
-    httpd_config_t config    = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers  = 12;
-    config.max_open_sockets  = 4;
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.max_uri_handlers = 12;
+    config.max_open_sockets = 4;
     config.recv_wait_timeout = 30; /* Large images take time */
     config.send_wait_timeout = 10;
-    config.lru_purge_enable  = true;
+    config.lru_purge_enable = true;
 
     esp_err_t err = httpd_start(&self->server, &config);
     if (err != ESP_OK) {
@@ -837,99 +837,99 @@ static bool start_http_server(ap_transfer_server_t *self)
 
     /* Register handlers */
     httpd_uri_t index_uri = {
-        .uri      = "/",
-        .method   = HTTP_GET,
-        .handler  = index_handler,
+        .uri = "/",
+        .method = HTTP_GET,
+        .handler = index_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &index_uri) != ESP_OK)
         return false;
 
     httpd_uri_t upload_uri = {
-        .uri      = "/upload",
-        .method   = HTTP_POST,
-        .handler  = upload_handler,
+        .uri = "/upload",
+        .method = HTTP_POST,
+        .handler = upload_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &upload_uri) != ESP_OK)
         return false;
 
     httpd_uri_t status_uri = {
-        .uri      = "/status",
-        .method   = HTTP_GET,
-        .handler  = status_handler,
+        .uri = "/status",
+        .method = HTTP_GET,
+        .handler = status_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &status_uri) != ESP_OK)
         return false;
 
     httpd_uri_t settings_get_uri = {
-        .uri      = "/settings",
-        .method   = HTTP_GET,
-        .handler  = settings_handler,
+        .uri = "/settings",
+        .method = HTTP_GET,
+        .handler = settings_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &settings_get_uri) != ESP_OK)
         return false;
 
     httpd_uri_t settings_post_uri = {
-        .uri      = "/settings",
-        .method   = HTTP_POST,
-        .handler  = settings_handler,
+        .uri = "/settings",
+        .method = HTTP_POST,
+        .handler = settings_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &settings_post_uri) != ESP_OK)
         return false;
 
     httpd_uri_t photos_uri = {
-        .uri      = "/photos",
-        .method   = HTTP_GET,
-        .handler  = photos_handler,
+        .uri = "/photos",
+        .method = HTTP_GET,
+        .handler = photos_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &photos_uri) != ESP_OK)
         return false;
 
     httpd_uri_t photo_get_uri = {
-        .uri      = "/photo",
-        .method   = HTTP_GET,
-        .handler  = photo_handler,
+        .uri = "/photo",
+        .method = HTTP_GET,
+        .handler = photo_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &photo_get_uri) != ESP_OK)
         return false;
 
     httpd_uri_t photo_delete_uri = {
-        .uri      = "/photo",
-        .method   = HTTP_DELETE,
-        .handler  = photo_handler,
+        .uri = "/photo",
+        .method = HTTP_DELETE,
+        .handler = photo_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &photo_delete_uri) != ESP_OK)
         return false;
 
     httpd_uri_t photo_meta_uri = {
-        .uri      = "/photo/meta",
-        .method   = HTTP_POST,
-        .handler  = photo_meta_handler,
+        .uri = "/photo/meta",
+        .method = HTTP_POST,
+        .handler = photo_meta_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &photo_meta_uri) != ESP_OK)
         return false;
 
     httpd_uri_t photo_move_uri = {
-        .uri      = "/photos/move",
-        .method   = HTTP_POST,
-        .handler  = photo_move_handler,
+        .uri = "/photos/move",
+        .method = HTTP_POST,
+        .handler = photo_move_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &photo_move_uri) != ESP_OK)
         return false;
 
     httpd_uri_t photo_show_uri = {
-        .uri      = "/photo/show",
-        .method   = HTTP_POST,
-        .handler  = photo_show_handler,
+        .uri = "/photo/show",
+        .method = HTTP_POST,
+        .handler = photo_show_handler,
         .user_ctx = self,
     };
     if (httpd_register_uri_handler(self->server, &photo_show_uri) != ESP_OK)
@@ -1001,9 +1001,9 @@ static bool start_access_point(ap_transfer_server_t *self)
     wifi_config_t wifi_config;
     memset(&wifi_config, 0, sizeof(wifi_config));
     strcpy((char *)wifi_config.ap.ssid, AP_SSID);
-    wifi_config.ap.ssid_len       = (uint8_t)strlen(AP_SSID);
+    wifi_config.ap.ssid_len = (uint8_t)strlen(AP_SSID);
     wifi_config.ap.max_connection = 4;
-    wifi_config.ap.channel        = 1;
+    wifi_config.ap.channel = 1;
     strcpy((char *)wifi_config.ap.password, AP_PASSWORD);
     wifi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
 
@@ -1069,10 +1069,10 @@ static void start_task(void *arg)
     }
 
     if (!start_access_point(self)) {
-        self->running    = false;
-        self->starting   = false;
+        self->running = false;
+        self->starting = false;
         self->start_task = NULL;
-        self->mode       = AP_SERVER_MODE_NONE;
+        self->mode = AP_SERVER_MODE_NONE;
         notify_state(self, AP_SERVER_STATE_K_ERROR, "AP start failed");
         vTaskDelete(NULL);
         return;
@@ -1085,17 +1085,17 @@ static void start_task(void *arg)
     }
 
     if (!start_http_server(self)) {
-        self->running    = false;
-        self->starting   = false;
+        self->running = false;
+        self->starting = false;
         self->start_task = NULL;
-        self->mode       = AP_SERVER_MODE_NONE;
+        self->mode = AP_SERVER_MODE_NONE;
         notify_state(self, AP_SERVER_STATE_K_ERROR, "HTTP start failed");
         vTaskDelete(NULL);
         return;
     }
 
-    self->running    = true;
-    self->starting   = false;
+    self->running = true;
+    self->starting = false;
     self->start_task = NULL;
     notify_state(self, AP_SERVER_STATE_K_AP_STARTED, self->ap_ip);
     ESP_LOGI(TAG, "AP start task done, stack watermark=%u", (unsigned)uxTaskGetStackHighWaterMark(NULL));
@@ -1120,13 +1120,13 @@ void ap_transfer_server_start(ap_transfer_server_t *server)
     }
 
     ESP_LOGI(TAG, "Starting AP Transfer Server async");
-    server->mode     = AP_SERVER_MODE_AP;
+    server->mode = AP_SERVER_MODE_AP;
     server->starting = true;
-    BaseType_t ok    = xTaskCreate(&start_task, "ap_transfer_start", 16384, server, 5, &server->start_task);
+    BaseType_t ok = xTaskCreate(&start_task, "ap_transfer_start", 16384, server, 5, &server->start_task);
     if (ok != pdPASS) {
-        server->starting   = false;
+        server->starting = false;
         server->start_task = NULL;
-        server->mode       = AP_SERVER_MODE_NONE;
+        server->mode = AP_SERVER_MODE_NONE;
         ESP_LOGE(TAG, "Failed to create AP start task");
         notify_state(server, AP_SERVER_STATE_K_ERROR, "Start task failed");
     }
@@ -1152,7 +1152,7 @@ bool ap_transfer_server_start_lan(ap_transfer_server_t *server, const char *ip_a
     ESP_LOGI(TAG, "Starting LAN HTTP server at http://%s/", server->ap_ip);
     if (!start_http_server(server)) {
         server->running = false;
-        server->mode    = AP_SERVER_MODE_NONE;
+        server->mode = AP_SERVER_MODE_NONE;
         notify_state(server, AP_SERVER_STATE_K_ERROR, "HTTP start failed");
         return false;
     }
@@ -1171,8 +1171,8 @@ void ap_transfer_server_stop(ap_transfer_server_t *server)
 
     ESP_LOGI(TAG, "Stopping AP Transfer Server");
     const ap_server_mode_t old_mode = server->mode;
-    server->starting                = false;
-    server->start_task              = NULL;
+    server->starting = false;
+    server->start_task = NULL;
 
     if (server->server) {
         httpd_stop(server->server);
@@ -1197,7 +1197,7 @@ void ap_transfer_server_stop(ap_transfer_server_t *server)
     }
 
     server->running = false;
-    server->mode    = AP_SERVER_MODE_NONE;
+    server->mode = AP_SERVER_MODE_NONE;
     notify_state(server, AP_SERVER_STATE_K_STOPPED, "Server stopped");
 }
 
@@ -1248,7 +1248,7 @@ void ap_transfer_server_set_state_callback(ap_transfer_server_t *server, ap_serv
 {
     if (!server)
         return;
-    server->state_cb     = cb;
+    server->state_cb = cb;
     server->state_cb_ctx = ctx;
 }
 
@@ -1257,7 +1257,7 @@ void ap_transfer_server_set_image_received_callback(ap_transfer_server_t *server
 {
     if (!server)
         return;
-    server->image_received_cb     = cb;
+    server->image_received_cb = cb;
     server->image_received_cb_ctx = ctx;
 }
 
@@ -1266,7 +1266,7 @@ void ap_transfer_server_set_settings_changed_callback(ap_transfer_server_t *serv
 {
     if (!server)
         return;
-    server->settings_changed_cb     = cb;
+    server->settings_changed_cb = cb;
     server->settings_changed_cb_ctx = ctx;
 }
 
@@ -1275,7 +1275,7 @@ void ap_transfer_server_set_photos_changed_callback(ap_transfer_server_t *server
 {
     if (!server)
         return;
-    server->photos_changed_cb     = cb;
+    server->photos_changed_cb = cb;
     server->photos_changed_cb_ctx = ctx;
 }
 
@@ -1283,6 +1283,6 @@ void ap_transfer_server_set_show_photo_callback(ap_transfer_server_t *server, ap
 {
     if (!server)
         return;
-    server->show_photo_cb     = cb;
+    server->show_photo_cb = cb;
     server->show_photo_cb_ctx = ctx;
 }

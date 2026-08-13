@@ -44,13 +44,13 @@ typedef struct {
     int x, y, w, h;
     int padding;
 
-    char             label[WIDGET_LIST_ITEM_LABEL_LEN]; /* "" = no label */
+    char label[WIDGET_LIST_ITEM_LABEL_LEN]; /* "" = no label */
     const lv_font_t *label_font;
 
-    char             value[WIDGET_LIST_ITEM_VALUE_LEN]; /* "" = no value */
+    char value[WIDGET_LIST_ITEM_VALUE_LEN]; /* "" = no value */
     const lv_font_t *value_font;
 
-    char             icon_code[WIDGET_LIST_ITEM_ICON_LEN]; /* "" = no icon */
+    char icon_code[WIDGET_LIST_ITEM_ICON_LEN]; /* "" = no icon */
     const lv_font_t *icon_font;
 
     bool show_chevron;
@@ -58,13 +58,13 @@ typedef struct {
     bool pressed;
 
     widget_list_item_callback_t callback;
-    void                       *callback_user_data;
+    void *callback_user_data;
 
     rawdraw_color_t bg_color;
     rawdraw_color_t text_color;
     rawdraw_color_t value_text_color;
     rawdraw_color_t separator_color;
-    bool            custom_colors;
+    bool custom_colors;
 } widget_list_item_t;
 
 /* ---- lifecycle ---- */
@@ -94,7 +94,7 @@ bool widget_list_item_handle_input(widget_list_item_t *item, const ui_button_eve
 
 /* ---- geometry / rendering ---- */
 rawdraw_rect_t widget_list_item_get_bounds(const widget_list_item_t *item);
-void           widget_list_item_render(const widget_list_item_t *item, uint8_t *fb, int fb_width, int fb_height);
+void widget_list_item_render(const widget_list_item_t *item, uint8_t *fb, int fb_width, int fb_height);
 
 #ifdef __cplusplus
 }

@@ -34,7 +34,7 @@
 #define NEWS_LINE_LEN 128
 #define NEWS_ROW_H 20
 
-static const lv_font_t *const kNewsFont      = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kNewsFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kNewsTitleFont = &SourceHanSansSC_Medium_slim;
 
 /* ------------------------------------------------------------------ */
@@ -43,19 +43,19 @@ static const lv_font_t *const kNewsTitleFont = &SourceHanSansSC_Medium_slim;
 
 void news_page_init(page_renderer_t *self, int width, int height)
 {
-    news_page_t *r                  = (news_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
-    r->count                        = 0;
-    r->selected_index               = 0;
-    r->scroll_offset                = 0;
-    r->preview_open                 = false;
-    r->footer_focus                 = 0;
-    r->preview_scroll               = 0;
-    r->font                         = kNewsFont;
-    r->title_font                   = kNewsTitleFont;
-    r->tts_request_cb               = NULL;
-    r->tts_ctx                      = NULL;
+    news_page_t *r = (news_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
+    r->count = 0;
+    r->selected_index = 0;
+    r->scroll_offset = 0;
+    r->preview_open = false;
+    r->footer_focus = 0;
+    r->preview_scroll = 0;
+    r->font = kNewsFont;
+    r->title_font = kNewsTitleFont;
+    r->tts_request_cb = NULL;
+    r->tts_ctx = NULL;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -70,16 +70,16 @@ static void news_page_enter(page_renderer_t *self)
 
 static void news_render_item(page_renderer_t *self, uint8_t *fb, int width, int height, int y, int index, bool selected)
 {
-    news_page_t                *r              = (news_page_t *)self;
-    const news_item_t          *item           = &r->items[index];
+    news_page_t *r = (news_page_t *)self;
+    const news_item_t *item = &r->items[index];
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border         = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const rawdraw_rect_t        row            = {NEWS_PANEL_X + 1, y, NEWS_PANEL_W - 2, NEWS_ITEM_H};
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_rect_t row = {NEWS_PANEL_X + 1, y, NEWS_PANEL_W - 2, NEWS_ITEM_H};
 
     const int center_y = row.y + row.h / 2;
-    const int text_y   = rawdraw_layout_ink_centered_text_top_y(r->font, "字", center_y, 0);
+    const int text_y = rawdraw_layout_ink_centered_text_top_y(r->font, "字", center_y, 0);
 
     char index_buf[16];
     snprintf(index_buf, sizeof(index_buf), "%d", index + 1);
@@ -90,14 +90,14 @@ static void news_render_item(page_renderer_t *self, uint8_t *fb, int width, int 
     }
     const int index_w = rawdraw_measure_text_width(index_buf, r->font);
     const int title_x = row.x + index_w + 12;
-    char      title[NEWS_TITLE_LEN + 8];
+    char title[NEWS_TITLE_LEN + 8];
     ui_text_fit_to_width(item->title, r->title_font, row.w - index_w - 12 - 60, title, sizeof(title));
     rawdraw_draw_text(fb, width, height, title_x,
                       rawdraw_layout_ink_centered_text_top_y(r->title_font, title, center_y, 0), title, r->title_font,
                       text);
 
     const char *time = item->time_label[0] != '\0' ? item->time_label : item->source;
-    char        fit_time[NEWS_TIME_LEN + 8];
+    char fit_time[NEWS_TIME_LEN + 8];
     ui_text_fit_to_width(time, r->font, 54, fit_time, sizeof(fit_time));
     const int time_w = rawdraw_measure_text_width(fit_time, r->font);
     rawdraw_draw_text(fb, width, height, row.x + row.w - time_w - 6, text_y, fit_time, r->font, secondary);
@@ -111,11 +111,11 @@ static void news_render_item(page_renderer_t *self, uint8_t *fb, int width, int 
 
 static void news_draw_preview_modal(page_renderer_t *self, uint8_t *fb, int width, int height)
 {
-    news_page_t          *r         = (news_page_t *)self;
-    const news_item_t    *item      = &r->items[r->selected_index];
-    const rawdraw_color_t text      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    news_page_t *r = (news_page_t *)self;
+    const news_item_t *item = &r->items[r->selected_index];
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t accent    = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
+    const rawdraw_color_t accent = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
 
     widget_modal_t modal;
     widget_modal_init(&modal);
@@ -124,16 +124,16 @@ static void news_draw_preview_modal(page_renderer_t *self, uint8_t *fb, int widt
     widget_modal_center_in_screen(&modal, width, height, 36);
     widget_modal_render(&modal, fb, width, height);
 
-    const rawdraw_rect_t body         = widget_modal_get_content_bounds(&modal);
-    const int            visible_rows = body.h / NEWS_ROW_H;
+    const rawdraw_rect_t body = widget_modal_get_content_bounds(&modal);
+    const int visible_rows = body.h / NEWS_ROW_H;
 
     /* Build all content lines: title (may wrap) / meta / summary. */
     char content_lines[NEWS_MAX_LINES][NEWS_LINE_LEN];
-    int  line_count  = 0;
-    int  title_lines = 0;
+    int line_count = 0;
+    int title_lines = 0;
 
     char title_wrapped[2][NEWS_LINE_LEN];
-    int  title_count = 0;
+    int title_count = 0;
     ui_text_wrap_lines(r->title_font, item->title, body.w, title_wrapped, NEWS_LINE_LEN, 2, &title_count);
     for (int i = 0; i < title_count && line_count < NEWS_MAX_LINES; ++i) {
         strncpy(content_lines[line_count], title_wrapped[i], NEWS_LINE_LEN - 1);
@@ -166,7 +166,7 @@ static void news_draw_preview_modal(page_renderer_t *self, uint8_t *fb, int widt
     }
 
     char summary_wrapped[NEWS_MAX_LINES][NEWS_LINE_LEN];
-    int  summary_count = 0;
+    int summary_count = 0;
     ui_text_wrap_lines(r->font, item->summary, body.w, summary_wrapped, NEWS_LINE_LEN, NEWS_MAX_LINES - line_count,
                        &summary_count);
     for (int i = 0; i < summary_count && line_count < NEWS_MAX_LINES; ++i) {
@@ -176,15 +176,15 @@ static void news_draw_preview_modal(page_renderer_t *self, uint8_t *fb, int widt
     }
 
     const int total_lines = line_count;
-    const int max_scroll  = RD_MAX(0, total_lines - visible_rows);
+    const int max_scroll = RD_MAX(0, total_lines - visible_rows);
     if (r->preview_scroll > max_scroll)
         r->preview_scroll = max_scroll;
 
     int y = body.y;
     for (int i = 0; i < visible_rows && i + r->preview_scroll < total_lines; ++i) {
-        const int        line_idx = i + r->preview_scroll;
-        const lv_font_t *f        = (line_idx < title_lines) ? r->title_font : r->font;
-        const int        center_y = y + NEWS_ROW_H / 2;
+        const int line_idx = i + r->preview_scroll;
+        const lv_font_t *f = (line_idx < title_lines) ? r->title_font : r->font;
+        const int center_y = y + NEWS_ROW_H / 2;
         rawdraw_draw_text(fb, width, height, body.x,
                           rawdraw_layout_ink_centered_text_top_y(f, content_lines[line_idx], center_y, 0),
                           content_lines[line_idx], f, f == r->title_font ? text : secondary);
@@ -206,10 +206,10 @@ void news_page_render(page_renderer_t *self, uint8_t *fb, int width, int height)
     if (!fb)
         return;
 
-    const rawdraw_paint_style_t bg_style    = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
     const rawdraw_paint_style_t panel_style = rawdraw_theme_component(ROLE_PANEL);
-    const rawdraw_color_t       text        = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary   = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
 
     rawdraw_draw_styled_rect(fb, width, height,
                              (rawdraw_rect_t){0, STYLE_STATUS_BAR_HEIGHT, width, height - STYLE_STATUS_BAR_HEIGHT},
@@ -283,14 +283,14 @@ static int news_preview_get_max_scroll(news_page_t *r)
     widget_modal_set_footer(&modal, r->footer_focus == 1 ? "朗读" : "关闭");
     widget_modal_center_in_screen(&modal, width, height, 36);
 
-    const rawdraw_rect_t body         = widget_modal_get_content_bounds(&modal);
-    const int            visible_rows = body.h / NEWS_ROW_H;
+    const rawdraw_rect_t body = widget_modal_get_content_bounds(&modal);
+    const int visible_rows = body.h / NEWS_ROW_H;
 
-    const news_item_t    *item      = &r->items[r->selected_index];
-    int  line_count  = 0;
+    const news_item_t *item = &r->items[r->selected_index];
+    int line_count = 0;
 
     char title_wrapped[2][NEWS_LINE_LEN];
-    int  title_count = 0;
+    int title_count = 0;
     ui_text_wrap_lines(r->title_font, item->title, body.w, title_wrapped, NEWS_LINE_LEN, 2, &title_count);
     line_count += title_count;
 
@@ -314,7 +314,7 @@ static int news_preview_get_max_scroll(news_page_t *r)
     }
 
     char summary_wrapped[NEWS_MAX_LINES][NEWS_LINE_LEN];
-    int  summary_count = 0;
+    int summary_count = 0;
     ui_text_wrap_lines(r->font, item->summary, body.w, summary_wrapped, NEWS_LINE_LEN, NEWS_MAX_LINES - line_count,
                        &summary_count);
     line_count += summary_count;
@@ -336,7 +336,7 @@ bool news_page_handle_input(page_renderer_t *self, const ui_button_event_t *even
                 r->base.needs_full_refresh_flag = true;
                 return true;
             }
-            r->footer_focus                 = (r->footer_focus == 0) ? 1 : 0;
+            r->footer_focus = (r->footer_focus == 0) ? 1 : 0;
             r->base.needs_full_refresh_flag = true;
             return true;
         case BTN_DOWN_CLICK: {
@@ -346,14 +346,14 @@ bool news_page_handle_input(page_renderer_t *self, const ui_button_event_t *even
                 r->base.needs_full_refresh_flag = true;
                 return true;
             }
-            r->footer_focus                 = (r->footer_focus == 0) ? 1 : 0;
+            r->footer_focus = (r->footer_focus == 0) ? 1 : 0;
             r->base.needs_full_refresh_flag = true;
             return true;
         }
         case BTN_BOOT_CLICK:
             if (r->footer_focus == 1 && r->tts_request_cb) {
                 const news_item_t *item = &r->items[r->selected_index];
-                char               tts_text[NEWS_TITLE_LEN + NEWS_SUMMARY_LEN + 2];
+                char tts_text[NEWS_TITLE_LEN + NEWS_SUMMARY_LEN + 2];
                 if (item->summary[0] != '\0') {
                     snprintf(tts_text, sizeof(tts_text), "%s %s", item->title, item->summary);
                 } else {
@@ -362,14 +362,14 @@ bool news_page_handle_input(page_renderer_t *self, const ui_button_event_t *even
                 r->tts_request_cb(tts_text, r->tts_ctx);
                 /* Keep the modal open after requesting speech; closing here
                      * would make BOOT feel like "close" even when DN selected read. */
-                r->footer_focus                 = 1;
+                r->footer_focus = 1;
                 r->base.needs_full_refresh_flag = true;
                 return true;
             }
             /* footer_focus == 0 → close */
-            r->preview_open                 = false;
-            r->footer_focus                 = 0;
-            r->preview_scroll               = 0;
+            r->preview_open = false;
+            r->footer_focus = 0;
+            r->preview_scroll = 0;
             r->base.needs_full_refresh_flag = true;
             return true;
         default:
@@ -391,7 +391,7 @@ bool news_page_handle_input(page_renderer_t *self, const ui_button_event_t *even
     case BTN_DOWN_CLICK:
         if (r->selected_index < r->count - 1) {
             r->selected_index++;
-            const int content_h   = NEWS_PANEL_H;
+            const int content_h = NEWS_PANEL_H;
             const int item_bottom = r->selected_index * (NEWS_ITEM_H + NEWS_ITEM_GAP) + NEWS_ITEM_H;
             if (item_bottom > r->scroll_offset + content_h) {
                 r->scroll_offset = item_bottom - content_h;
@@ -402,8 +402,8 @@ bool news_page_handle_input(page_renderer_t *self, const ui_button_event_t *even
         break;
     case BTN_BOOT_CLICK:
         if (r->count > 0) {
-            r->preview_open                 = true;
-            r->preview_scroll               = 0;
+            r->preview_open = true;
+            r->preview_scroll = 0;
             r->base.needs_full_refresh_flag = true;
             return true;
         }
@@ -443,8 +443,8 @@ static void news_clamp_selection(news_page_t *r)
 
 static void news_clamp_scroll_offset(news_page_t *r)
 {
-    const int content_h  = NEWS_PANEL_H;
-    int       max_offset = r->count * (NEWS_ITEM_H + NEWS_ITEM_GAP) - NEWS_ITEM_GAP - content_h;
+    const int content_h = NEWS_PANEL_H;
+    int max_offset = r->count * (NEWS_ITEM_H + NEWS_ITEM_GAP) - NEWS_ITEM_GAP - content_h;
     if (max_offset < 0)
         max_offset = 0;
     r->scroll_offset = RD_MAX(0, RD_MIN(r->scroll_offset, max_offset));
@@ -458,12 +458,12 @@ void news_page_set_items(page_renderer_t *self, const news_item_t *items, int co
     if (count < 0)
         count = 0;
 
-    const bool same_items         = news_same_items(r, items, count);
-    const int  old_selected       = r->selected_index;
-    const int  old_scroll         = r->scroll_offset;
-    const bool old_preview_open   = r->preview_open;
-    const int  old_footer_focus   = r->footer_focus;
-    const int  old_preview_scroll = r->preview_scroll;
+    const bool same_items = news_same_items(r, items, count);
+    const int old_selected = r->selected_index;
+    const int old_scroll = r->scroll_offset;
+    const bool old_preview_open = r->preview_open;
+    const int old_footer_focus = r->footer_focus;
+    const int old_preview_scroll = r->preview_scroll;
 
     r->count = count;
     for (int i = 0; i < count; ++i) {
@@ -472,15 +472,15 @@ void news_page_set_items(page_renderer_t *self, const news_item_t *items, int co
 
     if (same_items) {
         r->selected_index = old_selected;
-        r->scroll_offset  = old_scroll;
-        r->preview_open   = old_preview_open;
-        r->footer_focus   = old_footer_focus;
+        r->scroll_offset = old_scroll;
+        r->preview_open = old_preview_open;
+        r->footer_focus = old_footer_focus;
         r->preview_scroll = old_preview_scroll;
     } else {
         r->selected_index = 0;
-        r->scroll_offset  = 0;
-        r->preview_open   = false;
-        r->footer_focus   = 0;
+        r->scroll_offset = 0;
+        r->preview_open = false;
+        r->footer_focus = 0;
         r->preview_scroll = 0;
     }
     news_clamp_selection(r);
@@ -502,21 +502,21 @@ void news_page_add_item(page_renderer_t *self, const news_item_t *item)
 
 void news_page_clear(page_renderer_t *self)
 {
-    news_page_t *r                  = (news_page_t *)self;
-    r->count                        = 0;
-    r->selected_index               = 0;
-    r->scroll_offset                = 0;
-    r->preview_open                 = false;
-    r->footer_focus                 = 0;
-    r->preview_scroll               = 0;
+    news_page_t *r = (news_page_t *)self;
+    r->count = 0;
+    r->selected_index = 0;
+    r->scroll_offset = 0;
+    r->preview_open = false;
+    r->footer_focus = 0;
+    r->preview_scroll = 0;
     r->base.needs_full_refresh_flag = true;
 }
 
 void news_page_set_tts_request_callback(page_renderer_t *self, void (*cb)(const char *text, void *ctx), void *ctx)
 {
-    news_page_t *r    = (news_page_t *)self;
+    news_page_t *r = (news_page_t *)self;
     r->tts_request_cb = cb;
-    r->tts_ctx        = ctx;
+    r->tts_ctx = ctx;
 }
 
 /* ------------------------------------------------------------------ */
@@ -526,18 +526,17 @@ void news_page_set_tts_request_callback(page_renderer_t *self, void (*cb)(const 
 EXT_RAM_BSS_ATTR news_page_t s_news_instance;
 
 const page_renderer_ops_t news_page_ops = {
-    .init                    = news_page_init,
-    .enter                   = news_page_enter,
-    .render                  = news_page_render,
-    .handle_input            = news_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = news_page_init,
+    .enter = news_page_enter,
+    .render = news_page_render,
+    .handle_input = news_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_NEWS, "热点", FA_SETTINGS_NEWSPAPER, true, 90, &news_page_ops,
-              &s_news_instance.base);
+PAGE_REGISTER(UI_PAGE_NEWS, "热点", FA_SETTINGS_NEWSPAPER, true, 90, &news_page_ops, &s_news_instance.base);

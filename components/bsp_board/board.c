@@ -24,11 +24,11 @@ static void charge_tick_callback(void *arg)
 static void power_led_task(void *arg)
 {
     gpio_config_t led_conf = {
-        .intr_type    = GPIO_INTR_DISABLE,
-        .mode         = GPIO_MODE_OUTPUT,
+        .intr_type = GPIO_INTR_DISABLE,
+        .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask = (1ULL << GPIO_NUM_3),
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .pull_up_en   = GPIO_PULLUP_ENABLE,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
     };
     ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&led_conf));
 
@@ -51,8 +51,8 @@ static void power_led_task(void *arg)
             continue;
         }
 
-        charge_snapshot_t snap       = {0};
-        const bool        has_status = (g_board.charge_status != NULL);
+        charge_snapshot_t snap = {0};
+        const bool has_status = (g_board.charge_status != NULL);
         if (has_status) {
             snap = charge_status_get(g_board.charge_status);
         }
@@ -94,23 +94,23 @@ void board_init(charge_status_t *charge_status)
     // 1. Configure power rail GPIOs
     gpio_config_t gpio_conf = {
         .intr_type = GPIO_INTR_DISABLE,
-        .mode      = GPIO_MODE_OUTPUT,
+        .mode = GPIO_MODE_OUTPUT,
         .pin_bit_mask =
             (1ULL << EPD_PWR_PIN) | (1ULL << Audio_PWR_PIN) | (1ULL << Audio_AMP_PIN) | (1ULL << VBAT_PWR_PIN),
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .pull_up_en   = GPIO_PULLUP_ENABLE,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
     };
     ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&gpio_conf));
 
     // 2. Initialize I2C Master Bus
     i2c_master_bus_config_t i2c_bus_cfg = {
-        .i2c_port                     = (i2c_port_t)0,
-        .sda_io_num                   = AUDIO_CODEC_I2C_SDA_PIN,
-        .scl_io_num                   = AUDIO_CODEC_I2C_SCL_PIN,
-        .clk_source                   = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt            = 7,
-        .intr_priority                = 0,
-        .trans_queue_depth            = 0,
+        .i2c_port = (i2c_port_t)0,
+        .sda_io_num = AUDIO_CODEC_I2C_SDA_PIN,
+        .scl_io_num = AUDIO_CODEC_I2C_SCL_PIN,
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .intr_priority = 0,
+        .trans_queue_depth = 0,
         .flags.enable_internal_pullup = 1,
     };
     ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_bus_cfg, &g_board.i2c_bus));
@@ -122,24 +122,24 @@ void board_init(charge_status_t *charge_status)
     // Add PCF8563 RTC device
     i2c_device_config_t rtc_device_cfg = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address  = RTC_I2C_ADDR,
-        .scl_speed_hz    = 400 * 1000,
+        .device_address = RTC_I2C_ADDR,
+        .scl_speed_hz = 400 * 1000,
     };
     ESP_ERROR_CHECK(i2c_master_bus_add_device(g_board.i2c_bus, &rtc_device_cfg, &g_board.rtc_device));
 
     // Add GT23SC6699 NFC device
     i2c_device_config_t nfc_device_cfg = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address  = NFC_I2C_ADDR,
-        .scl_speed_hz    = 400 * 1000,
+        .device_address = NFC_I2C_ADDR,
+        .scl_speed_hz = 400 * 1000,
     };
     ESP_ERROR_CHECK(i2c_master_bus_add_device(g_board.i2c_bus, &nfc_device_cfg, &g_board.nfc_device));
 
     // Add ES8311 Audio Codec device
     i2c_device_config_t codec_device_cfg = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address  = AUDIO_CODEC_ES8311_ADDR,
-        .scl_speed_hz    = 400 * 1000,
+        .device_address = AUDIO_CODEC_ES8311_ADDR,
+        .scl_speed_hz = 400 * 1000,
     };
     ESP_ERROR_CHECK(i2c_master_bus_add_device(g_board.i2c_bus, &codec_device_cfg, &g_board.codec_device));
 
@@ -149,10 +149,10 @@ void board_init(charge_status_t *charge_status)
     // 4. Create fixed 100ms periodic charge-status sampler (independent of the
     //    variable-sleep LED task, so debounce timing stays accurate).
     const esp_timer_create_args_t charge_timer_args = {
-        .callback              = charge_tick_callback,
-        .arg                   = NULL,
-        .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "charge_tick",
+        .callback = charge_tick_callback,
+        .arg = NULL,
+        .dispatch_method = ESP_TIMER_TASK,
+        .name = "charge_tick",
         .skip_unhandled_events = true,
     };
     esp_err_t err = esp_timer_create(&charge_timer_args, &s_charge_tick_timer);
@@ -249,8 +249,8 @@ esp_err_t board_i2c_write_reg(i2c_master_dev_handle_t dev, uint8_t reg, uint8_t 
     if (!dev)
         return ESP_ERR_INVALID_ARG;
     xSemaphoreTake(g_board.i2c_mutex, portMAX_DELAY);
-    uint8_t   buffer[2] = {reg, value};
-    esp_err_t ret       = i2c_master_transmit(dev, buffer, sizeof(buffer), 100);
+    uint8_t buffer[2] = {reg, value};
+    esp_err_t ret = i2c_master_transmit(dev, buffer, sizeof(buffer), 100);
     if (ret == ESP_ERR_INVALID_STATE || ret == ESP_ERR_TIMEOUT) {
         ESP_LOGW("I2C", "I2C write failed, resetting bus and retrying...");
         if (i2c_master_bus_reset(g_board.i2c_bus) == ESP_OK) {

@@ -21,13 +21,13 @@ void widget_scrollview_init(widget_scrollview_t *sv, int x, int y, int w, int h,
     if (!sv)
         return;
     memset(sv, 0, sizeof(*sv));
-    sv->bounds.x          = x;
-    sv->bounds.y          = y;
-    sv->bounds.w          = w;
-    sv->bounds.h          = h;
-    sv->content_height    = content_height;
-    sv->scroll_offset     = 0;
-    sv->scrollbar_width   = STYLE_SCROLLBAR_WIDTH;
+    sv->bounds.x = x;
+    sv->bounds.y = y;
+    sv->bounds.w = w;
+    sv->bounds.h = h;
+    sv->content_height = content_height;
+    sv->scroll_offset = 0;
+    sv->scrollbar_width = STYLE_SCROLLBAR_WIDTH;
     sv->scrollbar_enabled = true;
 }
 
@@ -161,17 +161,17 @@ static void draw_scrollbar(const widget_scrollview_t *sv, uint8_t *fb, int fb_wi
 
     /* Scrollbar height proportional to visible content ratio. */
     float visible_ratio = (float)sv->bounds.h / (float)sv->content_height;
-    int   sb_height     = (int)(sv->bounds.h * visible_ratio);
+    int sb_height = (int)(sv->bounds.h * visible_ratio);
     if (sb_height < STYLE_SCROLLBAR_MIN_H)
         sb_height = STYLE_SCROLLBAR_MIN_H;
 
     /* Scrollbar position based on scroll offset. */
-    int   max_offset   = widget_scrollview_get_max_scroll_offset(sv);
+    int max_offset = widget_scrollview_get_max_scroll_offset(sv);
     float scroll_ratio = max_offset > 0 ? (float)sv->scroll_offset / (float)max_offset : 0.0f;
-    int   sb_y         = sv->bounds.y + (int)((sv->bounds.h - sb_height) * scroll_ratio);
+    int sb_y = sv->bounds.y + (int)((sv->bounds.h - sb_height) * scroll_ratio);
 
     rawdraw_paint_style_t track = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
-    rawdraw_color_t       thumb = rawdraw_theme_color_for(THEME_TOKEN_SELECTED);
+    rawdraw_color_t thumb = rawdraw_theme_color_for(THEME_TOKEN_SELECTED);
 
     /* Draw scrollbar background (track) */
     rawdraw_rect_t track_rect = {sb_x, sv->bounds.y, sv->scrollbar_width, sv->bounds.h};
@@ -191,7 +191,7 @@ void widget_scrollview_render(widget_scrollview_t *sv, uint8_t *fb, int fb_width
     /* Draw content at scroll offset via callback. */
     if (draw_cb) {
         rawdraw_rect_t visible = widget_scrollview_get_visible_content_rect(sv);
-        rawdraw_rect_t clip    = sv->bounds;
+        rawdraw_rect_t clip = sv->bounds;
         draw_cb(fb, fb_width, fb_height, visible, clip, user_data);
     }
 

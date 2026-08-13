@@ -96,14 +96,12 @@ static void stream_text_chunk_cb(const char *chunk, void *ctx)
 
 bool app_is_lan_http_running(void)
 {
-    return ap_transfer_server_is_running(&s_transfer_server) &&
-           ap_transfer_server_is_lan_mode(&s_transfer_server);
+    return ap_transfer_server_is_running(&s_transfer_server) && ap_transfer_server_is_lan_mode(&s_transfer_server);
 }
 
 static bool is_ap_transfer_mode_running(void)
 {
-    return ap_transfer_server_is_running(&s_transfer_server) &&
-           ap_transfer_server_is_ap_mode(&s_transfer_server);
+    return ap_transfer_server_is_running(&s_transfer_server) && ap_transfer_server_is_ap_mode(&s_transfer_server);
 }
 
 /* AP transfer server state callback — updates the AP transfer page UI. */
@@ -143,8 +141,6 @@ static void ap_server_state_cb(int state, const char *message, void *ctx)
     }
 }
 
-
-
 /* ------------------------------------------------------------------ */
 /* WiFi event callback                                                 */
 /* ------------------------------------------------------------------ */
@@ -159,8 +155,7 @@ static void process_wifi_event(wifi_manager_event_t event)
         protocol_start(&s_app.protocol);
         protocol_open_audio_channel(&s_app.protocol);
         app_sntp_start_once();
-        if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_AP_TRANSFER &&
-            !is_ap_transfer_mode_running()) {
+        if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_AP_TRANSFER && !is_ap_transfer_mode_running()) {
             ESP_LOGI(TAG, "WiFi connected while config page is visible, "
                           "returning to gallery");
             ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_GALLERY);
@@ -168,8 +163,8 @@ static void process_wifi_event(wifi_manager_event_t event)
         application_update_status_bar();
         app_sleep_arm_sync_timer();
         s_app.need_coding_plan_refresh = true;
-        s_app.need_weather_fetch       = true;
-        s_app.need_holiday_fetch       = true;
+        s_app.need_weather_fetch = true;
+        s_app.need_holiday_fetch = true;
         break;
     case WIFI_EVENT_GOT_IP:
         application_update_status_bar();
@@ -195,10 +190,7 @@ static void process_wifi_event(wifi_manager_event_t event)
 static void on_wifi_event(wifi_manager_event_t event, void *user_data)
 {
     (void)user_data;
-    app_event_t ev = {
-        .type = APP_EVENT_WIFI,
-        .wifi_event = event
-    };
+    app_event_t ev = {.type = APP_EVENT_WIFI, .wifi_event = event};
     if (s_app.event_queue) {
         xQueueSend(s_app.event_queue, &ev, 0);
     }
@@ -210,7 +202,7 @@ static void on_wifi_event(wifi_manager_event_t event, void *user_data)
 
 static void handle_image_received_async(const char *photo_id, void *ctx)
 {
-    app_event_t ev = { .type = APP_EVENT_UI_IMAGE_RECEIVED };
+    app_event_t ev = {.type = APP_EVENT_UI_IMAGE_RECEIVED};
     if (photo_id) {
         strncpy(ev.image_received.photo_id, photo_id, sizeof(ev.image_received.photo_id) - 1);
         ev.image_received.photo_id[sizeof(ev.image_received.photo_id) - 1] = '\0';
@@ -222,7 +214,7 @@ static void handle_image_received_async(const char *photo_id, void *ctx)
 
 static void handle_settings_changed_async(int minutes, void *ctx)
 {
-    app_event_t ev = { .type = APP_EVENT_UI_SETTINGS_CHANGED };
+    app_event_t ev = {.type = APP_EVENT_UI_SETTINGS_CHANGED};
     ev.settings_changed.slideshow_interval_minutes = minutes;
     if (s_app.event_queue) {
         xQueueSend(s_app.event_queue, &ev, 0);
@@ -231,7 +223,7 @@ static void handle_settings_changed_async(int minutes, void *ctx)
 
 static void handle_photos_changed_async(void *ctx)
 {
-    app_event_t ev = { .type = APP_EVENT_UI_PHOTOS_CHANGED };
+    app_event_t ev = {.type = APP_EVENT_UI_PHOTOS_CHANGED};
     if (s_app.event_queue) {
         xQueueSend(s_app.event_queue, &ev, 0);
     }
@@ -244,15 +236,8 @@ static bool handle_show_photo_sync(const char *photo_id, void *ctx)
         return false;
     }
     bool success = false;
-    show_photo_event_data_t data = {
-        .photo_id = photo_id,
-        .out_success = &success,
-        .done_sem = sem
-    };
-    app_event_t ev = {
-        .type = APP_EVENT_UI_SHOW_PHOTO,
-        .show_photo = { .show_photo_data = &data }
-    };
+    show_photo_event_data_t data = {.photo_id = photo_id, .out_success = &success, .done_sem = sem};
+    app_event_t ev = {.type = APP_EVENT_UI_SHOW_PHOTO, .show_photo = {.show_photo_data = &data}};
     if (s_app.event_queue && xQueueSend(s_app.event_queue, &ev, 0) == pdTRUE) {
         xSemaphoreTake(sem, portMAX_DELAY);
     }
@@ -266,7 +251,7 @@ static bool handle_show_photo_sync(const char *photo_id, void *ctx)
 void application_init(void)
 {
     memset(&s_app, 0, sizeof(s_app));
-    s_app.state          = DEVICE_STATE_STARTING;
+    s_app.state = DEVICE_STATE_STARTING;
     s_app.wifi_connected = false;
 
     holiday_fetcher_init();
@@ -380,8 +365,8 @@ void application_notify_wifi_if_connected(void)
         protocol_open_audio_channel(&s_app.protocol);
         app_sntp_start_once();
         s_app.need_coding_plan_refresh = true;
-        s_app.need_weather_fetch       = true;
-        s_app.need_holiday_fetch       = true;
+        s_app.need_weather_fetch = true;
+        s_app.need_holiday_fetch = true;
         app_sleep_arm_sync_timer();
     }
 }
@@ -400,12 +385,12 @@ static void render_low_battery_warning(void)
 
     const char *line1 = "电量耗尽";
     const char *line2 = "请充电";
-    int         w1    = rawdraw_measure_text_width(line1, &SourceHanSansSC_Medium_slim);
-    int         w2    = rawdraw_measure_text_width(line2, &SourceHanSansSC_Medium_slim);
-    int         h1    = SourceHanSansSC_Medium_slim.line_height;
+    int w1 = rawdraw_measure_text_width(line1, &SourceHanSansSC_Medium_slim);
+    int w2 = rawdraw_measure_text_width(line2, &SourceHanSansSC_Medium_slim);
+    int h1 = SourceHanSansSC_Medium_slim.line_height;
 
-    int x1      = (STYLE_SCREEN_WIDTH - w1) / 2;
-    int x2      = (STYLE_SCREEN_WIDTH - w2) / 2;
+    int x1 = (STYLE_SCREEN_WIDTH - w1) / 2;
+    int x2 = (STYLE_SCREEN_WIDTH - w2) / 2;
     int total_h = 2 * h1 + 10;
     int y_start = (STYLE_SCREEN_HEIGHT - total_h) / 2;
 
@@ -484,8 +469,8 @@ void application_run(void)
                 }
                 s_app.wifi_connected = false;
                 char ssid[32] = "ZecTrix-AP";
-                char pwd[32]  = "12345678";
-                char url[32]  = "http://192.168.4.1";
+                char pwd[32] = "12345678";
+                char url[32] = "http://192.168.4.1";
                 wifi_manager_get_ssid(ssid, sizeof(ssid));
                 ui_manager_show_wifi_config_page(s_app.ui_mgr, ssid, pwd, url);
                 application_update_status_bar();
@@ -537,16 +522,16 @@ void application_run(void)
                 page_renderer_t *cal_page = (page_renderer_t *)ui_manager_get_renderer(s_app.ui_mgr, UI_PAGE_CALENDAR);
                 if (cal_page) {
                     calendar_page_t *cal = (calendar_page_t *)cal_page;
-                    time_t    now_t = time(NULL);
+                    time_t now_t = time(NULL);
                     struct tm tm_buf;
                     localtime_r(&now_t, &tm_buf);
-                    cal->today_year  = tm_buf.tm_year + 1900;
+                    cal->today_year = tm_buf.tm_year + 1900;
                     cal->today_month = tm_buf.tm_mon + 1;
-                    cal->today_day   = tm_buf.tm_mday;
-                    cal->cal.today_year  = cal->today_year;
+                    cal->today_day = tm_buf.tm_mday;
+                    cal->cal.today_year = cal->today_year;
                     cal->cal.today_month = cal->today_month;
-                    cal->cal.today_day   = cal->today_day;
-                    cal->year  = cal->today_year;
+                    cal->cal.today_day = cal->today_day;
+                    cal->year = cal->today_year;
                     cal->month = cal->today_month;
                     widget_calendar_set_date(&cal->cal, cal->year, cal->month);
                     cal->base.needs_full_refresh_flag = true;
@@ -564,9 +549,11 @@ void application_run(void)
             case APP_EVENT_UI_IMAGE_RECEIVED: {
                 ESP_LOGI(TAG, "Processing UI_IMAGE_RECEIVED: %s", ev.image_received.photo_id);
                 photo_gallery_refresh_photo_list((page_renderer_t *)page_registry_get_instance(UI_PAGE_GALLERY));
-                int count = photo_gallery_get_photo_count((page_renderer_t *)page_registry_get_instance(UI_PAGE_GALLERY));
+                int count =
+                    photo_gallery_get_photo_count((page_renderer_t *)page_registry_get_instance(UI_PAGE_GALLERY));
                 if (count > 0 && ev.image_received.photo_id[0] != '\0') {
-                    photo_gallery_set_selected_by_id((page_renderer_t *)page_registry_get_instance(UI_PAGE_GALLERY), ev.image_received.photo_id);
+                    photo_gallery_set_selected_by_id((page_renderer_t *)page_registry_get_instance(UI_PAGE_GALLERY),
+                                                     ev.image_received.photo_id);
                 }
                 /* Photo list data is updated regardless; only flash the EPD
                  * when the gallery is on screen (photo belongs to gallery). */
@@ -636,7 +623,7 @@ void application_run(void)
                 }
                 if (s_app.need_holiday_fetch) {
                     s_app.need_holiday_fetch = false;
-                    time_t    t   = time(NULL);
+                    time_t t = time(NULL);
                     struct tm tmr;
                     localtime_r(&t, &tmr);
                     int year = tmr.tm_year + 1900;
@@ -655,10 +642,10 @@ void application_run(void)
                     app_sync_refresh_coding_plan();
                 }
             } else {
-                s_cp_refresh_counter           = 0;
-                s_app.need_weather_fetch       = false;
+                s_cp_refresh_counter = 0;
+                s_app.need_weather_fetch = false;
                 s_app.need_coding_plan_refresh = false;
-                s_app.need_holiday_fetch       = false;
+                s_app.need_holiday_fetch = false;
             }
 
             if (sm_can_sleep_now() && !app_sleep_is_local_http_running()) {
@@ -681,7 +668,7 @@ device_state_t application_get_device_state(void)
 bool application_set_device_state(device_state_t state)
 {
     const device_state_t old = s_app.state;
-    s_app.state              = state;
+    s_app.state = state;
     ESP_LOGI(TAG, "State %d -> %d", old, state);
     return true;
 }
@@ -703,9 +690,9 @@ void application_update_status_bar(void)
     strncpy(data.page_title, ui_manager_get_page_title(ui_manager_get_current_page(s_app.ui_mgr)),
             sizeof(data.page_title) - 1);
     data.page_title[sizeof(data.page_title) - 1] = '\0';
-    data.wifi_connected                          = s_app.wifi_connected;
-    data.server_connected                        = ap_transfer_server_is_running(&s_transfer_server);
-    data.battery_level                           = battery_level;
+    data.wifi_connected = s_app.wifi_connected;
+    data.server_connected = ap_transfer_server_is_running(&s_transfer_server);
+    data.battery_level = battery_level;
     ui_manager_update_status_bar(s_app.ui_mgr, &data);
 
     app_settings_update_wifi_item(s_app.wifi_connected, NULL);
@@ -725,22 +712,52 @@ void application_update_status_bar(void)
 
 static void post_button_event(app_event_type_t type)
 {
-    app_event_t ev = { .type = type };
+    app_event_t ev = {.type = type};
     if (s_app.event_queue) {
         xQueueSend(s_app.event_queue, &ev, 0);
     }
 }
 
-void application_on_up_click(void)                         { post_button_event(APP_EVENT_UP_CLICK); }
-void application_on_down_click(void)                       { post_button_event(APP_EVENT_DOWN_CLICK); }
-void application_on_up_double_click(void)                  { post_button_event(APP_EVENT_UP_DOUBLE_CLICK); }
-void application_on_boot_double_click(void)                { post_button_event(APP_EVENT_BOOT_DOUBLE_CLICK); }
-void application_on_down_double_click(void)                { post_button_event(APP_EVENT_DOWN_DOUBLE_CLICK); }
-void application_on_up_long_press(void)                    { post_button_event(APP_EVENT_UP_LONG_PRESS); }
-void application_on_down_long_press(void)                  { post_button_event(APP_EVENT_DOWN_LONG_PRESS); }
-void application_on_wifi_config_combo_long_press(void)     { post_button_event(APP_EVENT_WIFI_CONFIG_COMBO_LONG_PRESS); }
-void application_on_boot_click(void)                       { post_button_event(APP_EVENT_BOOT_CLICK); }
-void application_on_boot_long_press(void)                  { post_button_event(APP_EVENT_BOOT_LONG_PRESS); }
+void application_on_up_click(void)
+{
+    post_button_event(APP_EVENT_UP_CLICK);
+}
+void application_on_down_click(void)
+{
+    post_button_event(APP_EVENT_DOWN_CLICK);
+}
+void application_on_up_double_click(void)
+{
+    post_button_event(APP_EVENT_UP_DOUBLE_CLICK);
+}
+void application_on_boot_double_click(void)
+{
+    post_button_event(APP_EVENT_BOOT_DOUBLE_CLICK);
+}
+void application_on_down_double_click(void)
+{
+    post_button_event(APP_EVENT_DOWN_DOUBLE_CLICK);
+}
+void application_on_up_long_press(void)
+{
+    post_button_event(APP_EVENT_UP_LONG_PRESS);
+}
+void application_on_down_long_press(void)
+{
+    post_button_event(APP_EVENT_DOWN_LONG_PRESS);
+}
+void application_on_wifi_config_combo_long_press(void)
+{
+    post_button_event(APP_EVENT_WIFI_CONFIG_COMBO_LONG_PRESS);
+}
+void application_on_boot_click(void)
+{
+    post_button_event(APP_EVENT_BOOT_CLICK);
+}
+void application_on_boot_long_press(void)
+{
+    post_button_event(APP_EVENT_BOOT_LONG_PRESS);
+}
 
 /* ------------------------------------------------------------------ */
 /* Sleep control (thin wrapper — implementation in app_sleep.c)        */

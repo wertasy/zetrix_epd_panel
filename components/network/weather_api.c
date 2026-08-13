@@ -70,20 +70,20 @@ static const char *TAG = "WeatherApi";
 /* Static state                                                 */
 /* ============================================================ */
 
-static char               s_api_key[64]      = {0};
-static char               s_location[32]     = {0}; /* "lat,lon" e.g. "34.1600,108.9500" */
-static char               s_api_host[128]    = {0};
-static char               s_city_name[32]    = {0}; /* from IP geolocation */
-static bool               s_need_auto_detect = false;
-static weather_callback_t s_callback         = NULL;
-static void              *s_user_data        = NULL;
-static bool               s_initialized      = false;
+static char s_api_key[64] = {0};
+static char s_location[32] = {0}; /* "lat,lon" e.g. "34.1600,108.9500" */
+static char s_api_host[128] = {0};
+static char s_city_name[32] = {0}; /* from IP geolocation */
+static bool s_need_auto_detect = false;
+static weather_callback_t s_callback = NULL;
+static void *s_user_data = NULL;
+static bool s_initialized = false;
 
 static weather_data_t s_last_data;
 
 #ifdef ESP_PLATFORM
-static bool               s_in_progress = false;
-static esp_timer_handle_t s_timer       = NULL;
+static bool s_in_progress = false;
+static esp_timer_handle_t s_timer = NULL;
 
 static void save_weather_cache(void)
 {
@@ -100,7 +100,7 @@ static bool load_weather_cache(void)
     nvs_handle_t h;
     if (nvs_open("weather_cache", NVS_READONLY, &h) != ESP_OK)
         return false;
-    size_t len   = sizeof(s_last_data);
+    size_t len = sizeof(s_last_data);
     esp_err_t err = nvs_get_blob(h, "data", &s_last_data, &len);
     nvs_close(h);
     if (err == ESP_OK && len == sizeof(s_last_data)) {
@@ -198,7 +198,7 @@ bool weather_api_parse_now_json(const char *json, weather_data_t *out)
 
     /* v1 has no code/now wrapper — the payload is the top-level object.
      * Require at least a condition or temperature object to succeed. */
-    condition   = cJSON_GetObjectItemCaseSensitive(root, "condition");
+    condition = cJSON_GetObjectItemCaseSensitive(root, "condition");
     temperature = cJSON_GetObjectItemCaseSensitive(root, "temperature");
     if (!cJSON_IsObject(condition) && !cJSON_IsObject(temperature)) {
         LOGE("Now API: no condition/temperature in v1 response");
@@ -255,10 +255,10 @@ bool weather_api_parse_now_json(const char *json, weather_data_t *out)
 
 bool weather_api_parse_forecast_json(const char *json, weather_data_t *out)
 {
-    cJSON             *root;
-    cJSON             *days;
-    int                count;
-    int                i;
+    cJSON *root;
+    cJSON *days;
+    int count;
+    int i;
     static const char *labels[3] = {
         "\xe4\xbb\x8a\xe5\xa4\xa9", /* 今天 */
         "\xe6\x98\x8e\xe5\xa4\xa9", /* 明天 */
@@ -289,7 +289,7 @@ bool weather_api_parse_forecast_json(const char *json, weather_data_t *out)
     out->forecast_count = 0;
 
     for (i = 0; i < count; i++) {
-        cJSON                  *day = cJSON_GetArrayItem(days, i);
+        cJSON *day = cJSON_GetArrayItem(days, i);
         weather_forecast_day_t *item;
         if (!day)
             break;
@@ -329,8 +329,8 @@ bool weather_api_parse_air_json(const char *json, weather_data_t *out)
 {
     cJSON *root;
     cJSON *indexes;
-    int    count;
-    int    i;
+    int count;
+    int i;
     if (!json || !out)
         return false;
 
@@ -403,7 +403,7 @@ bool weather_api_parse_json(const char *json, weather_data_t *out)
 
 #ifdef ESP_PLATFORM
 
-#    define WEATHER_HTTP_BUF_SIZE 4096  /* raw compressed response */
+#    define WEATHER_HTTP_BUF_SIZE 4096 /* raw compressed response */
 #    define WEATHER_JSON_BUF_SIZE 16384 /* decompressed JSON output */
 
 static int parse_gzip_header(const uint8_t *src, size_t src_len)
@@ -415,8 +415,8 @@ static int parse_gzip_header(const uint8_t *src, size_t src_len)
     if (src[2] != 8)
         return -1;
 
-    uint8_t flags  = src[3];
-    int     offset = 10;
+    uint8_t flags = src[3];
+    int offset = 10;
 
     if (flags & 4) {
         if (offset + 2 > src_len)
@@ -464,10 +464,10 @@ static bool decompress_gzip(const uint8_t *src, size_t src_len, uint8_t *dst, si
     }
     tinfl_init(decomp);
 
-    size_t       in_avail  = deflate_len;
-    size_t       out_avail = *dst_len;
-    tinfl_status status    = tinfl_decompress(decomp, (const mz_uint8 *)(src + offset), &in_avail, dst, dst, &out_avail,
-                                              TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF);
+    size_t in_avail = deflate_len;
+    size_t out_avail = *dst_len;
+    tinfl_status status = tinfl_decompress(decomp, (const mz_uint8 *)(src + offset), &in_avail, dst, dst, &out_avail,
+                                           TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF);
     free(decomp);
 
     if (status == TINFL_STATUS_DONE) {
@@ -478,9 +478,9 @@ static bool decompress_gzip(const uint8_t *src, size_t src_len, uint8_t *dst, si
 #    else
     z_stream stream;
     memset(&stream, 0, sizeof(stream));
-    stream.next_in   = (Bytef *)src;
-    stream.avail_in  = src_len;
-    stream.next_out  = dst;
+    stream.next_in = (Bytef *)src;
+    stream.avail_in = src_len;
+    stream.next_out = dst;
     stream.avail_out = *dst_len;
 
     int status = inflateInit2(&stream, 31);
@@ -507,8 +507,8 @@ static bool weather_http_get_and_decompress(const char *url, char *out_buf, size
     }
 
     const char *headers[2] = {"X-QW-Api-Key", "accept"};
-    const char *values[2]  = {s_api_key, "application/json"};
-    int         n          = http_get_with_headers(url, headers, values, 2, raw_resp, WEATHER_HTTP_BUF_SIZE);
+    const char *values[2] = {s_api_key, "application/json"};
+    int n = http_get_with_headers(url, headers, values, 2, raw_resp, WEATHER_HTTP_BUF_SIZE);
     if (n < 0) {
         free(raw_resp);
         return false;
@@ -535,8 +535,8 @@ static bool weather_http_get_and_decompress(const char *url, char *out_buf, size
 static void do_fetch(void *arg)
 {
     weather_data_t *data;
-    char            url[512];
-    char           *resp;
+    char url[512];
+    char *resp;
     (void)arg;
 
     if (!s_initialized) {
@@ -564,9 +564,9 @@ static void do_fetch(void *arg)
         return;
     }
 
-    char        lat[16] = {0};
-    char        lon[16] = {0};
-    const char *comma   = strchr(s_location, ',');
+    char lat[16] = {0};
+    char lon[16] = {0};
+    const char *comma = strchr(s_location, ',');
     if (comma) {
         int lat_len = comma - s_location;
         if (lat_len < sizeof(lat)) {
@@ -591,7 +591,7 @@ static void do_fetch(void *arg)
 
     memset(data, 0, sizeof(*data));
     data->uv_index = -1;
-    data->air_aqi  = -1;
+    data->air_aqi = -1;
     snprintf(data->city_name, sizeof(data->city_name), "%s", s_city_name);
 
     /* v1 current */
@@ -657,13 +657,13 @@ static void timer_callback(void *arg)
 
 bool weather_api_detect_location(void)
 {
-    char   resp[1024];
+    char resp[1024];
     cJSON *root;
     cJSON *status;
     cJSON *lat_item;
     cJSON *lon_item;
     cJSON *city_item;
-    int    n;
+    int n;
 
     LOGI("Detecting location via IP geolocation");
     n = http_get_text("http://ip-api.com/json/?lang=zh-CN&fields=61439", resp, sizeof(resp));
@@ -716,8 +716,8 @@ bool weather_api_detect_location(void)
 
 void weather_api_redetect_location(void)
 {
-    s_location[0]      = '\0';
-    s_city_name[0]     = '\0';
+    s_location[0] = '\0';
+    s_city_name[0] = '\0';
     s_need_auto_detect = true;
 #    ifdef ESP_PLATFORM
     nvs_state_set_string("weather_location", "");
@@ -735,8 +735,8 @@ bool weather_api_detect_location(void)
 
 void weather_api_redetect_location(void)
 {
-    s_location[0]      = '\0';
-    s_city_name[0]     = '\0';
+    s_location[0] = '\0';
+    s_city_name[0] = '\0';
     s_need_auto_detect = true;
 }
 
@@ -767,8 +767,8 @@ void weather_api_init(const char *api_key, const char *location, weather_callbac
     }
 
     /* Location priority: explicit param → NVS cache → Kconfig → auto-detect. */
-    s_location[0]      = '\0';
-    s_city_name[0]     = '\0';
+    s_location[0] = '\0';
+    s_city_name[0] = '\0';
     s_need_auto_detect = false;
 
     if (location && location[0]) {
@@ -794,16 +794,16 @@ void weather_api_init(const char *api_key, const char *location, weather_callbac
         }
     }
 
-    s_callback    = callback;
-    s_user_data   = user_data;
+    s_callback = callback;
+    s_user_data = user_data;
     s_initialized = true;
 
 #ifdef ESP_PLATFORM
     if (!s_timer) {
         const esp_timer_create_args_t timer_args = {
             .callback = timer_callback,
-            .arg      = NULL,
-            .name     = "weather_refresh",
+            .arg = NULL,
+            .name = "weather_refresh",
         };
         if (esp_timer_create(&timer_args, &s_timer) == ESP_OK) {
             /* Hourly auto-refresh. */

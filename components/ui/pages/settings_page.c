@@ -48,9 +48,9 @@
 #define kServerListVisibleRows 5
 #define kOtaVisibleRows 4
 
-static const lv_font_t *const kSettingsFont      = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kSettingsFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kSettingsTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kSettingsIconFont  = &fa_settings_16;
+static const lv_font_t *const kSettingsIconFont = &fa_settings_16;
 static const lv_font_t *const kSettingsValueFont = &SourceHanSansSC_Regular_slim;
 
 /* ------------------------------------------------------------------ */
@@ -120,7 +120,7 @@ void settings_page_clear_dialog_region(uint8_t *fb, int width, int height, int x
                                        int pad)
 {
     const rawdraw_paint_style_t bg = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    int                         r  = radius + kDialogClearRadiusBoost;
+    int r = radius + kDialogClearRadiusBoost;
     if (r < 0)
         r = 0;
     rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){x - pad, y - pad, w + pad * 2, h + pad * 2}, r,
@@ -171,7 +171,7 @@ static int find_next_selectable(const settings_page_t *r, int index)
  * and report whether the selection lies inside that window. */
 static int count_visible_from(const settings_page_t *r, int start, bool *selection_visible)
 {
-    int visible_count  = 0;
+    int visible_count = 0;
     *selection_visible = false;
     for (int i = start; i < r->item_count; ++i) {
         if (r->items[i].type == SETTINGS_ITEM_SECTION)
@@ -189,7 +189,7 @@ static void ensure_selection_visible(settings_page_t *r)
 {
     if (r->item_count == 0) {
         r->first_visible_index = 0;
-        r->scroll_offset       = 0;
+        r->scroll_offset = 0;
         return;
     }
 
@@ -227,16 +227,16 @@ static void ensure_selection_visible(settings_page_t *r)
 static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, int y, int content_left, int index,
                         bool selected, int row_h)
 {
-    const settings_page_item_t *item           = &r->items[index];
-    const int                   content_right  = width - 20;
-    const rawdraw_paint_style_t text_style     = rawdraw_theme_style(THEME_TOKEN_TEXT_PRIMARY);
+    const settings_page_item_t *item = &r->items[index];
+    const int content_right = width - 20;
+    const rawdraw_paint_style_t text_style = rawdraw_theme_style(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
-    const rawdraw_color_t       action_color =
+    const rawdraw_color_t action_color =
         settings_page_token_ink_on_paper(strcmp(item->label, "关机") == 0 ? THEME_TOKEN_DANGER : THEME_TOKEN_ACCENT);
-    const rawdraw_color_t fg_color     = text_style.fg;
-    const int             row_center_y = y + row_h / 2;
-    const int             icon_x       = content_left;
-    const int             label_x      = icon_x + 16 + STYLE_SPACING_SM; /* 16 is icon width */
+    const rawdraw_color_t fg_color = text_style.fg;
+    const int row_center_y = y + row_h / 2;
+    const int icon_x = content_left;
+    const int label_x = icon_x + 16 + STYLE_SPACING_SM; /* 16 is icon width */
     const int label_y = rawdraw_layout_ink_centered_text_top_y(r->font, item->label, row_center_y, kTextOpticalNudgeY);
 
     if (selected) {
@@ -252,36 +252,36 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
     if (item->type == SETTINGS_ITEM_CHECKBOX) {
         const int track_w = 52;
         const int track_h = 20;
-        const int knob    = 16;
+        const int knob = 16;
         const int track_x = content_right - track_w;
         const int track_y = row_center_y - track_h / 2;
-        label_right       = track_x - STYLE_SPACING_LG;
+        label_right = track_x - STYLE_SPACING_LG;
         const rawdraw_paint_style_t switch_style =
             item->checked ? rawdraw_theme_style(THEME_TOKEN_ACCENT) : rawdraw_theme_style(THEME_TOKEN_DISABLED);
         rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){track_x, track_y, track_w, track_h},
                                        STYLE_BORDER_RADIUS_PILL, &switch_style);
         const char *switch_text = item->checked ? "ON" : "OFF";
-        const int   text_w      = rawdraw_measure_text_width(switch_text, r->value_font);
-        const int   text_x      = item->checked ? (track_x + 7) : (track_x + track_w - text_w - 6);
+        const int text_w = rawdraw_measure_text_width(switch_text, r->value_font);
+        const int text_x = item->checked ? (track_x + 7) : (track_x + track_w - text_w - 6);
         rawdraw_draw_text(
             fb, width, height, text_x,
             rawdraw_layout_ink_centered_text_top_y(r->value_font, switch_text, row_center_y, kValueOpticalNudgeY),
             switch_text, r->value_font, switch_style.fg);
         /* True circle knob: fill with paper, then outline. */
-        const int             knob_x  = item->checked ? (track_x + track_w - knob - 2) : (track_x + 2);
-        const int             knob_cx = knob_x + knob / 2;
-        const rawdraw_color_t paper   = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY).bg;
+        const int knob_x = item->checked ? (track_x + track_w - knob - 2) : (track_x + 2);
+        const int knob_cx = knob_x + knob / 2;
+        const rawdraw_color_t paper = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY).bg;
         rawdraw_draw_circle(fb, width, height, (rawdraw_point_t){knob_cx, row_center_y - 1}, knob / 2, paper);
         rawdraw_draw_circle_border(fb, width, height, (rawdraw_point_t){knob_cx, row_center_y - 1}, knob / 2, 1,
                                    text_style.fg);
     } else if (item->value[0] != '\0') {
         const int value_right = content_right;
-        const int max_val_w   = RD_MAX(0, value_right - (content_left + 88));
-        char      display_value[SETTINGS_PAGE_ITEM_VALUE_LEN];
+        const int max_val_w = RD_MAX(0, value_right - (content_left + 88));
+        char display_value[SETTINGS_PAGE_ITEM_VALUE_LEN];
         ui_text_fit_to_width(item->value, r->value_font, max_val_w, display_value, sizeof(display_value));
         const int value_w = rawdraw_measure_text_width(display_value, r->value_font);
-        const int val_x   = value_right - value_w;
-        label_right       = val_x - STYLE_SPACING_LG;
+        const int val_x = value_right - value_w;
+        label_right = val_x - STYLE_SPACING_LG;
         if (display_value[0] != '\0') {
             rawdraw_draw_text(
                 fb, width, height, val_x,
@@ -290,9 +290,9 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
         }
     } else if (item->type == SETTINGS_ITEM_ACTION) {
         const char *action_text = item->value[0] != '\0' ? item->value : "执行";
-        const int   action_w    = rawdraw_measure_text_width(action_text, r->value_font);
-        const int   act_x       = content_right - action_w;
-        label_right             = act_x - STYLE_SPACING_LG;
+        const int action_w = rawdraw_measure_text_width(action_text, r->value_font);
+        const int act_x = content_right - action_w;
+        label_right = act_x - STYLE_SPACING_LG;
         rawdraw_draw_text(
             fb, width, height, act_x,
             rawdraw_layout_ink_centered_text_top_y(r->value_font, action_text, row_center_y, kValueOpticalNudgeY),
@@ -300,7 +300,7 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
     }
 
     const int label_max_w = RD_MAX(0, label_right - label_x);
-    char      display_label[SETTINGS_PAGE_ITEM_LABEL_LEN];
+    char display_label[SETTINGS_PAGE_ITEM_LABEL_LEN];
     ui_text_fit_to_width(item->label, r->font, label_max_w, display_label, sizeof(display_label));
     if (display_label[0] != '\0') {
         rawdraw_draw_text(fb, width, height, label_x, label_y, display_label, r->font, fg_color);
@@ -315,9 +315,9 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
 
 void settings_page_init(page_renderer_t *self, int width, int height)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    settings_page_t *r = (settings_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
     /* Preserve item_count and selected_index across page switches — items
      * are populated once during application_init via set_settings_items
@@ -325,14 +325,14 @@ void settings_page_init(page_renderer_t *self, int width, int height)
     if (r->item_count == 0) {
         r->selected_index = 0;
     }
-    r->scroll_offset                = 0;
-    r->first_visible_index          = 0;
-    r->showing_debug_info           = false;
-    r->debug_hint_until_us          = 0;
-    r->font                         = kSettingsFont;
-    r->title_font                   = kSettingsTitleFont;
-    r->icon_font                    = kSettingsIconFont;
-    r->value_font                   = kSettingsValueFont;
+    r->scroll_offset = 0;
+    r->first_visible_index = 0;
+    r->showing_debug_info = false;
+    r->debug_hint_until_us = 0;
+    r->font = kSettingsFont;
+    r->title_font = kSettingsTitleFont;
+    r->icon_font = kSettingsIconFont;
+    r->value_font = kSettingsValueFont;
     settings_page_show_category_hint(self, 0);
     if (r->firmware_version[0] == '\0') {
         snprintf(r->firmware_version, sizeof(r->firmware_version), "v%s", PROJECT_VER);
@@ -341,9 +341,9 @@ void settings_page_init(page_renderer_t *self, int width, int height)
 
 void settings_page_show_category_hint(page_renderer_t *self, int duration_ms)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    const int64_t    duration_us    = duration_ms > 0 ? (int64_t)duration_ms * 1000 : kCategoryHintDurationUs;
-    r->category_hint_until_us       = esp_timer_get_time() + duration_us;
+    settings_page_t *r = (settings_page_t *)self;
+    const int64_t duration_us = duration_ms > 0 ? (int64_t)duration_ms * 1000 : kCategoryHintDurationUs;
+    r->category_hint_until_us = esp_timer_get_time() + duration_us;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -361,15 +361,15 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
 
     ensure_selection_visible(r);
 
-    const rawdraw_paint_style_t bg_style       = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    const rawdraw_paint_style_t text_style     = rawdraw_theme_style(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_paint_style_t border_style   = rawdraw_theme_style(THEME_TOKEN_BORDER);
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_paint_style_t text_style = rawdraw_theme_style(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_paint_style_t border_style = rawdraw_theme_style(THEME_TOKEN_BORDER);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
-    const int                   body_top       = STYLE_STATUS_BAR_HEIGHT;
-    const int                   body_bottom    = height - 3;
-    const int                   content_x      = kSettingsNavDividerX + 16;
-    const int                   content_right  = width - 20;
-    const int                   row_h          = kSettingsTableRowH;
+    const int body_top = STYLE_STATUS_BAR_HEIGHT;
+    const int body_bottom = height - 3;
+    const int content_x = kSettingsNavDividerX + 16;
+    const int content_right = width - 20;
+    const int row_h = kSettingsTableRowH;
 
     rawdraw_draw_styled_rect(fb, width, height, (rawdraw_rect_t){0, body_top, width, body_bottom - body_top},
                              &bg_style);
@@ -398,17 +398,17 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
 
     const int nav_top = body_top + kSettingsContentTopGap;
     for (int i = 0; i < section_count; ++i) {
-        const int   sy            = nav_top + i * kSettingsNavItemH;
-        const bool  selected      = (i == current_section_pos);
-        const char *label         = (section_indices[i] >= 0) ? r->items[section_indices[i]].label : "系统";
-        const int   nav_pill_x    = 16;
-        const int   nav_pill_w    = kSettingsNavDividerX - 26;
-        const int   nav_pill_h    = 28;
-        const int   nav_pill_y    = sy + (kSettingsNavItemH - nav_pill_h) / 2;
-        const int   icon_x        = nav_pill_x + 7;
-        const int   icon_center_y = sy + kSettingsNavItemH / 2;
-        const int   label_x       = nav_pill_x + 27;
-        const int   label_y = rawdraw_layout_ink_centered_text_top_y(r->font, label, icon_center_y, kTextOpticalNudgeY);
+        const int sy = nav_top + i * kSettingsNavItemH;
+        const bool selected = (i == current_section_pos);
+        const char *label = (section_indices[i] >= 0) ? r->items[section_indices[i]].label : "系统";
+        const int nav_pill_x = 16;
+        const int nav_pill_w = kSettingsNavDividerX - 26;
+        const int nav_pill_h = 28;
+        const int nav_pill_y = sy + (kSettingsNavItemH - nav_pill_h) / 2;
+        const int icon_x = nav_pill_x + 7;
+        const int icon_center_y = sy + kSettingsNavItemH / 2;
+        const int label_x = nav_pill_x + 27;
+        const int label_y = rawdraw_layout_ink_centered_text_top_y(r->font, label, icon_center_y, kTextOpticalNudgeY);
         if (selected) {
             rawdraw_draw_styled_round_rect(fb, width, height,
                                            (rawdraw_rect_t){nav_pill_x, nav_pill_y, nav_pill_w, nav_pill_h},
@@ -450,10 +450,10 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
             {"序列号", serial_buf},    {"官方网站", "blog.lazyyoun.xyz"},
         };
         const int row_count = (int)(sizeof(rows) / sizeof(rows[0]));
-        int       y         = kSettingsTableTop;
+        int y = kSettingsTableTop;
         for (int i = 0; i < row_count; ++i) {
             const int center_y = y + row_h / 2;
-            const int label_x  = content_x;
+            const int label_x = content_x;
             rawdraw_draw_styled_text(
                 fb, width, height, label_x,
                 rawdraw_layout_ink_centered_text_top_y(r->font, rows[i].label, center_y, kTextOpticalNudgeY),
@@ -475,12 +475,12 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
                 selected_pos = i;
         }
         const int visible_count = RD_MIN(kVisibleOptionCount, option_count);
-        int       window_start  = RD_MAX(0, selected_pos - visible_count / 2);
+        int window_start = RD_MAX(0, selected_pos - visible_count / 2);
         if (window_start + visible_count > option_count) {
             window_start = RD_MAX(0, option_count - visible_count);
         }
-        int       y            = kSettingsTableTop;
-        const int available_h  = RD_MAX(row_h, body_bottom - kSettingsTableTop - 2);
+        int y = kSettingsTableTop;
+        const int available_h = RD_MAX(row_h, body_bottom - kSettingsTableTop - 2);
         const int option_row_h = RD_MIN(row_h, RD_MAX(28, available_h / RD_MAX(1, visible_count)));
         for (int i = 0; i < visible_count; ++i) {
             const int item_index = option_indices[window_start + i];
@@ -493,9 +493,9 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
             const int track_y = kSettingsTableTop + 2;
             const int track_h = RD_MAX(24, option_row_h * visible_count - 4);
             rawdraw_draw_vline(fb, width, height, track_x, track_y, track_y + track_h, border_style.border);
-            const int thumb_h   = RD_MAX(10, track_h * visible_count / option_count);
+            const int thumb_h = RD_MAX(10, track_h * visible_count / option_count);
             const int max_start = RD_MAX(1, option_count - visible_count);
-            const int thumb_y   = track_y + (track_h - thumb_h) * window_start / max_start;
+            const int thumb_y = track_y + (track_h - thumb_h) * window_start / max_start;
             rawdraw_fill_rect(fb, width, height, (rawdraw_rect_t){track_x - 2, thumb_y, 4, thumb_h},
                               selected_style.border);
         }
@@ -530,11 +530,11 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
     /* === Debug info hint (transient badge, 3s auto-dismiss). === */
     const int64_t now = esp_timer_get_time();
     if (r->showing_debug_info && now < r->debug_hint_until_us) {
-        const int                   hint_y     = STYLE_STATUS_BAR_HEIGHT + 2;
-        const int                   hint_h     = r->font->line_height + STYLE_SPACING_XS * 2;
-        const char                 *hint_text  = "调试信息已显示";
-        const int                   hint_w     = rawdraw_measure_text_width(hint_text, r->font);
-        const int                   hint_x     = (width - hint_w) / 2;
+        const int hint_y = STYLE_STATUS_BAR_HEIGHT + 2;
+        const int hint_h = r->font->line_height + STYLE_SPACING_XS * 2;
+        const char *hint_text = "调试信息已显示";
+        const int hint_w = rawdraw_measure_text_width(hint_text, r->font);
+        const int hint_x = (width - hint_w) / 2;
         const rawdraw_paint_style_t hint_style = rawdraw_theme_style(THEME_TOKEN_BADGE);
         rawdraw_draw_styled_round_rect(
             fb, width, height,
@@ -542,7 +542,7 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
             STYLE_BORDER_RADIUS_SM, &hint_style);
         rawdraw_draw_text(fb, width, height, hint_x, hint_y + STYLE_SPACING_XS, hint_text, r->font, hint_style.fg);
     } else if (r->showing_debug_info) {
-        r->showing_debug_info           = false;
+        r->showing_debug_info = false;
         r->base.needs_full_refresh_flag = true;
     }
 
@@ -604,7 +604,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
         case BTN_UP_LONG_PRESS:
         case BTN_DOWN_CLICK:
         case BTN_DOWN_LONG_PRESS:
-            r->showing_about_dialog         = false;
+            r->showing_about_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         default:
@@ -620,7 +620,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
         case BTN_UP_LONG_PRESS:
         case BTN_DOWN_CLICK:
         case BTN_DOWN_LONG_PRESS:
-            r->showing_storage_dialog       = false;
+            r->showing_storage_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         default:
@@ -647,11 +647,11 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
             if (r->theme_dialog_handler) {
                 r->theme_dialog_handler(rawdraw_theme_at(r->theme_selected), r->theme_dialog_ctx);
             }
-            r->showing_theme_dialog         = false;
+            r->showing_theme_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         case BTN_BOOT_LONG_PRESS:
-            r->showing_theme_dialog         = false;
+            r->showing_theme_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         default:
@@ -663,7 +663,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
     if (r->showing_server_list_dialog) {
         const int total = r->server_list_count;
         if (total == 0) {
-            r->showing_server_list_dialog   = false;
+            r->showing_server_list_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         }
@@ -691,11 +691,11 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
                 r->server_list_dialog_handler(r->server_list_addresses[r->server_list_selected],
                                               r->server_list_dialog_ctx);
             }
-            r->showing_server_list_dialog   = false;
+            r->showing_server_list_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         case BTN_BOOT_LONG_PRESS:
-            r->showing_server_list_dialog   = false;
+            r->showing_server_list_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         default:
@@ -708,14 +708,14 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
         switch (event->type) {
         case BTN_UP_CLICK:
         case BTN_DOWN_CLICK:
-            r->server_selected              = (r->server_selected == 0) ? 1 : 0;
+            r->server_selected = (r->server_selected == 0) ? 1 : 0;
             r->base.needs_full_refresh_flag = true;
             return true;
         case BTN_BOOT_CLICK:
             if (r->server_dialog_handler) {
                 r->server_dialog_handler(r->server_selected, r->server_dialog_ctx);
             }
-            r->showing_server_dialog        = false;
+            r->showing_server_dialog = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         default:
@@ -729,7 +729,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
             switch (event->type) {
             case BTN_UP_CLICK:
             case BTN_DOWN_CLICK:
-                r->ota_confirm_selected         = (r->ota_confirm_selected == 0) ? 1 : 0;
+                r->ota_confirm_selected = (r->ota_confirm_selected == 0) ? 1 : 0;
                 r->base.needs_full_refresh_flag = true;
                 return true;
             case BTN_BOOT_CLICK:
@@ -742,7 +742,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
             case BTN_BOOT_LONG_PRESS:
             case BTN_UP_LONG_PRESS:
             case BTN_DOWN_LONG_PRESS:
-                r->showing_ota_confirm_dialog   = false;
+                r->showing_ota_confirm_dialog = false;
                 r->base.needs_full_refresh_flag = true;
                 return true;
             default:
@@ -769,7 +769,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
             if (r->ota_state == 2 && r->ota_version_count > 0 && r->ota_selected_index >= 0) {
                 snprintf(r->ota_confirm_firmware_name, sizeof(r->ota_confirm_firmware_name), "%s",
                          r->ota_versions[r->ota_selected_index]);
-                r->ota_confirm_selected       = 0;
+                r->ota_confirm_selected = 0;
                 r->showing_ota_confirm_dialog = true;
             } else if (r->ota_dialog_handler) {
                 r->ota_dialog_handler(0, true, false, r->ota_dialog_ctx);
@@ -813,9 +813,9 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
 
     case BTN_UP_LONG_PRESS:
         /* Scroll to top. */
-        r->scroll_offset                = 0;
-        r->selected_index               = get_first_selectable_index(r);
-        r->first_visible_index          = r->selected_index;
+        r->scroll_offset = 0;
+        r->selected_index = get_first_selectable_index(r);
+        r->first_visible_index = r->selected_index;
         r->base.needs_full_refresh_flag = true;
         return true;
 
@@ -842,7 +842,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
 
     case BTN_DOWN_LONG_PRESS: {
         /* Scroll to bottom. */
-        r->selected_index      = get_last_selectable_index(r);
+        r->selected_index = get_last_selectable_index(r);
         r->first_visible_index = r->selected_index;
         for (int shown = 1; shown < kVisibleOptionCount; ++shown) {
             int prev = find_prev_selectable(r, r->first_visible_index);
@@ -880,7 +880,7 @@ void settings_page_set_items(page_renderer_t *self, const settings_page_item_t *
     if (items && count > 0) {
         int n = RD_MIN(count, SETTINGS_PAGE_MAX_ITEMS);
         for (int i = 0; i < n; ++i) {
-            r->items[i]                                         = items[i];
+            r->items[i] = items[i];
             r->items[i].label[SETTINGS_PAGE_ITEM_LABEL_LEN - 1] = '\0';
             r->items[i].value[SETTINGS_PAGE_ITEM_VALUE_LEN - 1] = '\0';
         }
@@ -893,7 +893,7 @@ void settings_page_set_items(page_renderer_t *self, const settings_page_item_t *
         for (int i = 0; i < r->item_count; ++i) {
             if (strcmp(r->items[i].label, prev_label) == 0 && r->items[i].type != SETTINGS_ITEM_SECTION) {
                 r->selected_index = i;
-                found             = true;
+                found = true;
                 break;
             }
         }
@@ -908,7 +908,7 @@ void settings_page_set_items(page_renderer_t *self, const settings_page_item_t *
         r->selected_index = get_first_selectable_index(r);
     }
 
-    r->scroll_offset       = 0;
+    r->scroll_offset = 0;
     r->first_visible_index = r->selected_index;
     ensure_selection_visible(r);
     settings_page_show_category_hint(self, 0);
@@ -928,7 +928,7 @@ void settings_page_update_checked(page_renderer_t *self, int index, bool checked
 {
     settings_page_t *r = (settings_page_t *)self;
     if (index >= 0 && index < r->item_count) {
-        r->items[index].checked         = checked;
+        r->items[index].checked = checked;
         r->base.needs_full_refresh_flag = true;
     }
 }
@@ -951,9 +951,9 @@ int settings_page_get_selected_index(const page_renderer_t *self)
 
 void settings_page_show_debug_info(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_debug_info           = true;
-    r->debug_hint_until_us          = esp_timer_get_time() + 3000000; /* 3 seconds */
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_debug_info = true;
+    r->debug_hint_until_us = esp_timer_get_time() + 3000000; /* 3 seconds */
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -982,30 +982,30 @@ void settings_page_set_device_info(page_renderer_t *self, const char *mac, const
 
 void settings_page_show_volume_dialog(page_renderer_t *self, int volume)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->volume_dialog_value          = RD_CLAMP(volume, 0, 100);
-    r->showing_volume_dialog        = true;
+    settings_page_t *r = (settings_page_t *)self;
+    r->volume_dialog_value = RD_CLAMP(volume, 0, 100);
+    r->showing_volume_dialog = true;
     r->base.needs_full_refresh_flag = true;
 }
 
 void settings_page_set_volume_dialog_handler(page_renderer_t *self, settings_page_volume_handler_t handler, void *ctx)
 {
-    settings_page_t *r       = (settings_page_t *)self;
+    settings_page_t *r = (settings_page_t *)self;
     r->volume_dialog_handler = handler;
-    r->volume_dialog_ctx     = ctx;
+    r->volume_dialog_ctx = ctx;
 }
 
 void settings_page_show_about_dialog(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_about_dialog         = true;
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_about_dialog = true;
     r->base.needs_full_refresh_flag = true;
 }
 
 void settings_page_hide_about_dialog(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_about_dialog         = false;
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_about_dialog = false;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -1024,16 +1024,16 @@ void settings_page_show_storage_dialog(page_renderer_t *self, const char *used, 
     if (total) {
         snprintf(r->storage_total, sizeof(r->storage_total), "%s", total);
     }
-    r->storage_photos               = photos;
-    r->storage_txts                 = txts;
-    r->showing_storage_dialog       = true;
+    r->storage_photos = photos;
+    r->storage_txts = txts;
+    r->showing_storage_dialog = true;
     r->base.needs_full_refresh_flag = true;
 }
 
 void settings_page_hide_storage_dialog(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_storage_dialog       = false;
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_storage_dialog = false;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -1056,15 +1056,15 @@ void settings_page_show_server_dialog(page_renderer_t *self, const char *current
     if (remote_addr) {
         snprintf(r->server_remote_addr, sizeof(r->server_remote_addr), "%s", remote_addr);
     }
-    r->server_selected              = (current_addr && remote_addr && strcmp(current_addr, remote_addr) == 0) ? 1 : 0;
-    r->showing_server_dialog        = true;
+    r->server_selected = (current_addr && remote_addr && strcmp(current_addr, remote_addr) == 0) ? 1 : 0;
+    r->showing_server_dialog = true;
     r->base.needs_full_refresh_flag = true;
 }
 
 void settings_page_hide_server_dialog(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_server_dialog        = false;
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_server_dialog = false;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -1082,15 +1082,15 @@ int settings_page_get_server_dialog_selection(const page_renderer_t *self)
 
 void settings_page_set_server_dialog_handler(page_renderer_t *self, settings_page_server_handler_t handler, void *ctx)
 {
-    settings_page_t *r       = (settings_page_t *)self;
+    settings_page_t *r = (settings_page_t *)self;
     r->server_dialog_handler = handler;
-    r->server_dialog_ctx     = ctx;
+    r->server_dialog_ctx = ctx;
 }
 
 void settings_page_show_server_list_dialog(page_renderer_t *self, const char *const *addresses, int count,
                                            const char *current_addr)
 {
-    settings_page_t *r   = (settings_page_t *)self;
+    settings_page_t *r = (settings_page_t *)self;
     r->server_list_count = 0;
     if (addresses && count > 0) {
         int n = RD_MIN(count, SETTINGS_PAGE_MAX_SERVER_ADDRS);
@@ -1102,7 +1102,7 @@ void settings_page_show_server_list_dialog(page_renderer_t *self, const char *co
     if (current_addr) {
         snprintf(r->server_list_current, sizeof(r->server_list_current), "%s", current_addr);
     }
-    r->server_list_selected      = 0;
+    r->server_list_selected = 0;
     r->server_list_scroll_offset = 0;
     /* Find the current address index. */
     for (int i = 0; i < r->server_list_count; ++i) {
@@ -1111,14 +1111,14 @@ void settings_page_show_server_list_dialog(page_renderer_t *self, const char *co
             break;
         }
     }
-    r->showing_server_list_dialog   = true;
+    r->showing_server_list_dialog = true;
     r->base.needs_full_refresh_flag = true;
 }
 
 void settings_page_hide_server_list_dialog(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_server_list_dialog   = false;
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_server_list_dialog = false;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -1142,30 +1142,30 @@ const char *settings_page_get_server_list_selection(const page_renderer_t *self)
 void settings_page_set_server_list_dialog_handler(page_renderer_t *self, settings_page_server_list_handler_t handler,
                                                   void *ctx)
 {
-    settings_page_t *r            = (settings_page_t *)self;
+    settings_page_t *r = (settings_page_t *)self;
     r->server_list_dialog_handler = handler;
-    r->server_list_dialog_ctx     = ctx;
+    r->server_list_dialog_ctx = ctx;
 }
 
 void settings_page_show_theme_dialog(page_renderer_t *self, rawdraw_theme_id_t current_theme)
 {
     settings_page_t *r = (settings_page_t *)self;
-    r->theme_selected  = 0;
-    const int count    = settings_page_theme_count();
+    r->theme_selected = 0;
+    const int count = settings_page_theme_count();
     for (int i = 0; i < count; ++i) {
         if (settings_page_theme_at(i)->id == current_theme) {
             r->theme_selected = i;
             break;
         }
     }
-    r->showing_theme_dialog         = true;
+    r->showing_theme_dialog = true;
     r->base.needs_full_refresh_flag = true;
 }
 
 void settings_page_hide_theme_dialog(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_theme_dialog         = false;
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_theme_dialog = false;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -1177,16 +1177,16 @@ bool settings_page_is_theme_dialog_showing(const page_renderer_t *self)
 
 void settings_page_set_theme_dialog_handler(page_renderer_t *self, settings_page_theme_handler_t handler, void *ctx)
 {
-    settings_page_t *r      = (settings_page_t *)self;
+    settings_page_t *r = (settings_page_t *)self;
     r->theme_dialog_handler = handler;
-    r->theme_dialog_ctx     = ctx;
+    r->theme_dialog_ctx = ctx;
 }
 
 void settings_page_show_ota_dialog(page_renderer_t *self, const char *const *versions, int version_count,
                                    const char *current_version, int selected_index, int progress_percent,
                                    const char *status_text, int state)
 {
-    settings_page_t *r   = (settings_page_t *)self;
+    settings_page_t *r = (settings_page_t *)self;
     r->ota_version_count = 0;
     if (versions && version_count > 0) {
         int n = RD_MIN(version_count, SETTINGS_PAGE_MAX_OTA_VERSIONS);
@@ -1198,21 +1198,21 @@ void settings_page_show_ota_dialog(page_renderer_t *self, const char *const *ver
     if (current_version) {
         snprintf(r->ota_current_version, sizeof(r->ota_current_version), "%s", current_version);
     }
-    r->ota_selected_index   = RD_CLAMP(selected_index, 0, RD_MAX(0, r->ota_version_count - 1));
+    r->ota_selected_index = RD_CLAMP(selected_index, 0, RD_MAX(0, r->ota_version_count - 1));
     r->ota_progress_percent = RD_CLAMP(progress_percent, 0, 100);
     if (status_text) {
         snprintf(r->ota_status_text, sizeof(r->ota_status_text), "%s", status_text);
     }
-    r->ota_state                    = state;
-    r->showing_ota_dialog           = true;
+    r->ota_state = state;
+    r->showing_ota_dialog = true;
     r->base.needs_full_refresh_flag = true;
 }
 
 void settings_page_hide_ota_dialog(page_renderer_t *self)
 {
-    settings_page_t *r              = (settings_page_t *)self;
-    r->showing_ota_dialog           = false;
-    r->showing_ota_confirm_dialog   = false;
+    settings_page_t *r = (settings_page_t *)self;
+    r->showing_ota_dialog = false;
+    r->showing_ota_confirm_dialog = false;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -1224,9 +1224,9 @@ bool settings_page_is_ota_dialog_showing(const page_renderer_t *self)
 
 void settings_page_set_ota_dialog_handler(page_renderer_t *self, settings_page_ota_handler_t handler, void *ctx)
 {
-    settings_page_t *r    = (settings_page_t *)self;
+    settings_page_t *r = (settings_page_t *)self;
     r->ota_dialog_handler = handler;
-    r->ota_dialog_ctx     = ctx;
+    r->ota_dialog_ctx = ctx;
 }
 
 /* ------------------------------------------------------------------ */
@@ -1236,16 +1236,16 @@ void settings_page_set_ota_dialog_handler(page_renderer_t *self, settings_page_o
 EXT_RAM_BSS_ATTR settings_page_t s_settings_instance;
 
 const page_renderer_ops_t settings_page_ops = {
-    .init                    = settings_page_init,
-    .render                  = settings_page_render,
-    .handle_input            = settings_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = settings_page_init,
+    .render = settings_page_render,
+    .handle_input = settings_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
 PAGE_REGISTER(UI_PAGE_SETTINGS, "设置", FA_SETTINGS_GEAR, true, 50, &settings_page_ops, &s_settings_instance.base);

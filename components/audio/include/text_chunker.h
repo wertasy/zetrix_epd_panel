@@ -11,9 +11,9 @@ typedef void (*text_chunker_cb_t)(const char *chunk, void *ctx);
 
 typedef struct {
     text_chunker_cb_t callback;
-    void             *callback_ctx;
+    void *callback_ctx;
 
-    char  *buffer;
+    char *buffer;
     size_t buffer_len;
     size_t buffer_cap;
 
@@ -29,6 +29,6 @@ void text_chunker_destroy(text_chunker_t *tc);
 
 #ifndef ESP_PLATFORM
 void *test_malloc(size_t size);
-#define malloc test_malloc
+#    define malloc test_malloc
 #endif
 #endif // TEXT_CHUNKER_H_

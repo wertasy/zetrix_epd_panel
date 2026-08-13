@@ -9,14 +9,14 @@ void widget_modal_init(widget_modal_t *modal)
 {
     if (!modal)
         return;
-    modal->bounds.x     = STYLE_MODAL_INSET;
-    modal->bounds.y     = 44;
-    modal->bounds.w     = STYLE_SCREEN_WIDTH - STYLE_MODAL_INSET * 2;
-    modal->bounds.h     = STYLE_SCREEN_HEIGHT - 88;
-    modal->title[0]     = '\0';
-    modal->footer[0]    = '\0';
-    modal->title_font   = &BUILTIN_TEXT_FONT;
-    modal->radius       = STYLE_BORDER_RADIUS_LG;
+    modal->bounds.x = STYLE_MODAL_INSET;
+    modal->bounds.y = 44;
+    modal->bounds.w = STYLE_SCREEN_WIDTH - STYLE_MODAL_INSET * 2;
+    modal->bounds.h = STYLE_SCREEN_HEIGHT - 88;
+    modal->title[0] = '\0';
+    modal->footer[0] = '\0';
+    modal->title_font = &BUILTIN_TEXT_FONT;
+    modal->radius = STYLE_BORDER_RADIUS_LG;
     modal->border_width = STYLE_BORDER_THIN;
 }
 
@@ -110,7 +110,7 @@ rawdraw_rect_t widget_modal_get_content_bounds(const widget_modal_t *modal)
 {
     if (!modal)
         return (rawdraw_rect_t){0, 0, 0, 0};
-    int title_h  = (modal->title[0] != '\0') ? STYLE_MODAL_TITLE_HEIGHT : 0;
+    int title_h = (modal->title[0] != '\0') ? STYLE_MODAL_TITLE_HEIGHT : 0;
     int footer_h = (modal->footer[0] != '\0') ? STYLE_MODAL_FOOTER_HEIGHT : 0;
     return (rawdraw_rect_t){modal->bounds.x + STYLE_CARD_PADDING, modal->bounds.y + title_h + STYLE_CARD_PADDING,
                             modal->bounds.w - STYLE_CARD_PADDING * 2,
@@ -135,7 +135,7 @@ void widget_modal_render(const widget_modal_t *modal, uint8_t *fb, int width, in
         return;
 
     rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
-    modal_style.border_width          = modal->border_width;
+    modal_style.border_width = modal->border_width;
 
     rawdraw_draw_styled_round_rect(fb, width, height, bounds, modal->radius, &modal_style);
 

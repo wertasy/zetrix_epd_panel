@@ -39,10 +39,10 @@ typedef void (*widget_scrollview_content_draw_cb_t)(uint8_t *fb, int width, int 
 
 typedef struct {
     rawdraw_rect_t bounds; /* visible area on screen */
-    int            content_height; /* total scrollable content height */
-    int            scroll_offset; /* current scroll position (Y offset) */
-    int            scrollbar_width; /* scrollbar indicator width */
-    bool           scrollbar_enabled; /* show scrollbar */
+    int content_height; /* total scrollable content height */
+    int scroll_offset; /* current scroll position (Y offset) */
+    int scrollbar_width; /* scrollbar indicator width */
+    bool scrollbar_enabled; /* show scrollbar */
 } widget_scrollview_t;
 
 /* ---- lifecycle ---- */
@@ -56,10 +56,10 @@ void widget_scrollview_set_scrollbar_enabled(widget_scrollview_t *sv, bool enabl
 
 /* ---- scroll control ---- */
 void widget_scrollview_set_scroll_offset(widget_scrollview_t *sv, int offset);
-int  widget_scrollview_get_scroll_offset(const widget_scrollview_t *sv);
+int widget_scrollview_get_scroll_offset(const widget_scrollview_t *sv);
 void widget_scrollview_scroll_to_end(widget_scrollview_t *sv);
 void widget_scrollview_scroll_by(widget_scrollview_t *sv, int delta);
-int  widget_scrollview_get_max_scroll_offset(const widget_scrollview_t *sv);
+int widget_scrollview_get_max_scroll_offset(const widget_scrollview_t *sv);
 bool widget_scrollview_can_scroll_up(const widget_scrollview_t *sv);
 bool widget_scrollview_can_scroll_down(const widget_scrollview_t *sv);
 

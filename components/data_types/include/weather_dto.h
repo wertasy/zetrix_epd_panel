@@ -24,29 +24,29 @@ extern "C" {
 #define WEATHER_MAX_FORECAST 7 /**< forecast slots (v1 daily fills up to 7)   */
 
 typedef struct {
-    char    label[16]; /**< 今天 / 明天 / 后天              */
-    char    weather_text[WEATHER_STR_LEN]; /**< 晴 / 多云 / 小雨                 */
-    char    icon_code[WEATHER_ICON_LEN]; /**< QWeather icon code string       */
+    char label[16]; /**< 今天 / 明天 / 后天              */
+    char weather_text[WEATHER_STR_LEN]; /**< 晴 / 多云 / 小雨                 */
+    char icon_code[WEATHER_ICON_LEN]; /**< QWeather icon code string       */
     int32_t temp_min;
     int32_t temp_max;
 } weather_forecast_day_t;
 
 typedef struct {
-    char                   city[WEATHER_STR_LEN];
-    char                   city_name[32]; /**< IP-geolocation city (e.g. "新城") */
-    char                   temp[WEATHER_STR_LEN]; /**< current temperature string      */
-    char                   feels_like[WEATHER_STR_LEN];
-    char                   weather_icon[WEATHER_ICON_LEN];
-    char                   weather_text[WEATHER_STR_LEN];
-    char                   wind_dir[WEATHER_STR_LEN];
-    char                   wind_scale[WEATHER_ICON_LEN];
-    char                   humidity[WEATHER_ICON_LEN];
-    char                   update_time[WEATHER_TIME_LEN]; /**< "HH:MM"                         */
-    char                   air_quality[WEATHER_STR_LEN]; /**< "优" / "良" ...                  */
-    int32_t                air_aqi; /**< AQI number, -1 if unknown        */
-    int32_t                temp_int; /**< numeric temperature             */
-    int32_t                uv_index; /**< UV index, -1 if unknown          */
-    int                    forecast_count;
+    char city[WEATHER_STR_LEN];
+    char city_name[32]; /**< IP-geolocation city (e.g. "新城") */
+    char temp[WEATHER_STR_LEN]; /**< current temperature string      */
+    char feels_like[WEATHER_STR_LEN];
+    char weather_icon[WEATHER_ICON_LEN];
+    char weather_text[WEATHER_STR_LEN];
+    char wind_dir[WEATHER_STR_LEN];
+    char wind_scale[WEATHER_ICON_LEN];
+    char humidity[WEATHER_ICON_LEN];
+    char update_time[WEATHER_TIME_LEN]; /**< "HH:MM"                         */
+    char air_quality[WEATHER_STR_LEN]; /**< "优" / "良" ...                  */
+    int32_t air_aqi; /**< AQI number, -1 if unknown        */
+    int32_t temp_int; /**< numeric temperature             */
+    int32_t uv_index; /**< UV index, -1 if unknown          */
+    int forecast_count;
     weather_forecast_day_t forecast[WEATHER_MAX_FORECAST];
 } weather_data_t;
 

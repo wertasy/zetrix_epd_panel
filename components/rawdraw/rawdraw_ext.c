@@ -17,10 +17,10 @@ int rawdraw_rect_area(rawdraw_rect_t r)
 
 rawdraw_rect_t rawdraw_clamp_rect(rawdraw_rect_t r, int width, int height)
 {
-    int            x1  = RD_MAX(0, r.x);
-    int            y1  = RD_MAX(0, r.y);
-    int            x2  = RD_MIN(width, r.x + r.w);
-    int            y2  = RD_MIN(height, r.y + r.h);
+    int x1 = RD_MAX(0, r.x);
+    int y1 = RD_MAX(0, r.y);
+    int x2 = RD_MIN(width, r.x + r.w);
+    int y2 = RD_MIN(height, r.y + r.h);
     rawdraw_rect_t out = {x1, y1, RD_MAX(0, x2 - x1), RD_MAX(0, y2 - y1)};
     return out;
 }
@@ -38,14 +38,14 @@ rawdraw_rect_t rawdraw_rect_union(rawdraw_rect_t a, rawdraw_rect_t b)
         return b;
     if (rawdraw_rect_area(b) == 0)
         return a;
-    int x1  = a.x < b.x ? a.x : b.x;
-    int y1  = a.y < b.y ? a.y : b.y;
+    int x1 = a.x < b.x ? a.x : b.x;
+    int y1 = a.y < b.y ? a.y : b.y;
     int ax2 = a.x + a.w;
     int bx2 = b.x + b.w;
-    int x2  = ax2 > bx2 ? ax2 : bx2;
+    int x2 = ax2 > bx2 ? ax2 : bx2;
     int ay2 = a.y + a.h;
     int by2 = b.y + b.h;
-    int y2  = ay2 > by2 ? ay2 : by2;
+    int y2 = ay2 > by2 ? ay2 : by2;
     return (rawdraw_rect_t){x1, y1, x2 - x1, y2 - y1};
 }
 
@@ -58,9 +58,9 @@ bool rawdraw_point_in_rounded_rect(int px, int py, rawdraw_rect_t r, int radius)
         return true;
     }
 
-    const int left   = r.x + radius;
-    const int right  = r.x + r.w - 1 - radius;
-    const int top    = r.y + radius;
+    const int left = r.x + radius;
+    const int right = r.x + r.w - 1 - radius;
+    const int top = r.y + radius;
     const int bottom = r.y + r.h - 1 - radius;
 
     if ((px >= left && px <= right) || (py >= top && py <= bottom)) {
@@ -118,13 +118,13 @@ void rawdraw_draw_round_rect_border(uint8_t *fb, int width, int height, rawdraw_
         return;
 
     int max_radius = RD_MIN(r.w, r.h) / 2;
-    radius         = RD_MIN(radius, max_radius);
+    radius = RD_MIN(radius, max_radius);
     if (radius < 0)
         radius = 0;
 
-    rawdraw_rect_t clipped      = rawdraw_clamp_rect(r, width, height);
-    rawdraw_rect_t inner        = {r.x + thickness, r.y + thickness, r.w - thickness * 2, r.h - thickness * 2};
-    int            inner_radius = RD_MAX(0, radius - thickness);
+    rawdraw_rect_t clipped = rawdraw_clamp_rect(r, width, height);
+    rawdraw_rect_t inner = {r.x + thickness, r.y + thickness, r.w - thickness * 2, r.h - thickness * 2};
+    int inner_radius = RD_MAX(0, radius - thickness);
 
     for (int y = clipped.y; y < clipped.y + clipped.h; ++y) {
         for (int x = clipped.x; x < clipped.x + clipped.w; ++x) {
@@ -143,8 +143,8 @@ void rawdraw_draw_hline(uint8_t *fb, int width, int height, int y, int x1, int x
         return;
     if (x1 > x2) {
         int tmp = x1;
-        x1      = x2;
-        x2      = tmp;
+        x1 = x2;
+        x2 = tmp;
     }
     /* P0: Use memset scanline instead of per-pixel set_pixel */
     rawdraw_fill_scanline_segment(fb, width, height, y, x1, x2 + 1, (int)color);
@@ -156,8 +156,8 @@ void rawdraw_draw_vline(uint8_t *fb, int width, int height, int x, int y1, int y
         return;
     if (y1 > y2) {
         int tmp = y1;
-        y1      = y2;
-        y2      = tmp;
+        y1 = y2;
+        y2 = tmp;
     }
     for (int y = y1; y <= y2; y++)
         rawdraw_set_pixel_unchecked(fb, width, height, x, y, (int)color);
@@ -169,10 +169,10 @@ void rawdraw_draw_line(uint8_t *fb, int width, int height, rawdraw_point_t p1, r
     if (!fb)
         return;
 
-    int dx  = abs(p2.x - p1.x);
-    int dy  = abs(p2.y - p1.y);
-    int sx  = (p1.x < p2.x) ? 1 : -1;
-    int sy  = (p1.y < p2.y) ? 1 : -1;
+    int dx = abs(p2.x - p1.x);
+    int dy = abs(p2.y - p1.y);
+    int sx = (p1.x < p2.x) ? 1 : -1;
+    int sy = (p1.y < p2.y) ? 1 : -1;
     int err = dx - dy;
 
     int x = p1.x, y = p1.y;
@@ -203,9 +203,9 @@ void rawdraw_draw_circle(uint8_t *fb, int width, int height, rawdraw_point_t cen
     int cx = center.x, cy = center.y;
 
     int y_start = RD_MAX(-radius, -cy);
-    int y_end   = RD_MIN(radius, height - 1 - cy);
+    int y_end = RD_MIN(radius, height - 1 - cy);
     int x_start = RD_MAX(-radius, -cx);
-    int x_end   = RD_MIN(radius, width - 1 - cx);
+    int x_end = RD_MIN(radius, width - 1 - cx);
 
     for (int y = y_start; y <= y_end; y++) {
         for (int x = x_start; x <= x_end; x++) {
@@ -264,7 +264,7 @@ void rawdraw_draw_progress(uint8_t *fb, int width, int height, rawdraw_rect_t r,
     }
 
     int max_radius = RD_MIN(r.w, r.h) / 2;
-    radius         = RD_MIN(radius, max_radius);
+    radius = RD_MIN(radius, max_radius);
 
     rawdraw_draw_round_rect(fb, width, height, r.x, r.y, r.w, r.h, radius, (int)bg_color, (int)bg_color, 0);
 
@@ -283,23 +283,23 @@ void rawdraw_draw_progress_with_label(uint8_t *fb, int width, int height, int x,
     rawdraw_draw_progress(fb, width, height, r, value_pct, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, -1);
 
     if (label && font) {
-        int text_w  = rawdraw_measure_text_width(label, font);
-        int text_h  = font->line_height;
+        int text_w = rawdraw_measure_text_width(label, font);
+        int text_h = font->line_height;
         int label_x = x + (w - text_w) / 2;
         int label_y = y + (h - text_h) / 2;
 
         int progress_x = x + (w * value_pct) / 100;
 
-        int         cursor_x = label_x;
-        int         cursor_y = label_y;
-        const char *p        = label;
+        int cursor_x = label_x;
+        int cursor_y = label_y;
+        const char *p = label;
 
         const int letter_spacing = (font->line_height + 8) / 16;
-        const int space_width    = font->line_height / 4;
+        const int space_width = font->line_height / 4;
 
         while (*p) {
             const char *char_start = p;
-            uint32_t    ch         = utf8_next(&p);
+            uint32_t ch = utf8_next(&p);
             if (ch == 0)
                 break;
 
@@ -314,7 +314,7 @@ void rawdraw_draw_progress_with_label(uint8_t *fb, int width, int height, int x,
                 char_w = space_width;
             } else {
                 lv_font_glyph_dsc_t g = {0};
-                g.resolved_font       = font;
+                g.resolved_font = font;
                 if (!lv_font_get_glyph_dsc(font, &g, ch, 0)) {
                     char_w = font->line_height / 2;
                 } else {
@@ -330,11 +330,11 @@ void rawdraw_draw_progress_with_label(uint8_t *fb, int width, int height, int x,
             }
 
             // Choose white if the character's center position is less than the progress threshold X, black otherwise.
-            int             char_center = cursor_x + char_w / 2;
-            rawdraw_color_t color       = (char_center < progress_x) ? RAWDRAW_COLOR_WHITE : RAWDRAW_COLOR_BLACK;
+            int char_center = cursor_x + char_w / 2;
+            rawdraw_color_t color = (char_center < progress_x) ? RAWDRAW_COLOR_WHITE : RAWDRAW_COLOR_BLACK;
 
             if (ch != ' ') {
-                int  char_len = p - char_start;
+                int char_len = p - char_start;
                 char tmp[8];
                 if (char_len > 0 && char_len < (int)sizeof(tmp)) {
                     memcpy(tmp, char_start, char_len);
@@ -353,11 +353,11 @@ int rawdraw_measure_text_width(const char *text, const lv_font_t *font)
     if (!text || !font)
         return 0;
 
-    int         width = 0;
-    const char *p     = text;
+    int width = 0;
+    const char *p = text;
 
     const int letter_spacing = (font->line_height + 8) / 16;
-    const int space_width    = font->line_height / 4;
+    const int space_width = font->line_height / 4;
 
     while (*p) {
         uint32_t ch = utf8_next(&p);
@@ -374,7 +374,7 @@ int rawdraw_measure_text_width(const char *text, const lv_font_t *font)
         }
 
         lv_font_glyph_dsc_t g = {0};
-        g.resolved_font       = font;
+        g.resolved_font = font;
         if (lv_font_get_glyph_dsc(font, &g, ch, 0)) {
             if (ch >= 0x20 && ch <= 0x7E) {
                 int prop_adv = (int)g.box_w + (int)g.ofs_x + letter_spacing;
@@ -406,13 +406,13 @@ rawdraw_rect_t rawdraw_measure_text_bounds(const char *text, const lv_font_t *fo
         return (rawdraw_rect_t){0, 0, 0, 0};
     }
 
-    int         max_line_w     = 0;
-    int         current_line_w = 0;
-    int         line_count     = 1;
-    const char *p              = text;
+    int max_line_w = 0;
+    int current_line_w = 0;
+    int line_count = 1;
+    const char *p = text;
 
     const int letter_spacing = (font->line_height + 8) / 16;
-    const int space_width    = font->line_height / 4;
+    const int space_width = font->line_height / 4;
 
     while (*p) {
         uint32_t ch = utf8_next(&p);
@@ -420,7 +420,7 @@ rawdraw_rect_t rawdraw_measure_text_bounds(const char *text, const lv_font_t *fo
             break;
 
         if (ch == '\n') {
-            max_line_w     = RD_MAX(max_line_w, current_line_w);
+            max_line_w = RD_MAX(max_line_w, current_line_w);
             current_line_w = 0;
             line_count++;
             continue;
@@ -431,7 +431,7 @@ rawdraw_rect_t rawdraw_measure_text_bounds(const char *text, const lv_font_t *fo
             char_w = space_width;
         } else {
             lv_font_glyph_dsc_t g = {0};
-            g.resolved_font       = font;
+            g.resolved_font = font;
             if (lv_font_get_glyph_dsc(font, &g, ch, 0)) {
                 if (ch >= 0x20 && ch <= 0x7E) {
                     char_w = (int)g.box_w + (int)g.ofs_x + letter_spacing;
@@ -446,7 +446,7 @@ rawdraw_rect_t rawdraw_measure_text_bounds(const char *text, const lv_font_t *fo
         }
 
         if (max_width > 0 && current_line_w + char_w > max_width && current_line_w > 0) {
-            max_line_w     = RD_MAX(max_line_w, current_line_w);
+            max_line_w = RD_MAX(max_line_w, current_line_w);
             current_line_w = char_w;
             line_count++;
         } else {
@@ -486,9 +486,9 @@ void rawdraw_invert_region(uint8_t *fb, int width, int height, rawdraw_rect_t r)
         uint32_t row_base = (uint32_t)y * bpr;
         for (int x = clipped.x; x < clipped.x + clipped.w; x++) {
             uint32_t index = row_base + (uint32_t)(x >> 2);
-            uint8_t  shift = (uint8_t)(6 - ((x & 0x03) << 1));
-            uint8_t  bits  = (uint8_t)((fb[index] >> shift) & 0x03);
-            uint8_t  inv;
+            uint8_t shift = (uint8_t)(6 - ((x & 0x03) << 1));
+            uint8_t bits = (uint8_t)((fb[index] >> shift) & 0x03);
+            uint8_t inv;
             if (bits == RAWDRAW_COLOR_BLACK) {
                 inv = (uint8_t)RAWDRAW_COLOR_WHITE;
             } else if (bits == RAWDRAW_COLOR_WHITE) {
@@ -497,7 +497,7 @@ void rawdraw_invert_region(uint8_t *fb, int width, int height, rawdraw_rect_t r)
                 continue; /* yellow/red unchanged */
             }
             uint8_t mask = (uint8_t)(0x03U << shift);
-            fb[index]    = (uint8_t)((fb[index] & (uint8_t)~mask) | (inv << shift));
+            fb[index] = (uint8_t)((fb[index] & (uint8_t)~mask) | (inv << shift));
         }
     }
 }
@@ -511,8 +511,8 @@ void rawdraw_copy_region(const uint8_t *src, uint8_t *dst, int width, int height
     if (clipped.w <= 0 || clipped.h <= 0)
         return;
 
-    int sx     = clipped.x;
-    int dx     = dst_x;
+    int sx = clipped.x;
+    int dx = dst_x;
     int copy_w = clipped.w;
 
     /* Clip destination horizontally */
@@ -528,7 +528,7 @@ void rawdraw_copy_region(const uint8_t *src, uint8_t *dst, int width, int height
 
     /* Clip destination vertically */
     int dy_start = dst_y;
-    int copy_h   = clipped.h;
+    int copy_h = clipped.h;
     if (dy_start < 0) {
         copy_h += dy_start;
         dy_start = 0;
@@ -538,8 +538,8 @@ void rawdraw_copy_region(const uint8_t *src, uint8_t *dst, int width, int height
     if (copy_h <= 0)
         return;
 
-    int      src_y_start = clipped.y + (dy_start - dst_y);
-    uint16_t bpr         = (uint16_t)((width * 2 + 7) >> 3);
+    int src_y_start = clipped.y + (dy_start - dst_y);
+    uint16_t bpr = (uint16_t)((width * 2 + 7) >> 3);
 
     /* Fast path: byte-aligned copy (both x offsets divisible by 4,
      * copy width divisible by 4 → whole 2bpp bytes per row) */
@@ -547,7 +547,7 @@ void rawdraw_copy_region(const uint8_t *src, uint8_t *dst, int width, int height
         size_t bytes_per_row_copy = (size_t)(copy_w / 4);
         for (int i = 0; i < copy_h; i++) {
             const uint8_t *sp = src + (size_t)(src_y_start + i) * bpr + (size_t)(sx >> 2);
-            uint8_t       *dp = dst + (size_t)(dy_start + i) * bpr + (size_t)(dx >> 2);
+            uint8_t *dp = dst + (size_t)(dy_start + i) * bpr + (size_t)(dx >> 2);
             memcpy(dp, sp, bytes_per_row_copy);
         }
     } else {
@@ -556,13 +556,13 @@ void rawdraw_copy_region(const uint8_t *src, uint8_t *dst, int width, int height
             uint32_t src_row = (uint32_t)(src_y_start + i) * bpr;
             uint32_t dst_row = (uint32_t)(dy_start + i) * bpr;
             for (int x = 0; x < copy_w; x++) {
-                uint32_t si     = src_row + (uint32_t)((sx + x) >> 2);
-                uint8_t  sshift = (uint8_t)(6 - (((sx + x) & 0x03) << 1));
-                uint8_t  bits   = (uint8_t)((src[si] >> sshift) & 0x03);
-                uint32_t di     = dst_row + (uint32_t)((dx + x) >> 2);
-                uint8_t  dshift = (uint8_t)(6 - (((dx + x) & 0x03) << 1));
-                uint8_t  dmask  = (uint8_t)(0x03U << dshift);
-                dst[di]         = (uint8_t)((dst[di] & (uint8_t)~dmask) | (bits << dshift));
+                uint32_t si = src_row + (uint32_t)((sx + x) >> 2);
+                uint8_t sshift = (uint8_t)(6 - (((sx + x) & 0x03) << 1));
+                uint8_t bits = (uint8_t)((src[si] >> sshift) & 0x03);
+                uint32_t di = dst_row + (uint32_t)((dx + x) >> 2);
+                uint8_t dshift = (uint8_t)(6 - (((dx + x) & 0x03) << 1));
+                uint8_t dmask = (uint8_t)(0x03U << dshift);
+                dst[di] = (uint8_t)((dst[di] & (uint8_t)~dmask) | (bits << dshift));
             }
         }
     }
@@ -587,11 +587,11 @@ void rawdraw_blit_rotated_90(const uint8_t *src, int sw, int sh, uint8_t *dst, i
         if (dx < 0 || dx >= dw)
             continue; /* whole column off-screen */
 
-        const uint8_t *src_row      = src + (uint32_t)sy * src_bpr;
-        uint32_t       dst_col_byte = (uint32_t)(dx >> 2);
-        uint8_t        shift        = (uint8_t)(6 - ((dx & 0x03) << 1));
-        uint8_t        dmask        = (uint8_t)(0x03U << shift);
-        uint8_t        keep         = (uint8_t)~dmask;
+        const uint8_t *src_row = src + (uint32_t)sy * src_bpr;
+        uint32_t dst_col_byte = (uint32_t)(dx >> 2);
+        uint8_t shift = (uint8_t)(6 - ((dx & 0x03) << 1));
+        uint8_t dmask = (uint8_t)(0x03U << shift);
+        uint8_t keep = (uint8_t)~dmask;
 
         /* Batched reads: each source byte holds 4 packed 2bpp pixels. */
         int sx = 0;
@@ -601,19 +601,19 @@ void rawdraw_blit_rotated_90(const uint8_t *src, int sw, int sh, uint8_t *dst, i
                 int dy = dst_y + sx + i;
                 if ((unsigned)dy >= (unsigned)dh)
                     continue;
-                uint8_t  color = (uint8_t)((sb >> (6 - (i << 1))) & 0x03U);
-                uint8_t *dp    = dst + (uint32_t)dy * dst_bpr + dst_col_byte;
-                *dp            = (uint8_t)((*dp & keep) | (color << shift));
+                uint8_t color = (uint8_t)((sb >> (6 - (i << 1))) & 0x03U);
+                uint8_t *dp = dst + (uint32_t)dy * dst_bpr + dst_col_byte;
+                *dp = (uint8_t)((*dp & keep) | (color << shift));
             }
         }
         for (; sx < sw; ++sx) {
             int dy = dst_y + sx;
             if ((unsigned)dy >= (unsigned)dh)
                 continue;
-            uint8_t  sb    = src_row[(uint32_t)sx >> 2];
-            uint8_t  color = (uint8_t)((sb >> (6 - ((sx & 0x03) << 1))) & 0x03U);
-            uint8_t *dp    = dst + (uint32_t)dy * dst_bpr + dst_col_byte;
-            *dp            = (uint8_t)((*dp & keep) | (color << shift));
+            uint8_t sb = src_row[(uint32_t)sx >> 2];
+            uint8_t color = (uint8_t)((sb >> (6 - ((sx & 0x03) << 1))) & 0x03U);
+            uint8_t *dp = dst + (uint32_t)dy * dst_bpr + dst_col_byte;
+            *dp = (uint8_t)((*dp & keep) | (color << shift));
         }
     }
 }
@@ -624,7 +624,7 @@ void rawdraw_clear(uint8_t *fb, int width, int height, rawdraw_color_t fill)
         return;
 
     size_t bytes_per_row = (width * 2 + 7) >> 3;
-    size_t total         = bytes_per_row * height;
+    size_t total = bytes_per_row * height;
     memset(fb, ColorToFillByte(fill), total);
 }
 
@@ -644,7 +644,7 @@ rawdraw_color_t rawdraw_get_pixel(const uint8_t *fb, int width, int height, int 
         return RAWDRAW_COLOR_WHITE;
 
     uint16_t bytes_per_row = (width * 2 + 7) >> 3;
-    uint32_t index         = (uint32_t)y * bytes_per_row + (uint32_t)(x >> 2);
-    uint8_t  shift         = (uint8_t)(6 - ((x & 0x03) << 1));
+    uint32_t index = (uint32_t)y * bytes_per_row + (uint32_t)(x >> 2);
+    uint8_t shift = (uint8_t)(6 - ((x & 0x03) << 1));
     return (rawdraw_color_t)((fb[index] >> shift) & 0x03);
 }

@@ -41,16 +41,16 @@ typedef struct {
     char max_label[WIDGET_SLIDER_LABEL_LEN]; /* auto-populated from range */
     char value_label[WIDGET_SLIDER_LABEL_LEN]; /* "" = no value label      */
 
-    const lv_font_t         *font;
+    const lv_font_t *font;
     widget_slider_callback_t callback;
-    void                    *callback_user_data;
+    void *callback_user_data;
 
     rawdraw_color_t track_bg_color;
     rawdraw_color_t track_fill_color;
     rawdraw_color_t thumb_color;
     rawdraw_color_t text_color;
     rawdraw_color_t border_color;
-    bool            custom_colors;
+    bool custom_colors;
 } widget_slider_t;
 
 /* ---- lifecycle ---- */
@@ -61,8 +61,8 @@ void widget_slider_set_position(widget_slider_t *s, int x, int y);
 void widget_slider_set_size(widget_slider_t *s, int w, int h);
 void widget_slider_set_range(widget_slider_t *s, int min_val, int max_val);
 void widget_slider_set_value(widget_slider_t *s, int value);
-int  widget_slider_get_value(const widget_slider_t *s);
-int  widget_slider_get_value_percent(const widget_slider_t *s);
+int widget_slider_get_value(const widget_slider_t *s);
+int widget_slider_get_value_percent(const widget_slider_t *s);
 void widget_slider_set_labels(widget_slider_t *s, const char *min_label, const char *max_label,
                               const char *value_label);
 void widget_slider_set_font(widget_slider_t *s, const lv_font_t *font);
@@ -76,10 +76,10 @@ bool widget_slider_handle_drag(widget_slider_t *s, int px);
 bool widget_slider_handle_input(widget_slider_t *s, const ui_button_event_t *event);
 
 /* ---- geometry ---- */
-rawdraw_rect_t  widget_slider_get_bounds(const widget_slider_t *s);
-rawdraw_rect_t  widget_slider_get_track_bounds(const widget_slider_t *s);
+rawdraw_rect_t widget_slider_get_bounds(const widget_slider_t *s);
+rawdraw_rect_t widget_slider_get_track_bounds(const widget_slider_t *s);
 rawdraw_point_t widget_slider_get_thumb_center(const widget_slider_t *s);
-int             widget_slider_x_to_value(const widget_slider_t *s, int px);
+int widget_slider_x_to_value(const widget_slider_t *s, int px);
 
 /* ---- rendering ---- */
 void widget_slider_render(const widget_slider_t *s, uint8_t *fb, int fb_width, int fb_height);

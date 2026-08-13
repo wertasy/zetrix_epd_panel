@@ -25,14 +25,14 @@ extern "C" {
 
 typedef struct {
     rawdraw_rect_t bounds;
-    int            radius;
+    int radius;
 
-    char             title[WIDGET_PANEL_TITLE_LEN]; /* "" = no title bar text */
+    char title[WIDGET_PANEL_TITLE_LEN]; /* "" = no title bar text */
     const lv_font_t *title_font;
-    int              title_height; /* 0 = auto (font line_height + 2*padding) */
+    int title_height; /* 0 = auto (font line_height + 2*padding) */
 
-    int  padding;
-    int  border_width;
+    int padding;
+    int border_width;
     bool title_enabled;
 
     rawdraw_color_t bg_color;
@@ -60,7 +60,7 @@ void widget_panel_set_title_colors(widget_panel_t *panel, rawdraw_color_t bg, ra
 rawdraw_rect_t widget_panel_get_bounds(const widget_panel_t *panel);
 rawdraw_rect_t widget_panel_get_title_bounds(const widget_panel_t *panel);
 rawdraw_rect_t widget_panel_get_content_bounds(const widget_panel_t *panel);
-int            widget_panel_calculate_title_height(const widget_panel_t *panel);
+int widget_panel_calculate_title_height(const widget_panel_t *panel);
 
 /* ---- rendering ---- */
 void widget_panel_render(const widget_panel_t *panel, uint8_t *fb, int fb_width, int fb_height);

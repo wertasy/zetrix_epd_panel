@@ -19,20 +19,20 @@ extern "C" {
 
 typedef struct {
     int16_t year;
-    int8_t  month;
-    int8_t  day;
-    char    name[HOLIDAY_NAME_LEN];
-    bool    is_rest;
+    int8_t month;
+    int8_t day;
+    char name[HOLIDAY_NAME_LEN];
+    bool is_rest;
 } holiday_entry_t;
 
 typedef struct {
-    int             year;
-    int             entry_count;
+    int year;
+    int entry_count;
     holiday_entry_t entries[HOLIDAY_MAX_ENTRIES];
 } holiday_cache_t;
 
-bool        holiday_fetcher_is_holiday(int year, int month, int day);
-bool        holiday_fetcher_is_makeup_workday(int year, int month, int day);
+bool holiday_fetcher_is_holiday(int year, int month, int day);
+bool holiday_fetcher_is_makeup_workday(int year, int month, int day);
 const char *holiday_fetcher_get_holiday_name(int year, int month, int day);
 const char *holiday_fetcher_get_makeup_label(int year, int month, int day);
 const holiday_cache_t *holiday_fetcher_get_cache(void);

@@ -35,23 +35,23 @@ static const char *TAG = "bt_mgr";
 /* ------------------------------------------------------------------ */
 /* Module state                                                        */
 /* ------------------------------------------------------------------ */
-static bool s_ble_enabled     = false;
+static bool s_ble_enabled = false;
 static bool s_ble_initialized = false;
-static bool s_advertising     = false;
+static bool s_advertising = false;
 
 /* Injectable NFC NDEF writer (Touch & Go). */
-static bluetooth_nfc_ndef_writer_t s_nfc_writer           = NULL;
-static void                       *s_nfc_writer_user_data = NULL;
+static bluetooth_nfc_ndef_writer_t s_nfc_writer = NULL;
+static void *s_nfc_writer_user_data = NULL;
 
 /* Advertising parameters (matches the original C++ configuration). */
 static esp_ble_adv_params_t s_adv_params = {
-    .adv_int_min       = 0x20,
-    .adv_int_max       = 0x40,
-    .adv_type          = ADV_TYPE_IND,
-    .own_addr_type     = BLE_ADDR_TYPE_PUBLIC,
-    .peer_addr         = {0},
-    .peer_addr_type    = BLE_ADDR_TYPE_PUBLIC,
-    .channel_map       = ADV_CHNL_ALL,
+    .adv_int_min = 0x20,
+    .adv_int_max = 0x40,
+    .adv_type = ADV_TYPE_IND,
+    .own_addr_type = BLE_ADDR_TYPE_PUBLIC,
+    .peer_addr = {0},
+    .peer_addr_type = BLE_ADDR_TYPE_PUBLIC,
+    .channel_map = ADV_CHNL_ALL,
     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
 };
 
@@ -111,7 +111,7 @@ bool bluetooth_manager_init(void)
 
     /* BT controller. */
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-    ret                               = esp_bt_controller_init(&bt_cfg);
+    ret = esp_bt_controller_init(&bt_cfg);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "BT controller init failed: %s", esp_err_to_name(ret));
         return false;
@@ -265,7 +265,7 @@ bool bluetooth_manager_is_enabled(void)
 /* ------------------------------------------------------------------ */
 void bluetooth_manager_set_nfc_writer(bluetooth_nfc_ndef_writer_t writer, void *user_data)
 {
-    s_nfc_writer           = writer;
+    s_nfc_writer = writer;
     s_nfc_writer_user_data = user_data;
 }
 
@@ -322,7 +322,7 @@ static int build_ndef_text_tlv(const char *text, uint8_t *out, size_t out_cap)
         out[1] = (uint8_t)ndef_len;
         hdr = 2;
     }
-    size_t i   = hdr;
+    size_t i = hdr;
 
     out[i++] = 0xD1; /* MB=1 ME=1 CF=0 SR=1 IL=0 TNF=001 */
     out[i++] = 0x01; /* TYPE length = 1 ('T')            */
@@ -347,8 +347,8 @@ int bluetooth_manager_publish_touch_and_go(void)
     }
 
     /* Read the BLE MAC (ESP_MAC_BT is the public BLE address). */
-    uint8_t   mac[6] = {0};
-    esp_err_t ret    = esp_read_mac(mac, ESP_MAC_BT);
+    uint8_t mac[6] = {0};
+    esp_err_t ret = esp_read_mac(mac, ESP_MAC_BT);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Touch & Go: failed to read BLE MAC: %s", esp_err_to_name(ret));
         return -2;
@@ -363,7 +363,7 @@ int bluetooth_manager_publish_touch_and_go(void)
     /* Encode as NDEF Text record + Message TLV + Terminator, then hand the
      * raw bytes to the NFC writer for verbatim write to the tag user area. */
     uint8_t tlv[320];
-    int     tlv_len = build_ndef_text_tlv(text, tlv, sizeof(tlv));
+    int tlv_len = build_ndef_text_tlv(text, tlv, sizeof(tlv));
     if (tlv_len < 0) {
         ESP_LOGE(TAG, "Touch & Go: NDEF message too large");
         return -3;

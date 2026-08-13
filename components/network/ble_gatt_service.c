@@ -34,8 +34,8 @@ static const char *TAG = "ble_gatt";
 
 #ifdef ESP_PLATFORM
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
+#    include <freertos/FreeRTOS.h>
+#    include <freertos/semphr.h>
 
 static SemaphoreHandle_t s_ble_mutex = NULL;
 
@@ -56,18 +56,18 @@ static void unlock_ble(void)
 /* ------------------------------------------------------------------ */
 /* GATT attribute handle storage                                       */
 /* ------------------------------------------------------------------ */
-static uint16_t      s_service_handle            = 0;
-static uint16_t      s_char_image_data_handle    = 0;
-static uint16_t      s_char_image_control_handle = 0;
-static uint16_t      s_char_device_info_handle   = 0;
-static esp_gatt_if_t s_gatts_if                  = 0;
-static bool          s_service_ready             = false;
-static uint16_t      s_conn_id                   = 0;
-static uint16_t      s_local_mtu                 = 23; /* default BLE MTU */
+static uint16_t s_service_handle = 0;
+static uint16_t s_char_image_data_handle = 0;
+static uint16_t s_char_image_control_handle = 0;
+static uint16_t s_char_device_info_handle = 0;
+static esp_gatt_if_t s_gatts_if = 0;
+static bool s_service_ready = false;
+static uint16_t s_conn_id = 0;
+static uint16_t s_local_mtu = 23; /* default BLE MTU */
 
 /* Image-ready callback (fires on COMPLETE control command). */
-static ble_gatt_image_ready_cb_t s_image_ready_cb        = NULL;
-static void                     *s_image_ready_user_data = NULL;
+static ble_gatt_image_ready_cb_t s_image_ready_cb = NULL;
+static void *s_image_ready_user_data = NULL;
 
 /* Device info reported by the Device Info characteristic. */
 static ble_gatt_device_info_t s_device_info;
@@ -88,13 +88,13 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
     case ESP_GATTS_REG_EVT:
         ESP_LOGI(TAG, "GATTS REG_EVT, status=%d, app_id=%d", param->reg.status, param->reg.app_id);
         if (param->reg.status == ESP_GATT_OK) {
-            s_gatts_if                    = gatts_if_param;
+            s_gatts_if = gatts_if_param;
             esp_gatt_srvc_id_t service_id = {
                 .id =
                     {
                         .uuid =
                             {
-                                .len  = ESP_UUID_LEN_16,
+                                .len = ESP_UUID_LEN_16,
                                 .uuid = {.uuid16 = BLE_GATT_SERVICE_UUID},
                             },
                         .inst_id = 0,
@@ -111,13 +111,13 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
 
         /* Image Data characteristic (Write only). */
         esp_bt_uuid_t data_uuid = {
-            .len  = ESP_UUID_LEN_16,
+            .len = ESP_UUID_LEN_16,
             .uuid = {.uuid16 = BLE_GATT_CHAR_UUID_IMAGE_DATA},
         };
         esp_attr_value_t data_val = {
             .attr_max_len = 512,
-            .attr_len     = 0,
-            .attr_value   = NULL,
+            .attr_len = 0,
+            .attr_value = NULL,
         };
         esp_ble_gatts_add_char(s_service_handle, &data_uuid, ESP_GATT_PERM_WRITE, ESP_GATT_CHAR_PROP_BIT_WRITE,
                                &data_val, NULL);
@@ -132,7 +132,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
 
             /* Image Control characteristic (Write/Read). */
             esp_bt_uuid_t ctrl_uuid = {
-                .len  = ESP_UUID_LEN_16,
+                .len = ESP_UUID_LEN_16,
                 .uuid = {.uuid16 = BLE_GATT_CHAR_UUID_IMAGE_CTRL},
             };
             esp_ble_gatts_add_char(s_service_handle, &ctrl_uuid, ESP_GATT_PERM_WRITE | ESP_GATT_PERM_READ,
@@ -142,7 +142,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
 
             /* Device Info characteristic (Read only). */
             esp_bt_uuid_t info_uuid = {
-                .len  = ESP_UUID_LEN_16,
+                .len = ESP_UUID_LEN_16,
                 .uuid = {.uuid16 = BLE_GATT_CHAR_UUID_DEVICE_INFO},
             };
             esp_ble_gatts_add_char(s_service_handle, &info_uuid, ESP_GATT_PERM_READ, ESP_GATT_CHAR_PROP_BIT_READ, NULL,
@@ -169,7 +169,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
 
     case ESP_GATTS_DISCONNECT_EVT:
         ESP_LOGI(TAG, "DISCONNECT_EVT, conn_id=%d", param->disconnect.conn_id);
-        s_conn_id   = 0;
+        s_conn_id = 0;
         s_local_mtu = 23;
         ble_image_receiver_reset(); /* cancel any pending transfer */
         bluetooth_manager_restart_advertising();
@@ -198,13 +198,13 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
         if (param->read.handle == s_char_image_control_handle) {
             /* Status block: [status, recv_hi, recv_lo, exp_hi, exp_lo]. */
             uint8_t status[5];
-            status[0]     = (uint8_t)ble_image_receiver_get_status();
+            status[0] = (uint8_t)ble_image_receiver_get_status();
             uint16_t recv = ble_image_receiver_get_received_bytes();
-            status[1]     = (uint8_t)(recv >> 8);
-            status[2]     = (uint8_t)(recv & 0xFF);
+            status[1] = (uint8_t)(recv >> 8);
+            status[2] = (uint8_t)(recv & 0xFF);
             uint16_t expected = ble_image_receiver_get_expected_size();
-            status[3]     = (uint8_t)(expected >> 8);
-            status[4]     = (uint8_t)(expected & 0xFF);
+            status[3] = (uint8_t)(expected >> 8);
+            status[4] = (uint8_t)(expected & 0xFF);
 
             esp_gatt_rsp_t rsp;
             memset(&rsp, 0, sizeof(rsp));
@@ -290,10 +290,10 @@ static void handle_control_command(const uint8_t *data, uint16_t len)
 static void handle_json_control_command(const uint8_t *data, uint16_t len)
 {
     /* cJSON requires a NUL-terminated string. */
-    char   json[128];
+    char json[128];
     cJSON *root;
     cJSON *cmd_item;
-    char   cmd[16];
+    char cmd[16];
     if (len >= sizeof(json)) {
         len = sizeof(json) - 1;
     }
@@ -361,13 +361,13 @@ bool ble_gatt_service_init(void)
     /* Device-info defaults (firmware 6.7.0, 400x300 panel). */
     lock_ble();
     memset(&s_device_info, 0, sizeof(s_device_info));
-    s_device_info.firmware_major      = 6;
-    s_device_info.firmware_minor      = 7;
-    s_device_info.firmware_patch      = 0;
-    s_device_info.display_width_high  = (uint8_t)(400 >> 8);
-    s_device_info.display_width_low   = (uint8_t)(400 & 0xFF);
+    s_device_info.firmware_major = 6;
+    s_device_info.firmware_minor = 7;
+    s_device_info.firmware_patch = 0;
+    s_device_info.display_width_high = (uint8_t)(400 >> 8);
+    s_device_info.display_width_low = (uint8_t)(400 & 0xFF);
     s_device_info.display_height_high = (uint8_t)(300 >> 8);
-    s_device_info.display_height_low  = (uint8_t)(300 & 0xFF);
+    s_device_info.display_height_low = (uint8_t)(300 & 0xFF);
     unlock_ble();
 
     ESP_LOGI(TAG, "GATT service init complete, waiting for registration event");
@@ -379,7 +379,7 @@ bool ble_gatt_service_init(void)
 
 void ble_gatt_service_set_image_ready_callback(ble_gatt_image_ready_cb_t callback, void *user_data)
 {
-    s_image_ready_cb        = callback;
+    s_image_ready_cb = callback;
     s_image_ready_user_data = user_data;
 }
 
@@ -390,7 +390,6 @@ void ble_gatt_service_update_device_info(uint8_t battery_percent, uint8_t storag
     s_device_info.storage_percent = storage_percent;
     unlock_ble();
 }
-
 
 ble_gatt_status_t ble_gatt_service_get_status(void)
 {

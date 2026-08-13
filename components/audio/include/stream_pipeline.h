@@ -31,8 +31,8 @@ static inline void vSemaphoreDelete(SemaphoreHandle_t mutex)
 }
 int test_xSemaphoreTake(SemaphoreHandle_t mutex, uint32_t delay);
 int test_xSemaphoreGive(SemaphoreHandle_t mutex);
-#define xSemaphoreTake test_xSemaphoreTake
-#define xSemaphoreGive test_xSemaphoreGive
+#    define xSemaphoreTake test_xSemaphoreTake
+#    define xSemaphoreGive test_xSemaphoreGive
 #    ifndef portMAX_DELAY
 #        define portMAX_DELAY 0xFFFFFFFF
 #    endif
@@ -44,12 +44,12 @@ int test_xSemaphoreGive(SemaphoreHandle_t mutex);
 typedef void (*text_chunk_cb_t)(const char *chunk, void *ctx);
 
 typedef struct {
-    protocol_t      *proto;
-    text_chunker_t   chunker;
-    text_chunk_cb_t  cb;
-    void            *cb_ctx;
+    protocol_t *proto;
+    text_chunker_t chunker;
+    text_chunk_cb_t cb;
+    void *cb_ctx;
 
-    bool    is_streaming;
+    bool is_streaming;
     int64_t last_ui_update_ms;
 
     SemaphoreHandle_t mutex;

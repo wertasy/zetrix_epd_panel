@@ -68,15 +68,15 @@ void rawdraw_draw_circular_progress_with_label(uint8_t *fb, int width, int heigh
 
 typedef struct {
     rawdraw_rect_t bounds;
-    int            value; /* 0–100 */
-    int            radius; /* corner radius (STYLE_PROGRESS_RADIUS = pill) */
+    int value; /* 0–100 */
+    int radius; /* corner radius (STYLE_PROGRESS_RADIUS = pill) */
 
-    char             label[WIDGET_PROGRESS_BAR_LABEL_LEN]; /* "" = no label */
+    char label[WIDGET_PROGRESS_BAR_LABEL_LEN]; /* "" = no label */
     const lv_font_t *label_font;
 
     rawdraw_color_t bg_color; /* empty track color */
     rawdraw_color_t fg_color; /* filled portion color */
-    bool            custom_colors;
+    bool custom_colors;
 } widget_progress_bar_t;
 
 /* ---- lifecycle ---- */
@@ -85,7 +85,7 @@ void widget_progress_bar_init(widget_progress_bar_t *bar, int x, int y, int w, i
 /* ---- configuration ---- */
 void widget_progress_bar_set_bounds(widget_progress_bar_t *bar, int x, int y, int w, int h);
 void widget_progress_bar_set_value(widget_progress_bar_t *bar, int value);
-int  widget_progress_bar_get_value(const widget_progress_bar_t *bar);
+int widget_progress_bar_get_value(const widget_progress_bar_t *bar);
 void widget_progress_bar_set_label(widget_progress_bar_t *bar, const char *label);
 void widget_progress_bar_set_label_font(widget_progress_bar_t *bar, const lv_font_t *font);
 void widget_progress_bar_set_radius(widget_progress_bar_t *bar, int radius);
@@ -94,7 +94,7 @@ void widget_progress_bar_set_fg_color(widget_progress_bar_t *bar, rawdraw_color_
 
 /* ---- geometry / rendering ---- */
 rawdraw_rect_t widget_progress_bar_get_bounds(const widget_progress_bar_t *bar);
-void           widget_progress_bar_render(const widget_progress_bar_t *bar, uint8_t *fb, int fb_width, int fb_height);
+void widget_progress_bar_render(const widget_progress_bar_t *bar, uint8_t *fb, int fb_width, int fb_height);
 
 /* ============================================================
  * CircularGauge widget
@@ -106,12 +106,12 @@ typedef struct {
     int thickness; /* ring thickness */
     int value; /* 0–100 */
 
-    char             label[WIDGET_PROGRESS_BAR_LABEL_LEN]; /* "" = no label */
+    char label[WIDGET_PROGRESS_BAR_LABEL_LEN]; /* "" = no label */
     const lv_font_t *label_font;
 
     rawdraw_color_t bg_color; /* background ring color */
     rawdraw_color_t fg_color; /* foreground arc color */
-    bool            custom_colors;
+    bool custom_colors;
 } widget_circular_gauge_t;
 
 /* ---- lifecycle ---- */
@@ -122,7 +122,7 @@ void widget_circular_gauge_set_center(widget_circular_gauge_t *gauge, int cx, in
 void widget_circular_gauge_set_radius(widget_circular_gauge_t *gauge, int radius);
 void widget_circular_gauge_set_thickness(widget_circular_gauge_t *gauge, int thickness);
 void widget_circular_gauge_set_value(widget_circular_gauge_t *gauge, int value);
-int  widget_circular_gauge_get_value(const widget_circular_gauge_t *gauge);
+int widget_circular_gauge_get_value(const widget_circular_gauge_t *gauge);
 void widget_circular_gauge_set_label(widget_circular_gauge_t *gauge, const char *label);
 void widget_circular_gauge_set_label_font(widget_circular_gauge_t *gauge, const lv_font_t *font);
 void widget_circular_gauge_set_bg_color(widget_circular_gauge_t *gauge, rawdraw_color_t color);

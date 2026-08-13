@@ -74,10 +74,10 @@ void app_sleep_enter_scheduled(void)
             s_app.sleep_timer = NULL;
         }
         esp_timer_create_args_t args = {0};
-        args.callback                = on_sync_sleep_timer;
-        args.arg                     = NULL;
-        args.dispatch_method         = ESP_TIMER_TASK;
-        args.name                    = "app_sync_sleep";
+        args.callback = on_sync_sleep_timer;
+        args.arg = NULL;
+        args.dispatch_method = ESP_TIMER_TASK;
+        args.name = "app_sync_sleep";
         if (esp_timer_create(&args, &s_app.sleep_timer) == ESP_OK) {
             esp_timer_start_once(s_app.sleep_timer, 5ULL * 1000 * 1000); // 5 seconds
         }
@@ -229,8 +229,8 @@ void app_sleep_arm_sync_timer(void)
         return;
     }
 
-    settings_handle_t nvs              = settings_open(APP_SYNC_NS, false);
-    int               interval_minutes = APP_DEFAULT_SYNC_INTERVAL_MIN;
+    settings_handle_t nvs = settings_open(APP_SYNC_NS, false);
+    int interval_minutes = APP_DEFAULT_SYNC_INTERVAL_MIN;
     if (nvs) {
         interval_minutes = (int)settings_get_int(nvs, APP_SYNC_INTERVAL_KEY, APP_DEFAULT_SYNC_INTERVAL_MIN);
         settings_close(nvs);
@@ -246,11 +246,11 @@ void app_sleep_arm_sync_timer(void)
         s_app.sleep_timer = NULL;
     }
     esp_timer_create_args_t args = {0};
-    args.callback                = on_sync_sleep_timer;
-    args.arg                     = NULL;
-    args.dispatch_method         = ESP_TIMER_TASK;
-    args.name                    = "app_sync_sleep";
-    esp_err_t ret                = esp_timer_create(&args, &s_app.sleep_timer);
+    args.callback = on_sync_sleep_timer;
+    args.arg = NULL;
+    args.dispatch_method = ESP_TIMER_TASK;
+    args.name = "app_sync_sleep";
+    esp_err_t ret = esp_timer_create(&args, &s_app.sleep_timer);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to create sync sleep timer: %s", esp_err_to_name(ret));
         return;

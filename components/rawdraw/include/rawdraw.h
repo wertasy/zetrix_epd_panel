@@ -7,13 +7,13 @@
 #include "display_types.h"
 
 typedef enum {
-    RAWDRAW_COLOR_BLACK  = 0,
-    RAWDRAW_COLOR_WHITE  = 1,
+    RAWDRAW_COLOR_BLACK = 0,
+    RAWDRAW_COLOR_WHITE = 1,
     RAWDRAW_COLOR_YELLOW = 2,
-    RAWDRAW_COLOR_RED    = 3,
+    RAWDRAW_COLOR_RED = 3,
 } rawdraw_color_t;
 
-void               rawdraw_set_pixel(uint8_t *fb, int width, int height, int x, int y, int color);
+void rawdraw_set_pixel(uint8_t *fb, int width, int height, int x, int y, int color);
 
 /* Convert a 2bpp color to its packed fill-byte (4 identical pixels per byte). */
 static inline uint8_t rd_color_to_fill_byte(int color)
@@ -25,17 +25,16 @@ static inline uint8_t rd_color_to_fill_byte(int color)
  * aligned interior and set_pixel_unchecked only for sub-byte edges.  This is
  * the kernel-style cfb_fillrect approach: batch writes to exploit PSRAM cache
  * line prefetching instead of per-pixel read-modify-write. */
-void rawdraw_fill_scanline_segment(uint8_t *fb, int fb_width, int fb_height,
-                                   int y, int x_start, int x_end, int color);
+void rawdraw_fill_scanline_segment(uint8_t *fb, int fb_width, int fb_height, int y, int x_start, int x_end, int color);
 
 static inline void rawdraw_set_pixel_unchecked(uint8_t *fb, int width, int height, int x, int y, int color)
 {
     (void)height; /* Caller guarantees bounds; height retained for API symmetry */
     uint16_t bytes_per_row = (uint16_t)((width * 2 + 7) >> 3);
-    uint32_t index         = (uint32_t)y * bytes_per_row + (uint32_t)(x >> 2);
-    uint8_t  shift         = (uint8_t)(6 - ((x & 0x03) << 1));
-    uint8_t  mask          = (uint8_t)(0x03U << shift);
-    fb[index]              = (uint8_t)((fb[index] & (uint8_t)~mask) | ((uint8_t)(color & 0x03) << shift));
+    uint32_t index = (uint32_t)y * bytes_per_row + (uint32_t)(x >> 2);
+    uint8_t shift = (uint8_t)(6 - ((x & 0x03) << 1));
+    uint8_t mask = (uint8_t)(0x03U << shift);
+    fb[index] = (uint8_t)((fb[index] & (uint8_t)~mask) | ((uint8_t)(color & 0x03) << shift));
 }
 void rawdraw_draw_rect(uint8_t *fb, int w, int h, int rx, int ry, int rw, int rh, int color);
 void rawdraw_draw_dither_rect(uint8_t *fb, int w, int h, int rx, int ry, int rw, int rh);

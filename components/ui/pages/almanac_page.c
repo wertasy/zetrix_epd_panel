@@ -41,14 +41,14 @@ static const char *const kJiTable[][3] = {
 
 void almanac_page_refresh_data(page_renderer_t *self)
 {
-    almanac_page_t *r   = (almanac_page_t *)self;
-    time_t          now = time(NULL);
-    struct tm       tm_buf;
+    almanac_page_t *r = (almanac_page_t *)self;
+    time_t now = time(NULL);
+    struct tm tm_buf;
     localtime_r(&now, &tm_buf);
 
-    r->year    = tm_buf.tm_year + 1900;
-    r->month   = tm_buf.tm_mon + 1;
-    r->day     = tm_buf.tm_mday;
+    r->year = tm_buf.tm_year + 1900;
+    r->month = tm_buf.tm_mon + 1;
+    r->day = tm_buf.tm_mday;
     r->weekday = tm_buf.tm_wday; /* 0=Sun */
 
     /* Lunar date via the calendar widget's algorithm. */
@@ -73,23 +73,23 @@ void almanac_page_refresh_data(page_renderer_t *self)
 
 void almanac_page_init(page_renderer_t *self, int width, int height)
 {
-    almanac_page_t *r               = (almanac_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    almanac_page_t *r = (almanac_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font                         = &SourceHanSansSC_Regular_slim;
-    r->title_font                   = &SourceHanSansSC_Medium_slim;
-    r->icon_font                    = &weather_icons_48;
+    r->font = &SourceHanSansSC_Regular_slim;
+    r->title_font = &SourceHanSansSC_Medium_slim;
+    r->icon_font = &weather_icons_48;
     almanac_page_refresh_data(self);
 }
 
 static void draw_title_bar(almanac_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t bar_style     = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
-    const rawdraw_color_t       text          = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       border        = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const int                   title_y_start = STYLE_STATUS_BAR_HEIGHT;
-    const int                   title_bar_h   = ALMANAC_PAGE_TITLE_BAR_H;
+    const rawdraw_paint_style_t bar_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const int title_y_start = STYLE_STATUS_BAR_HEIGHT;
+    const int title_bar_h = ALMANAC_PAGE_TITLE_BAR_H;
 
     /* Background */
     rawdraw_draw_styled_rect(fb, width, height, (rawdraw_rect_t){0, title_y_start, width, title_bar_h}, &bar_style);
@@ -115,13 +115,13 @@ void almanac_page_render(page_renderer_t *self, uint8_t *fb, int width, int heig
     if (!fb)
         return;
 
-    const int             content_top = STYLE_STATUS_BAR_HEIGHT + ALMANAC_PAGE_TITLE_BAR_H + STYLE_SPACING_XS;
-    int                   y           = content_top + STYLE_SPACING_MD;
-    const rawdraw_color_t text        = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t secondary   = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t accent      = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
-    const rawdraw_color_t danger      = rawdraw_theme_color_for(THEME_TOKEN_DANGER);
-    const rawdraw_color_t border      = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const int content_top = STYLE_STATUS_BAR_HEIGHT + ALMANAC_PAGE_TITLE_BAR_H + STYLE_SPACING_XS;
+    int y = content_top + STYLE_SPACING_MD;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t accent = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
+    const rawdraw_color_t danger = rawdraw_theme_color_for(THEME_TOKEN_DANGER);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
 
     /* === Title bar === */
     draw_title_bar(r, fb, width, height);
@@ -166,7 +166,7 @@ void almanac_page_render(page_renderer_t *self, uint8_t *fb, int width, int heig
     /* === 宜 (auspicious) section === */
     rawdraw_draw_text(fb, width, height, STYLE_SPACING_LG, y, "宜", r->title_font, accent);
     const int yi_label_w = rawdraw_measure_text_width("宜", r->title_font);
-    const int yi_start   = STYLE_SPACING_LG + yi_label_w + STYLE_SPACING_SM;
+    const int yi_start = STYLE_SPACING_LG + yi_label_w + STYLE_SPACING_SM;
     for (int i = 0; i < 4; i++) {
         rawdraw_draw_text(fb, width, height, yi_start + i * 60, y, r->yi[i], r->font, text);
     }
@@ -175,7 +175,7 @@ void almanac_page_render(page_renderer_t *self, uint8_t *fb, int width, int heig
     /* === 忌 (inauspicious) section === */
     rawdraw_draw_text(fb, width, height, STYLE_SPACING_LG, y, "忌", r->title_font, danger);
     const int ji_label_w = rawdraw_measure_text_width("忌", r->title_font);
-    const int ji_start   = STYLE_SPACING_LG + ji_label_w + STYLE_SPACING_SM;
+    const int ji_start = STYLE_SPACING_LG + ji_label_w + STYLE_SPACING_SM;
     for (int i = 0; i < 3; i++) {
         rawdraw_draw_text(fb, width, height, ji_start + i * 60, y, r->ji[i], r->font, text);
     }
@@ -203,8 +203,8 @@ bool almanac_page_handle_input(page_renderer_t *self, const ui_button_event_t *e
                 r->year++;
             }
         }
-        r->lunar                        = widget_calendar_to_lunar_date(r->year, r->month, r->day);
-        r->solar_term                   = widget_calendar_get_solar_term(r->month, r->day);
+        r->lunar = widget_calendar_to_lunar_date(r->year, r->month, r->day);
+        r->solar_term = widget_calendar_get_solar_term(r->month, r->day);
         r->base.needs_full_refresh_flag = true;
         return true;
 
@@ -227,16 +227,16 @@ bool almanac_page_handle_input(page_renderer_t *self, const ui_button_event_t *e
 EXT_RAM_BSS_ATTR almanac_page_t s_almanac_instance;
 
 const page_renderer_ops_t almanac_page_ops = {
-    .init                    = almanac_page_init,
-    .render                  = almanac_page_render,
-    .handle_input            = almanac_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = almanac_page_init,
+    .render = almanac_page_render,
+    .handle_input = almanac_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
 PAGE_REGISTER(UI_PAGE_ALMANAC, "老黄历", NULL, false, 80, &almanac_page_ops, &s_almanac_instance.base);

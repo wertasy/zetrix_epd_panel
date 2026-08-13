@@ -53,7 +53,7 @@ static const char *TAG = "HolidayFetcher";
 
 /* In-memory cache (the active year). */
 static holiday_cache_t s_cache;
-static bool            s_loaded = false;
+static bool s_loaded = false;
 
 /* ============================================================ */
 /* JSON parsing                                                 */
@@ -78,13 +78,13 @@ bool holiday_fetcher_parse_json(int year, const char *json)
         return false;
     }
 
-    s_cache.year        = year;
+    s_cache.year = year;
     s_cache.entry_count = 0;
 
     for (member = hol->child; member != NULL && s_cache.entry_count < HOLIDAY_MAX_ENTRIES; member = member->next) {
-        char             date_key[24];
-        char             name[HOLIDAY_NAME_LEN] = {0};
-        int              y, m, d;
+        char date_key[24];
+        char name[HOLIDAY_NAME_LEN] = {0};
+        int y, m, d;
         holiday_entry_t *e;
 
         /* The member key is a date "YYYY-MM-DD". */
@@ -108,14 +108,14 @@ bool holiday_fetcher_parse_json(int year, const char *json)
          * multiplier (1=normal, 2=200%, 3=300%) and cannot be used to
          * distinguish holidays from makeup days. */
         cJSON *holiday_flag = cJSON_GetObjectItemCaseSensitive(member, "holiday");
-        bool   is_holiday   = cJSON_IsTrue(holiday_flag);
+        bool is_holiday = cJSON_IsTrue(holiday_flag);
 
         cjson_copy_str(member, "name", name, sizeof(name));
 
-        e          = &s_cache.entries[s_cache.entry_count++];
-        e->year    = (int16_t)year;
-        e->month   = (int8_t)m;
-        e->day     = (int8_t)d;
+        e = &s_cache.entries[s_cache.entry_count++];
+        e->year = (int16_t)year;
+        e->month = (int8_t)m;
+        e->day = (int8_t)d;
         e->is_rest = is_holiday;
         snprintf(e->name, sizeof(e->name), "%s", name);
     }
@@ -134,11 +134,11 @@ bool holiday_fetcher_parse_json(int year, const char *json)
 
 static void save_cache(void)
 {
-    char         key[32];
+    char key[32];
     nvs_handle_t handle;
-    esp_err_t    err;
-    int          blob_size;
-    uint8_t      blob[HOLIDAY_BLOB_MAX];
+    esp_err_t err;
+    int blob_size;
+    uint8_t blob[HOLIDAY_BLOB_MAX];
 
     snprintf(key, sizeof(key), "holiday_%d", s_cache.year);
     err = nvs_open(HOLIDAY_NVS_NAMESPACE, NVS_READWRITE, &handle);
@@ -170,12 +170,12 @@ static void save_cache(void)
 
 static bool load_cache(int year)
 {
-    char         key[32];
+    char key[32];
     nvs_handle_t handle;
-    esp_err_t    err;
-    size_t       blob_size = 0;
-    uint8_t      blob[HOLIDAY_BLOB_MAX];
-    int          count;
+    esp_err_t err;
+    size_t blob_size = 0;
+    uint8_t blob[HOLIDAY_BLOB_MAX];
+    int count;
 
     snprintf(key, sizeof(key), "holiday_%d", year);
     err = nvs_open(HOLIDAY_NVS_NAMESPACE, NVS_READONLY, &handle);
@@ -202,7 +202,7 @@ static bool load_cache(int year)
     if (blob_size < sizeof(int) + (size_t)count * sizeof(holiday_entry_t))
         return false;
 
-    s_cache.year        = year;
+    s_cache.year = year;
     s_cache.entry_count = count;
     if (count > 0) {
         memcpy(s_cache.entries, blob + sizeof(int), (size_t)count * sizeof(holiday_entry_t));
@@ -236,12 +236,12 @@ static const holiday_entry_t *find_entry(int year, int month, int day)
 bool holiday_fetcher_init(void)
 {
 #ifdef ESP_PLATFORM
-    time_t    now;
+    time_t now;
     struct tm tm_buf;
-    int       year;
+    int year;
     now = time(NULL);
     localtime_r(&now, &tm_buf);
-    year     = tm_buf.tm_year + 1900;
+    year = tm_buf.tm_year + 1900;
     s_loaded = load_cache(year);
     return s_loaded;
 #else
@@ -255,7 +255,7 @@ bool holiday_fetcher_fetch(int year)
 {
 #ifdef ESP_PLATFORM
     char url[80];
-    int  n;
+    int n;
     char *resp = (char *)malloc(HOLIDAY_MAX_RESPONSE + 1);
     if (!resp) {
         LOGE("out of memory for response buffer");
@@ -291,7 +291,6 @@ bool holiday_fetcher_fetch(int year)
     }
     resp[n] = '\0';
     LOGI("Received %d bytes", n);
-
 
     if (!holiday_fetcher_parse_json(year, resp)) {
         LOGE("Failed to parse response");

@@ -58,13 +58,14 @@ void app_sync_on_coding_plan_update(const coding_plan_api_data_t *data, void *us
     if (!page_data)
         return;
     memset(page_data, 0, sizeof(*page_data));
-    snprintf(page_data->five_hour_reset_time, sizeof(page_data->five_hour_reset_time), "%s", data->five_hour_reset_time);
+    snprintf(page_data->five_hour_reset_time, sizeof(page_data->five_hour_reset_time), "%s",
+             data->five_hour_reset_time);
     snprintf(page_data->week_reset_time, sizeof(page_data->week_reset_time), "%s", data->week_reset_time);
     page_data->five_hour_tokens = data->five_hour_tokens;
-    page_data->week_tokens      = data->week_tokens;
-    page_data->five_hour_pct    = data->five_hour_pct;
-    page_data->week_pct         = data->week_pct;
-    page_data->per_model_count  = data->per_model_count;
+    page_data->week_tokens = data->week_tokens;
+    page_data->five_hour_pct = data->five_hour_pct;
+    page_data->week_pct = data->week_pct;
+    page_data->per_model_count = data->per_model_count;
     for (int i = 0; i < data->per_model_count && i < CODING_PLAN_MAX_MODELS; i++) {
         page_data->per_model[i] = data->per_model[i];
     }
@@ -143,13 +144,13 @@ void app_sync_on_sntp_sync(struct timeval *tv)
 
     /* Write the corrected time back to the PCF8563 RTC so cold boots start
      * with the right date without needing WiFi. */
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm_buf;
     localtime_r(&now, &tm_buf);
     pcf8563_set_time(&tm_buf);
 
     /* Notify the main loop so it can refresh date-dependent pages. */
-    app_event_t ev = { .type = APP_EVENT_TIME_SYNC };
+    app_event_t ev = {.type = APP_EVENT_TIME_SYNC};
     if (s_app.event_queue) {
         xQueueSend(s_app.event_queue, &ev, 0);
     }

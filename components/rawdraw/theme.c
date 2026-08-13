@@ -12,101 +12,101 @@ static rawdraw_theme_id_t g_current_theme = THEME_INDUSTRIAL;
 
 static const rawdraw_theme_definition_t kThemes[] = {
     // 1. Nintendo Pop / Industrial
-    {.id           = THEME_INDUSTRIAL,
-     .key          = "nintendo_pop",
+    {.id = THEME_INDUSTRIAL,
+     .key = "nintendo_pop",
      .display_name = "Nintendo Pop",
-     .tokens = {[THEME_TOKEN_TEXT_PRIMARY]         = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_TEXT_SECONDARY]       = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_LIGHT_GRAY, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BACKGROUND_PRIMARY]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+     .tokens = {[THEME_TOKEN_TEXT_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                              DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_TEXT_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                DITHER_LIGHT_GRAY, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BACKGROUND_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                    DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_BACKGROUND_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                                       DITHER_NONE, 1, false, REFRESH_SMALL_ACCENT},
-                [THEME_TOKEN_ACCENT]  = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                         false, REFRESH_SMALL_ACCENT},
+                [THEME_TOKEN_ACCENT] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_SMALL_ACCENT},
                 [THEME_TOKEN_WARNING] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
                                          false, REFRESH_SMALL_ACCENT},
-                [THEME_TOKEN_DANGER]  = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                         false, REFRESH_SMALL_ACCENT},
+                [THEME_TOKEN_DANGER] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                        false, REFRESH_SMALL_ACCENT},
                 [THEME_TOKEN_SUCCESS_LIKE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                               DITHER_NONE, 1, false, REFRESH_SMALL_ACCENT},
                 [THEME_TOKEN_SELECTED] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
                                           false, REFRESH_SMALL_ACCENT},
                 [THEME_TOKEN_DISABLED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
                                           DITHER_LIGHT_GRAY, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BORDER]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_SHADOW]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                          DITHER_LIGHT_GRAY, 1, false, REFRESH_AVOID_LARGE_AREA},
-                [THEME_TOKEN_FOCUS]    = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE, 2,
-                                          false, REFRESH_SMALL_ACCENT},
-                [THEME_TOKEN_BADGE]    = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                          false, REFRESH_SMALL_ACCENT},
+                [THEME_TOKEN_BORDER] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_SHADOW] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                        DITHER_LIGHT_GRAY, 1, false, REFRESH_AVOID_LARGE_AREA},
+                [THEME_TOKEN_FOCUS] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE, 2,
+                                       false, REFRESH_SMALL_ACCENT},
+                [THEME_TOKEN_BADGE] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                       false, REFRESH_SMALL_ACCENT},
                 [THEME_TOKEN_PROGRESS_FILL] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_BLACK, DITHER_NONE,
                                                1, false, REFRESH_SMALL_ACCENT}}},
     // 2. Bright Lemon
-    {.id           = THEME_BRIGHT_LEMON,
-     .key          = "bright_lemon",
+    {.id = THEME_BRIGHT_LEMON,
+     .key = "bright_lemon",
      .display_name = "Bright Lemon",
-     .tokens = {[THEME_TOKEN_TEXT_PRIMARY]         = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_TEXT_SECONDARY]       = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_SOFT, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BACKGROUND_PRIMARY]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+     .tokens = {[THEME_TOKEN_TEXT_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                              DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_TEXT_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                DITHER_SOFT, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BACKGROUND_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                    DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_BACKGROUND_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                                       DITHER_SOFT, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_ACCENT]  = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_ACCENT] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_WARNING] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_GOLD, 1,
                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_DANGER]  = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_DANGER] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SUCCESS_LIKE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                               DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SELECTED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE,
                                           1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_DISABLED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
                                           DITHER_LIGHT_GRAY, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BORDER]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                          false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BORDER] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SHADOW] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_SOFT, 1,
                                         false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_FOCUS]  = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 2,
-                                        false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BADGE]  = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_FOCUS] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 2,
+                                       false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BADGE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                       false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_PROGRESS_FILL] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                                DITHER_NONE, 1, false, REFRESH_STATIC_SAFE}}},
     // 3. Console
-    {.id           = THEME_CONSOLE,
-     .key          = "console",
+    {.id = THEME_CONSOLE,
+     .key = "console",
      .display_name = "Console",
-     .tokens = {[THEME_TOKEN_TEXT_PRIMARY]         = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_TEXT_SECONDARY]       = {RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BACKGROUND_PRIMARY]   = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE,
-                                                      DITHER_NONE, 1, false, REFRESH_AVOID_LARGE_AREA},
+     .tokens = {[THEME_TOKEN_TEXT_PRIMARY] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE,
+                                              DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_TEXT_SECONDARY] = {RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE,
+                                                DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BACKGROUND_PRIMARY] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE,
+                                                    DITHER_NONE, 1, false, REFRESH_AVOID_LARGE_AREA},
                 [THEME_TOKEN_BACKGROUND_SECONDARY] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE,
                                                       DITHER_GRAY, 1, false, REFRESH_AVOID_LARGE_AREA},
                 [THEME_TOKEN_ACCENT] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_YELLOW, DITHER_NONE, 1,
                                         false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_WARNING] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_YELLOW, DITHER_NONE,
                                          1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_DANGER]  = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_DANGER] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SUCCESS_LIKE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_YELLOW,
                                               DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SELECTED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_YELLOW, DITHER_NONE,
                                           1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_DISABLED] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, DITHER_GRAY, 1,
                                           false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BORDER]   = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, DITHER_NONE, 1,
-                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_SHADOW]   = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, DITHER_GRAY, 1,
-                                          false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BORDER] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_SHADOW] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, DITHER_GRAY, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_FOCUS] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_YELLOW, DITHER_NONE, 2,
                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_BADGE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_YELLOW, DITHER_NONE, 1,
@@ -114,105 +114,105 @@ static const rawdraw_theme_definition_t kThemes[] = {
                 [THEME_TOKEN_PROGRESS_FILL] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_YELLOW,
                                                DITHER_NONE, 1, false, REFRESH_STATIC_SAFE}}},
     // 4. Peach Paper
-    {.id           = THEME_PEACH_PAPER,
-     .key          = "peach_paper",
+    {.id = THEME_PEACH_PAPER,
+     .key = "peach_paper",
      .display_name = "Peach Paper",
-     .tokens = {[THEME_TOKEN_TEXT_PRIMARY]         = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_TEXT_SECONDARY]       = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_PEACH, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BACKGROUND_PRIMARY]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+     .tokens = {[THEME_TOKEN_TEXT_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                              DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_TEXT_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                DITHER_PEACH, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BACKGROUND_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                    DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_BACKGROUND_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
                                                       DITHER_PEACH, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_ACCENT] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_PEACH, 1,
                                         false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_WARNING] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_DANGER]  = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_DANGER] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SUCCESS_LIKE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                               DITHER_SOFT, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SELECTED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_PEACH,
                                           1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_DISABLED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
                                           DITHER_LIGHT_GRAY, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BORDER]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                          false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BORDER] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SHADOW] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_PEACH, 1,
                                         false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_FOCUS]  = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_PEACH, 2,
-                                        false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BADGE]  = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_PEACH, 1,
-                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_FOCUS] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_PEACH, 2,
+                                       false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BADGE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_PEACH, 1,
+                                       false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_PROGRESS_FILL] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                                DITHER_GOLD, 1, false, REFRESH_STATIC_SAFE}}},
     // 5. Sticker
-    {.id           = THEME_STICKER,
-     .key          = "sticker",
+    {.id = THEME_STICKER,
+     .key = "sticker",
      .display_name = "Sticker",
-     .tokens = {[THEME_TOKEN_TEXT_PRIMARY]         = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_TEXT_SECONDARY]       = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_SOFT, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BACKGROUND_PRIMARY]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+     .tokens = {[THEME_TOKEN_TEXT_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                              DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_TEXT_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                DITHER_SOFT, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BACKGROUND_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                    DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_BACKGROUND_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
                                                       DITHER_LIGHT_GRAY, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_ACCENT]  = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_ACCENT] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_WARNING] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_DANGER]  = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_DANGER] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SUCCESS_LIKE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                               DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SELECTED] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
                                           false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_DISABLED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_GRAY, 1,
                                           false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BORDER]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_SHADOW]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_GRAY, 1,
-                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_FOCUS]    = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_BLACK, DITHER_NONE, 2,
-                                          false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BORDER] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_SHADOW] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, DITHER_GRAY, 1,
+                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_FOCUS] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_BLACK, DITHER_NONE, 2,
+                                       false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_BADGE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_PROGRESS_FILL] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE,
                                                1, false, REFRESH_STATIC_SAFE}}},
     // 6. Candy Pop
-    {.id           = THEME_CANDY_POP,
-     .key          = "candy_pop",
+    {.id = THEME_CANDY_POP,
+     .key = "candy_pop",
      .display_name = "Candy Pop",
-     .tokens = {[THEME_TOKEN_TEXT_PRIMARY]         = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_TEXT_SECONDARY]       = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED,
-                                                      DITHER_PEACH, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BACKGROUND_PRIMARY]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
-                                                      DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+     .tokens = {[THEME_TOKEN_TEXT_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                              DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_TEXT_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED,
+                                                DITHER_PEACH, 1, false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BACKGROUND_PRIMARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
+                                                    DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_BACKGROUND_SECONDARY] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_YELLOW,
                                                       DITHER_GOLD, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_ACCENT]  = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_ACCENT] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_WARNING] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK, DITHER_NONE, 1,
                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_DANGER]  = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                         false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_DANGER] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SUCCESS_LIKE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_BLACK,
                                               DITHER_NONE, 1, false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_SELECTED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
                                           false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_DISABLED] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_BLACK,
                                           DITHER_LIGHT_GRAY, 1, false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BORDER]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_SHADOW]   = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, DITHER_PEACH, 1,
-                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_FOCUS]    = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_RED, DITHER_NONE, 2,
-                                          false, REFRESH_STATIC_SAFE},
-                [THEME_TOKEN_BADGE]    = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
-                                          false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BORDER] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_SHADOW] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, DITHER_PEACH, 1,
+                                        false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_FOCUS] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_RED, DITHER_NONE, 2,
+                                       false, REFRESH_STATIC_SAFE},
+                [THEME_TOKEN_BADGE] = {RAWDRAW_COLOR_BLACK, RAWDRAW_COLOR_YELLOW, RAWDRAW_COLOR_RED, DITHER_NONE, 1,
+                                       false, REFRESH_STATIC_SAFE},
                 [THEME_TOKEN_PROGRESS_FILL] = {RAWDRAW_COLOR_WHITE, RAWDRAW_COLOR_RED, RAWDRAW_COLOR_RED, DITHER_NONE,
                                                1, false, REFRESH_STATIC_SAFE}}}};
 
@@ -290,20 +290,20 @@ static bool DitherPixel(rawdraw_dither_token_t token, int x, int y)
  * `on` corresponds to DitherPixel() == true.  Mirrors the colour-selection
  * logic that previously lived inline in DitherColor(), hoisted out so callers
  * can compute it once per draw instead of once per pixel. */
-static void dither_colors(rawdraw_dither_token_t token, rawdraw_paint_style_t style,
-                          rawdraw_color_t *on_color, rawdraw_color_t *off_color)
+static void dither_colors(rawdraw_dither_token_t token, rawdraw_paint_style_t style, rawdraw_color_t *on_color,
+                          rawdraw_color_t *off_color)
 {
     switch (token) {
     case DITHER_ORANGE:
-        *on_color  = RAWDRAW_COLOR_YELLOW;
+        *on_color = RAWDRAW_COLOR_YELLOW;
         *off_color = RAWDRAW_COLOR_RED;
         return;
     case DITHER_PEACH:
-        *on_color  = RAWDRAW_COLOR_RED;
+        *on_color = RAWDRAW_COLOR_RED;
         *off_color = RAWDRAW_COLOR_WHITE;
         return;
     case DITHER_GOLD:
-        *on_color  = RAWDRAW_COLOR_YELLOW;
+        *on_color = RAWDRAW_COLOR_YELLOW;
         *off_color = RAWDRAW_COLOR_WHITE;
         return;
     case DITHER_GRAY:
@@ -311,7 +311,7 @@ static void dither_colors(rawdraw_dither_token_t token, rawdraw_paint_style_t st
     case DITHER_NOISE:
     case DITHER_SOFT:
     default:
-        *on_color  = style.fg;
+        *on_color = style.fg;
         *off_color = style.bg;
         return;
     }
@@ -350,41 +350,41 @@ static inline void ensure_dither_lut_ready(void)
  * per-pixel switch) and pixels are packed into 2bpp framebuffer bytes: fully
  * aligned interior bytes are written directly while only the sub-byte edges need
  * a read-modify-write, mirroring the kernel cfb_fillrect batched-write approach. */
-static void fill_dithered_row(uint8_t *fb, int width, int y, int x_start, int x_end,
-                              rawdraw_dither_token_t token, rawdraw_paint_style_t style)
+static void fill_dithered_row(uint8_t *fb, int width, int y, int x_start, int x_end, rawdraw_dither_token_t token,
+                              rawdraw_paint_style_t style)
 {
     if (x_end <= x_start)
         return;
 
-    const int      bytes_per_row = (width * 2 + 7) >> 3;
-    uint8_t *const row           = fb + (size_t)y * (size_t)bytes_per_row;
+    const int bytes_per_row = (width * 2 + 7) >> 3;
+    uint8_t *const row = fb + (size_t)y * (size_t)bytes_per_row;
 
     rawdraw_color_t on_color, off_color;
     dither_colors(token, style, &on_color, &off_color);
 
     int first_byte = x_start >> 2;
-    int last_byte  = (x_end - 1) >> 2;
+    int last_byte = (x_end - 1) >> 2;
 
     for (int b = first_byte; b <= last_byte; ++b) {
-        int     px0 = b << 2;   /* first pixel index in this byte */
+        int px0 = b << 2; /* first pixel index in this byte */
         uint8_t out = 0;
         for (int sub = 0; sub < 4; ++sub) {
-            bool            on = dither_pattern[token][y & 7][(px0 + sub) & 7];
-            rawdraw_color_t c  = on ? on_color : off_color;
-            out                = (uint8_t)((out << 2) | (c & 0x03));
+            bool on = dither_pattern[token][y & 7][(px0 + sub) & 7];
+            rawdraw_color_t c = on ? on_color : off_color;
+            out = (uint8_t)((out << 2) | (c & 0x03));
         }
 
         int lo = x_start - px0; /* first in-range sub-pixel, clamped >= 0 */
         if (lo < 0)
             lo = 0;
-        int hi = x_end - px0;   /* one past last in-range sub-pixel */
+        int hi = x_end - px0; /* one past last in-range sub-pixel */
         if (hi > 4)
             hi = 4;
 
         if (lo == 0 && hi == 4) {
-            row[b] = out;       /* fully aligned interior byte */
+            row[b] = out; /* fully aligned interior byte */
         } else {
-            uint8_t mask = 0;   /* 2bpp bits covering in-range pixels */
+            uint8_t mask = 0; /* 2bpp bits covering in-range pixels */
             for (int sub = lo; sub < hi; ++sub)
                 mask |= (uint8_t)(0x03 << ((3 - sub) << 1));
             row[b] = (uint8_t)((row[b] & (uint8_t)~mask) | (out & mask));
@@ -521,12 +521,12 @@ rawdraw_paint_style_t rawdraw_make_paint(rawdraw_color_t fg, rawdraw_color_t bg,
                                          rawdraw_refresh_cost_t refresh_cost)
 {
     rawdraw_paint_style_t s;
-    s.fg           = fg;
-    s.bg           = bg;
-    s.border       = border;
-    s.dither       = dither;
+    s.fg = fg;
+    s.bg = bg;
+    s.border = border;
+    s.dither = dither;
     s.border_width = border_width;
-    s.invert_text  = false;
+    s.invert_text = false;
     s.refresh_cost = refresh_cost;
     return s;
 }
@@ -542,8 +542,8 @@ void rawdraw_draw_styled_rect(uint8_t *fb, int width, int height, rawdraw_rect_t
     }
     int x_start = r.x;
     int y_start = r.y;
-    int x_end   = r.x + r.w;
-    int y_end   = r.y + r.h;
+    int x_end = r.x + r.w;
+    int y_end = r.y + r.h;
     if (x_start < 0)
         x_start = 0;
     if (y_start < 0)
@@ -571,16 +571,16 @@ void rawdraw_draw_styled_round_rect(uint8_t *fb, int width, int height, rawdraw_
     rawdraw_draw_round_rect(fb, width, height, r.x, r.y, r.w, r.h, radius, (int)panel_style.bg, (int)panel_style.border,
                             (int)panel_style.border_width);
 
-    int            bw           = (int)panel_style.border_width;
-    rawdraw_rect_t inner        = {r.x + bw, r.y + bw, r.w - bw * 2, r.h - bw * 2};
-    int            inner_radius = radius - bw;
+    int bw = (int)panel_style.border_width;
+    rawdraw_rect_t inner = {r.x + bw, r.y + bw, r.w - bw * 2, r.h - bw * 2};
+    int inner_radius = radius - bw;
     if (inner_radius < 0)
         inner_radius = 0;
 
     int x_start = inner.x;
     int y_start = inner.y;
-    int x_end   = inner.x + inner.w;
-    int y_end   = inner.y + inner.h;
+    int x_end = inner.x + inner.w;
+    int y_end = inner.y + inner.h;
 
     if (x_start < 0)
         x_start = 0;
@@ -599,7 +599,7 @@ void rawdraw_draw_styled_round_rect(uint8_t *fb, int width, int height, rawdraw_
         for (int x = x_start; x < x_end; ++x) {
             if (!rawdraw_point_in_rounded_rect(x, y, inner, inner_radius))
                 continue;
-            bool            on    = dither_pattern[panel_style.dither][y & 7][x & 7];
+            bool on = dither_pattern[panel_style.dither][y & 7][x & 7];
             rawdraw_color_t color = on ? on_color : off_color;
             rawdraw_set_pixel_unchecked(fb, width, height, x, y, (int)color);
         }

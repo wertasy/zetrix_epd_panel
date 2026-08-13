@@ -85,13 +85,12 @@ static const char *TAG = "CodingPlanApi";
 /* Credentials (target: NVS → Kconfig; host: params only)             */
 /* ------------------------------------------------------------------ */
 
-static char s_token[CP_TOKEN_LEN]  = {0};
-static char s_org[CP_ORG_LEN]      = {0};
+static char s_token[CP_TOKEN_LEN] = {0};
+static char s_org[CP_ORG_LEN] = {0};
 static char s_project[CP_PROJ_LEN] = {0};
 
-
 static coding_plan_api_data_t s_cached_data;
-static bool                   s_has_cached_data = false;
+static bool s_has_cached_data = false;
 
 #ifdef ESP_PLATFORM
 static void save_cp_cache(const coding_plan_api_data_t *data)
@@ -110,7 +109,7 @@ static bool load_cp_cache(coding_plan_api_data_t *out)
     nvs_handle_t h;
     if (nvs_open("cp_cache", NVS_READONLY, &h) != ESP_OK)
         return false;
-    size_t len    = sizeof(*out);
+    size_t len = sizeof(*out);
     esp_err_t err = nvs_get_blob(h, "data", out, &len);
     nvs_close(h);
     if (err == ESP_OK && len == sizeof(*out)) {
@@ -194,7 +193,7 @@ static void format_reset_time(int64_t ms, char *out, size_t out_size)
             out[0] = '\0';
         return;
     }
-    time_t    t = (time_t)(ms / 1000);
+    time_t t = (time_t)(ms / 1000);
     struct tm tmv;
     memset(&tmv, 0, sizeof(tmv));
     localtime_r(&t, &tmv);
@@ -255,7 +254,7 @@ bool parse_quota_limit_json(const char *json, coding_plan_api_data_t *out)
             continue;
         }
         int unit = cp_get_int(limit, "unit", 0);
-        int pct  = cp_get_int(limit, "percentage", 0);
+        int pct = cp_get_int(limit, "percentage", 0);
         if (pct < 0)
             pct = 0;
         if (pct > 100)
@@ -265,7 +264,7 @@ bool parse_quota_limit_json(const char *json, coding_plan_api_data_t *out)
             /* 5-hour window. */
             out->five_hour_pct = pct;
             out->five_hour_tokens = 2000000ULL * pct / 100;
-            any                = true;
+            any = true;
             if (cJSON_HasObjectItem(limit, "nextResetTime")) {
                 int64_t ms = cp_get_int64(limit, "nextResetTime", 0);
                 if (ms > 0) {
@@ -276,7 +275,7 @@ bool parse_quota_limit_json(const char *json, coding_plan_api_data_t *out)
             /* Weekly window. */
             out->week_pct = pct;
             out->week_tokens = 10000000ULL * pct / 100;
-            any           = true;
+            any = true;
             if (cJSON_HasObjectItem(limit, "nextResetTime")) {
                 int64_t ms = cp_get_int64(limit, "nextResetTime", 0);
                 if (ms > 0) {
@@ -296,8 +295,7 @@ bool parse_quota_limit_json(const char *json, coding_plan_api_data_t *out)
 
     cJSON_Delete(root);
     if (any) {
-        LOGI("quota/limit: 5h=%d%% (reset=%s) week=%d%% (reset=%s)",
-             out->five_hour_pct, out->five_hour_reset_time,
+        LOGI("quota/limit: 5h=%d%% (reset=%s) week=%d%% (reset=%s)", out->five_hour_pct, out->five_hour_reset_time,
              out->week_pct, out->week_reset_time);
     }
     return any;
@@ -331,7 +329,7 @@ bool parse_model_usage_json(const char *json, coding_plan_api_data_t *out)
         int64_t week = cp_get_int64(total, "totalTokensUsage", 0);
         if (week > 0) {
             out->week_tokens = (uint64_t)week;
-            any              = true;
+            any = true;
         }
 
         cJSON *models = cJSON_GetObjectItemCaseSensitive(total, "modelSummaryList");
@@ -371,7 +369,7 @@ bool parse_model_usage_json(const char *json, coding_plan_api_data_t *out)
         if (v < 0)
             v = 0;
         out->hourly_tokens[out->hourly_count++] = (uint64_t)v;
-        any                                     = true;
+        any = true;
     }
 
     cJSON_Delete(root);
@@ -398,7 +396,7 @@ static bool cp_http_get(const char *path, const char *query, char *buf, size_t b
     }
 
     const char *headers[3] = {"authorization", "bigmodel-organization", "bigmodel-project"};
-    const char *values[3]  = {s_token, s_org, s_project};
+    const char *values[3] = {s_token, s_org, s_project};
 
     int n = http_get_with_headers(url, headers, values, 3, (uint8_t *)buf, buf_size - 1);
     if (n < 0) {
@@ -443,7 +441,7 @@ bool coding_plan_api_fetch(coding_plan_api_data_t *out)
     time_t now_t = time(NULL);
     if (now_t <= 0)
         now_t = 0;
-    time_t    start_t = now_t - (7 * 24 * 3600);
+    time_t start_t = now_t - (7 * 24 * 3600);
     struct tm start_tm, now_tm;
     localtime_r(&start_t, &start_tm);
     localtime_r(&now_t, &now_tm);
@@ -482,10 +480,9 @@ bool coding_plan_api_fetch(coding_plan_api_data_t *out)
 /* Async fetch                                                         */
 /* ------------------------------------------------------------------ */
 
-static coding_plan_callback_t s_callback           = NULL;
-static void                  *s_callback_user_data = NULL;
-static volatile bool          s_fetch_in_progress  = false;
-
+static coding_plan_callback_t s_callback = NULL;
+static void *s_callback_user_data = NULL;
+static volatile bool s_fetch_in_progress = false;
 
 bool coding_plan_api_has_cached_data(void)
 {
@@ -498,7 +495,7 @@ const coding_plan_api_data_t *coding_plan_api_get_cached_data(void)
 }
 void coding_plan_api_set_callback(coding_plan_callback_t cb, void *user_data)
 {
-    s_callback           = cb;
+    s_callback = cb;
     s_callback_user_data = user_data;
 }
 
@@ -517,11 +514,11 @@ static void cp_fetch_task(void *arg)
         return;
     }
     if (coding_plan_api_fetch(data)) {
-        s_cached_data      = *data;
-        s_has_cached_data  = true;
-#ifdef ESP_PLATFORM
+        s_cached_data = *data;
+        s_has_cached_data = true;
+#    ifdef ESP_PLATFORM
         save_cp_cache(data);
-#endif
+#    endif
         if (s_callback) {
             s_callback(data, s_callback_user_data);
         }

@@ -2,9 +2,9 @@
 #include <stdatomic.h>
 #include <esp_timer.h>
 
-static _Atomic uint32_t g_busy_mask   = 0;
-static _Atomic int      g_hold_count  = 0;
-static _Atomic int64_t  g_deadline_ms = 0;
+static _Atomic uint32_t g_busy_mask = 0;
+static _Atomic int g_hold_count = 0;
+static _Atomic int64_t g_deadline_ms = 0;
 
 static inline int64_t get_now_ms(void)
 {
@@ -24,7 +24,7 @@ void sm_set_busy(sleep_busy_src_t src, bool busy)
 void sm_kick(uint32_t delay_ms, const char *reason)
 {
     int64_t new_deadline = get_now_ms() + (int64_t)delay_ms;
-    int64_t cur          = atomic_load(&g_deadline_ms);
+    int64_t cur = atomic_load(&g_deadline_ms);
     while (cur < new_deadline) {
         if (atomic_compare_exchange_weak(&g_deadline_ms, &cur, new_deadline)) {
             break;

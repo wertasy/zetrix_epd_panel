@@ -41,22 +41,22 @@ void widget_slider_init(widget_slider_t *s, int x, int y, int w, int h, int min_
     if (!s)
         return;
     memset(s, 0, sizeof(*s));
-    s->x                  = x;
-    s->y                  = y;
-    s->w                  = w;
-    s->h                  = h;
-    s->min_val            = min_val;
-    s->max_val            = max_val;
-    s->value              = min_val;
-    s->font               = NULL;
-    s->callback           = NULL;
+    s->x = x;
+    s->y = y;
+    s->w = w;
+    s->h = h;
+    s->min_val = min_val;
+    s->max_val = max_val;
+    s->value = min_val;
+    s->font = NULL;
+    s->callback = NULL;
     s->callback_user_data = NULL;
-    s->track_bg_color     = RAWDRAW_COLOR_WHITE;
-    s->track_fill_color   = RAWDRAW_COLOR_BLACK;
-    s->thumb_color        = RAWDRAW_COLOR_BLACK;
-    s->text_color         = RAWDRAW_COLOR_BLACK;
-    s->border_color       = RAWDRAW_COLOR_BLACK;
-    s->custom_colors      = false;
+    s->track_bg_color = RAWDRAW_COLOR_WHITE;
+    s->track_fill_color = RAWDRAW_COLOR_BLACK;
+    s->thumb_color = RAWDRAW_COLOR_BLACK;
+    s->text_color = RAWDRAW_COLOR_BLACK;
+    s->border_color = RAWDRAW_COLOR_BLACK;
+    s->custom_colors = false;
     refresh_auto_labels(s);
 }
 
@@ -142,7 +142,7 @@ void widget_slider_set_callback(widget_slider_t *s, widget_slider_callback_t cb,
 {
     if (!s)
         return;
-    s->callback           = cb;
+    s->callback = cb;
     s->callback_user_data = user_data;
 }
 
@@ -151,11 +151,11 @@ void widget_slider_set_colors(widget_slider_t *s, rawdraw_color_t track_bg, rawd
 {
     if (!s)
         return;
-    s->track_bg_color   = track_bg;
+    s->track_bg_color = track_bg;
     s->track_fill_color = track_fill;
-    s->thumb_color      = thumb;
-    s->text_color       = text;
-    s->custom_colors    = true;
+    s->thumb_color = thumb;
+    s->text_color = text;
+    s->custom_colors = true;
 }
 
 /* ============================================================
@@ -175,8 +175,8 @@ bool widget_slider_handle_drag(widget_slider_t *s, int px)
         return false;
     int old_value = s->value;
     int new_value = widget_slider_x_to_value(s, px);
-    new_value     = RD_CLAMP(new_value, s->min_val, s->max_val);
-    s->value      = new_value;
+    new_value = RD_CLAMP(new_value, s->min_val, s->max_val);
+    s->value = new_value;
     if (new_value != old_value) {
         if (s->callback)
             s->callback(new_value, s->callback_user_data);
@@ -242,10 +242,10 @@ rawdraw_rect_t widget_slider_get_track_bounds(const widget_slider_t *s)
     /* Track is the horizontal bar portion (middle vertical section). */
     int track_h = RD_MAX(4, s->h / 3);
     int track_y = s->y + (s->h - track_h) / 2;
-    r.x         = s->x;
-    r.y         = track_y;
-    r.w         = s->w;
-    r.h         = track_h;
+    r.x = s->x;
+    r.y = track_y;
+    r.w = s->w;
+    r.h = track_h;
     return r;
 }
 
@@ -255,8 +255,8 @@ rawdraw_point_t widget_slider_get_thumb_center(const widget_slider_t *s)
     if (!s)
         return p;
     int pct = widget_slider_get_value_percent(s);
-    p.x     = s->x + (s->w * pct) / 100;
-    p.y     = s->y + s->h / 2;
+    p.x = s->x + (s->w * pct) / 100;
+    p.y = s->y + s->h / 2;
     return p;
 }
 
@@ -265,7 +265,7 @@ int widget_slider_x_to_value(const widget_slider_t *s, int px)
     if (!s || s->w <= 0)
         return s ? s->min_val : 0;
     int clamped_x = RD_CLAMP(px, s->x, s->x + s->w);
-    int pct       = ((clamped_x - s->x) * 100) / s->w;
+    int pct = ((clamped_x - s->x) * 100) / s->w;
     return s->min_val + (pct * (s->max_val - s->min_val)) / 100;
 }
 
@@ -294,21 +294,21 @@ void widget_slider_render(const widget_slider_t *s, uint8_t *fb, int fb_width, i
     /* Determine colors: use theme defaults unless custom colors are set. */
     const bool default_colors = !s->custom_colors;
 
-    rawdraw_color_t        track_bg     = s->track_bg_color;
-    rawdraw_color_t        track_fill   = s->track_fill_color;
-    rawdraw_color_t        thumb_fill   = s->thumb_color;
-    rawdraw_color_t        text_color   = s->text_color;
-    rawdraw_color_t        border_col   = s->border_color;
+    rawdraw_color_t track_bg = s->track_bg_color;
+    rawdraw_color_t track_fill = s->track_fill_color;
+    rawdraw_color_t thumb_fill = s->thumb_color;
+    rawdraw_color_t text_color = s->text_color;
+    rawdraw_color_t border_col = s->border_color;
     rawdraw_dither_token_t track_dither = DITHER_NONE;
 
     if (default_colors) {
         rawdraw_paint_style_t progress_style = rawdraw_theme_component(ROLE_PROGRESS);
-        track_bg                             = progress_style.bg;
-        track_fill                           = progress_style.fg;
-        thumb_fill                           = progress_style.border;
-        text_color                           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-        border_col                           = progress_style.border;
-        track_dither                         = progress_style.dither;
+        track_bg = progress_style.bg;
+        track_fill = progress_style.fg;
+        thumb_fill = progress_style.border;
+        text_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+        border_col = progress_style.border;
+        track_dither = progress_style.dither;
     }
 
     /* Draw track background (styled round rect). */
@@ -330,8 +330,8 @@ void widget_slider_render(const widget_slider_t *s, uint8_t *fb, int fb_width, i
     rawdraw_draw_round_rect_border(fb, fb_width, fb_height, track, track_radius, 1, border_col);
 
     /* Draw thumb (diamond shape — good visibility on 1bpp ePaper). */
-    rawdraw_point_t thumb      = widget_slider_get_thumb_center(s);
-    int             thumb_size = RD_MAX(4, track.h / 2 + 2);
+    rawdraw_point_t thumb = widget_slider_get_thumb_center(s);
+    int thumb_size = RD_MAX(4, track.h / 2 + 2);
 
     for (int dy = -thumb_size; dy <= thumb_size; dy++) {
         int half_w = thumb_size - abs(dy);

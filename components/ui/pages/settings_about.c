@@ -21,19 +21,19 @@
 
 void settings_page_render_about_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t modal_style   = rawdraw_theme_component(ROLE_MODAL);
-    const rawdraw_paint_style_t shadow_style  = rawdraw_theme_style(THEME_TOKEN_SHADOW);
-    const rawdraw_color_t       text          = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary     = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border        = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const rawdraw_color_t       accent        = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
-    const int                   dialog_w      = 316;
-    const int                   dialog_h      = STYLE_DIALOG_H_LG;
-    const int                   dialog_x      = (width - dialog_w) / 2;
-    const int                   dialog_y      = STYLE_STATUS_BAR_HEIGHT + 30;
-    const int                   content_right = dialog_x + dialog_w - 20;
-    const int                   titlebar_h    = kAboutTitlebarH;
-    const int                   shadow_offset = 2;
+    const rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
+    const rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_color_t accent = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
+    const int dialog_w = 316;
+    const int dialog_h = STYLE_DIALOG_H_LG;
+    const int dialog_x = (width - dialog_w) / 2;
+    const int dialog_y = STYLE_STATUS_BAR_HEIGHT + 30;
+    const int content_right = dialog_x + dialog_w - 20;
+    const int titlebar_h = kAboutTitlebarH;
+    const int shadow_offset = 2;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -52,8 +52,8 @@ void settings_page_render_about_dialog(settings_page_t *r, uint8_t *fb, int widt
     rawdraw_draw_line(fb, width, height, (rawdraw_point_t){dialog_x + 18, dialog_y + 10},
                       (rawdraw_point_t){dialog_x + 10, dialog_y + 18}, accent);
 
-    const char *title   = "About notellm";
-    const int   title_w = rawdraw_measure_text_width(title, r->font);
+    const char *title = "About notellm";
+    const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y_in_box(r->font, title, dialog_y, titlebar_h, 0), title,
                       r->font, text);
@@ -87,16 +87,16 @@ void settings_page_render_about_dialog(settings_page_t *r, uint8_t *fb, int widt
         {"序列号", serial_buf},    {"官方网站", "canhui.wang"},
     };
     const int row_count = (int)(sizeof(rows) / sizeof(rows[0]));
-    const int row_h     = kAboutRowHeight;
-    int       y         = dialog_y + titlebar_h + 12;
-    const int rows_x    = dialog_x + 70;
+    const int row_h = kAboutRowHeight;
+    int y = dialog_y + titlebar_h + 12;
+    const int rows_x = dialog_x + 70;
     for (int i = 0; i < row_count; ++i) {
         const int center_y = y + row_h / 2;
         rawdraw_draw_text(fb, width, height, rows_x,
                           rawdraw_layout_ink_centered_text_top_y(r->font, rows[i].label, center_y, 0), rows[i].label,
                           r->font, text);
         const int value_left_min = rows_x + 84;
-        char      display_value[SETTINGS_PAGE_ITEM_VALUE_LEN];
+        char display_value[SETTINGS_PAGE_ITEM_VALUE_LEN];
         ui_text_fit_to_width(rows[i].value, r->value_font, RD_MAX(0, content_right - value_left_min), display_value,
                              sizeof(display_value));
         const int value_w = rawdraw_measure_text_width(display_value, r->value_font);

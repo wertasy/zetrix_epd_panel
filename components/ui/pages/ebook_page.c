@@ -35,7 +35,7 @@
 /* Reader page wrap storage. */
 #define EBOOK_MAX_DISPLAY_LINES 16
 
-static const lv_font_t *const kEbookFont      = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kEbookFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kEbookTitleFont = &SourceHanSansSC_Medium_slim;
 
 static int ebook_chars_per_page(const ebook_page_t *r)
@@ -50,7 +50,7 @@ static void ebook_calc_pages(ebook_page_t *r)
         r->total_pages = 1;
     } else {
         const int chars_per_page = ebook_chars_per_page(r);
-        r->total_pages           = (content_len + chars_per_page - 1) / chars_per_page;
+        r->total_pages = (content_len + chars_per_page - 1) / chars_per_page;
     }
 }
 
@@ -75,19 +75,19 @@ static void ebook_save_reader_position(ebook_page_t *r)
 
 void ebook_page_init(page_renderer_t *self, int width, int height)
 {
-    ebook_page_t *r                 = (ebook_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
-    r->file_count                   = 0;
-    r->selected_index               = 0;
-    r->reader_mode                  = false;
-    r->portrait_reader              = false;
-    r->reader_filename[0]           = '\0';
-    r->reader_content[0]            = '\0';
-    r->current_page                 = 0;
-    r->total_pages                  = 0;
-    r->font                         = kEbookFont;
-    r->title_font                   = kEbookTitleFont;
+    ebook_page_t *r = (ebook_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
+    r->file_count = 0;
+    r->selected_index = 0;
+    r->reader_mode = false;
+    r->portrait_reader = false;
+    r->reader_filename[0] = '\0';
+    r->reader_content[0] = '\0';
+    r->current_page = 0;
+    r->total_pages = 0;
+    r->font = kEbookFont;
+    r->title_font = kEbookTitleFont;
     r->base.needs_full_refresh_flag = true;
 
     /* P1: Restore reader position from NVS on wake. */
@@ -116,12 +116,12 @@ static void ebook_page_enter(page_renderer_t *self)
 
 static void ebook_render_file_list(page_renderer_t *self, uint8_t *fb, int width, int height)
 {
-    ebook_page_t               *r              = (ebook_page_t *)self;
-    const rawdraw_paint_style_t bg_style       = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    ebook_page_t *r = (ebook_page_t *)self;
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
-    const rawdraw_paint_style_t footer_style   = rawdraw_theme_component(ROLE_PANEL);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_paint_style_t footer_style = rawdraw_theme_component(ROLE_PANEL);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
 
     /* Clear content area. */
     rawdraw_draw_styled_rect(
@@ -129,8 +129,8 @@ static void ebook_render_file_list(page_renderer_t *self, uint8_t *fb, int width
         (rawdraw_rect_t){0, STYLE_STATUS_BAR_HEIGHT + 1, width, height - STYLE_STATUS_BAR_HEIGHT - 1}, &bg_style);
 
     if (r->file_count == 0) {
-        const char *hint   = "暂无TXT文件";
-        const int   hint_w = rawdraw_measure_text_width(hint, r->font);
+        const char *hint = "暂无TXT文件";
+        const int hint_w = rawdraw_measure_text_width(hint, r->font);
         rawdraw_draw_text(fb, width, height, (width - hint_w) / 2, EBOOK_LIST_Y + 80, hint, r->font, text);
         rawdraw_draw_text(fb, width, height, (width - rawdraw_measure_text_width("推送TXT到设备", r->font)) / 2,
                           EBOOK_LIST_Y + 110, "推送TXT到设备", r->font, secondary);
@@ -140,7 +140,7 @@ static void ebook_render_file_list(page_renderer_t *self, uint8_t *fb, int width
             const int idx = visible_start + i;
             if (idx >= r->file_count)
                 break;
-            const int  y   = EBOOK_LIST_Y + i * EBOOK_ITEM_H;
+            const int y = EBOOK_LIST_Y + i * EBOOK_ITEM_H;
             const bool sel = idx == r->selected_index;
 
             if (sel) {
@@ -179,13 +179,13 @@ static void ebook_render_file_list(page_renderer_t *self, uint8_t *fb, int width
 static void ebook_render_reader_page(page_renderer_t *self, uint8_t *fb, int width, int height, int content_y,
                                      int content_h)
 {
-    ebook_page_t         *r         = (ebook_page_t *)self;
-    const rawdraw_color_t text      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    ebook_page_t *r = (ebook_page_t *)self;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
 
     if (r->reader_content[0] == '\0') {
         const char *empty_hint = "文件为空或读取失败";
-        const int   hint_w     = rawdraw_measure_text_width(empty_hint, r->font);
+        const int hint_w = rawdraw_measure_text_width(empty_hint, r->font);
         rawdraw_draw_text(fb, width, height, (width - hint_w) / 2,
                           rawdraw_layout_ink_centered_text_top_y(r->font, empty_hint, content_y + 42, 0), empty_hint,
                           r->font, text);
@@ -196,8 +196,8 @@ static void ebook_render_reader_page(page_renderer_t *self, uint8_t *fb, int wid
     }
 
     const int chars_per_page = ebook_chars_per_page(r);
-    const int content_len    = (int)strlen(r->reader_content);
-    int       start_char     = r->current_page * chars_per_page;
+    const int content_len = (int)strlen(r->reader_content);
+    int start_char = r->current_page * chars_per_page;
     if (start_char >= content_len) {
         start_char = content_len > 0 ? content_len - 1 : 0;
     }
@@ -213,14 +213,14 @@ static void ebook_render_reader_page(page_renderer_t *self, uint8_t *fb, int wid
     /* Wrap text into display lines first (handles \n and word-wrap).
      * Extract the page slice into a NUL-terminated buffer, then delegate
      * to the shared ui_text_wrap_lines helper. */
-    const int margin_x       = 14;
+    const int margin_x = 14;
     const int max_line_width = width - margin_x * 2;
 
     char display_lines[EBOOK_MAX_DISPLAY_LINES][128];
-    int  line_count = 0;
+    int line_count = 0;
 
     const int slice_len = end_char - start_char;
-    char      page_slice[EBOOK_PORTRAIT_CHARS_PER_PAGE + 1];
+    char page_slice[EBOOK_PORTRAIT_CHARS_PER_PAGE + 1];
     const int copy_len = RD_MIN(slice_len, (int)sizeof(page_slice) - 1);
     memcpy(page_slice, r->reader_content + start_char, (size_t)copy_len);
     page_slice[copy_len] = '\0';
@@ -238,15 +238,15 @@ static void ebook_render_reader_page(page_renderer_t *self, uint8_t *fb, int wid
     int max_ink_h = 0;
     for (int i = 0; i < line_count; ++i) {
         const rawdraw_text_ink_bounds_t ink = rawdraw_layout_measure_text_ink_bounds(r->font, display_lines[i]);
-        const int                       h   = ink.valid ? ink.height : (int)r->font->line_height;
+        const int h = ink.valid ? ink.height : (int)r->font->line_height;
         if (h > max_ink_h)
             max_ink_h = h;
     }
     const int line_box_h = RD_MAX(max_ink_h + 6, 22);
-    const int line_gap   = 3;
-    const int line_step  = line_box_h + line_gap;
-    const int max_lines  = content_h / line_step;
-    const int visible    = RD_MIN(line_count, max_lines);
+    const int line_gap = 3;
+    const int line_step = line_box_h + line_gap;
+    const int max_lines = content_h / line_step;
+    const int visible = RD_MIN(line_count, max_lines);
 
     for (int i = 0; i < visible; ++i) {
         const int line_box_y = content_y + i * line_step;
@@ -259,11 +259,11 @@ static void ebook_render_reader_page(page_renderer_t *self, uint8_t *fb, int wid
 
 static void ebook_render_reader_portrait(page_renderer_t *self, uint8_t *fb, int width, int height)
 {
-    ebook_page_t *r              = (ebook_page_t *)self;
-    const int     kPortraitW     = STYLE_SCREEN_HEIGHT; /* portrait = rotated screen */
-    const int     kPortraitH     = STYLE_SCREEN_WIDTH;
-    const size_t  portrait_bytes = ((size_t)kPortraitW * 2 + 7) / 8 * (size_t)kPortraitH;
-    uint8_t      *portrait       = (uint8_t *)heap_caps_malloc(portrait_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    ebook_page_t *r = (ebook_page_t *)self;
+    const int kPortraitW = STYLE_SCREEN_HEIGHT; /* portrait = rotated screen */
+    const int kPortraitH = STYLE_SCREEN_WIDTH;
+    const size_t portrait_bytes = ((size_t)kPortraitW * 2 + 7) / 8 * (size_t)kPortraitH;
+    uint8_t *portrait = (uint8_t *)heap_caps_malloc(portrait_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!portrait)
         portrait = (uint8_t *)malloc(portrait_bytes);
     if (!portrait)
@@ -276,7 +276,7 @@ static void ebook_render_reader_portrait(page_renderer_t *self, uint8_t *fb, int
     ebook_render_reader_page(self, portrait, kPortraitW, kPortraitH, 12, kPortraitH - 24);
 
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    char                  page_buf[24];
+    char page_buf[24];
     snprintf(page_buf, sizeof(page_buf), "%d/%d", r->current_page + 1, r->total_pages);
     const int page_w = rawdraw_measure_text_width(page_buf, r->font);
     rawdraw_draw_text(portrait, kPortraitW, kPortraitH, kPortraitW - page_w - 10, kPortraitH - 18, page_buf, r->font,
@@ -409,7 +409,7 @@ void ebook_page_set_file_list(page_renderer_t *self, const char *const *files, i
             r->files[i][0] = '\0';
         }
     }
-    r->selected_index               = 0;
+    r->selected_index = 0;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -443,16 +443,16 @@ void ebook_page_open_file(page_renderer_t *self, const char *filename, const cha
     } else {
         r->reader_content[0] = '\0';
     }
-    r->reader_mode     = true;
+    r->reader_mode = true;
     r->portrait_reader = false;
-    r->current_page    = 0;
+    r->current_page = 0;
     ebook_calc_pages(r);
     r->base.needs_full_refresh_flag = true;
 }
 
 void ebook_page_close_reader(page_renderer_t *self)
 {
-    ebook_page_t *r                 = (ebook_page_t *)self;
+    ebook_page_t *r = (ebook_page_t *)self;
     /* Clear saved reader position when explicitly closing. */
     settings_handle_t h = settings_open("ebook", true);
     if (h) {
@@ -460,12 +460,12 @@ void ebook_page_close_reader(page_renderer_t *self)
         settings_set_int(h, "reader_page", 0);
         settings_close(h);
     }
-    r->reader_mode                  = false;
-    r->portrait_reader              = false;
-    r->reader_content[0]            = '\0';
-    r->reader_filename[0]           = '\0';
-    r->current_page                 = 0;
-    r->total_pages                  = 0;
+    r->reader_mode = false;
+    r->portrait_reader = false;
+    r->reader_content[0] = '\0';
+    r->reader_filename[0] = '\0';
+    r->current_page = 0;
+    r->total_pages = 0;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -506,8 +506,8 @@ static void ebook_set_portrait_reader(ebook_page_t *r, bool portrait)
         return;
     }
     const int old_chars_per_page = ebook_chars_per_page(r);
-    const int current_offset     = RD_MAX(0, r->current_page) * old_chars_per_page;
-    r->portrait_reader           = portrait;
+    const int current_offset = RD_MAX(0, r->current_page) * old_chars_per_page;
+    r->portrait_reader = portrait;
     ebook_calc_pages(r);
     r->current_page = r->total_pages > 0 ? RD_MIN(r->total_pages - 1, current_offset / ebook_chars_per_page(r)) : 0;
     r->base.needs_full_refresh_flag = true;
@@ -520,17 +520,17 @@ static void ebook_set_portrait_reader(ebook_page_t *r, bool portrait)
 EXT_RAM_BSS_ATTR ebook_page_t s_ebook_instance;
 
 const page_renderer_ops_t ebook_page_ops = {
-    .init                    = ebook_page_init,
-    .enter                   = ebook_page_enter,
-    .render                  = ebook_page_render,
-    .handle_input            = ebook_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = ebook_page_init,
+    .enter = ebook_page_enter,
+    .render = ebook_page_render,
+    .handle_input = ebook_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
 PAGE_REGISTER(UI_PAGE_EBOOK, "电子书", FA_SETTINGS_BOOK, true, 60, &ebook_page_ops, &s_ebook_instance.base);

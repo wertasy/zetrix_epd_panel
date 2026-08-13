@@ -15,9 +15,9 @@
 #    include <pthread.h>
 #    include <stdlib.h>
 
-typedef pthread_mutex_t         *SemaphoreHandle_t;
+typedef pthread_mutex_t *SemaphoreHandle_t;
 typedef struct host_event_group *EventGroupHandle_t;
-typedef void                    *TaskHandle_t;
+typedef void *TaskHandle_t;
 
 #    define portMAX_DELAY 0xFFFFFFFF
 #    define pdTRUE 1
@@ -28,9 +28,9 @@ typedef void                    *TaskHandle_t;
 typedef uint32_t EventBits_t;
 
 struct host_event_group {
-    uint32_t        bits;
+    uint32_t bits;
     pthread_mutex_t lock;
-    pthread_cond_t  cond;
+    pthread_cond_t cond;
 };
 
 static inline SemaphoreHandle_t xSemaphoreCreateMutex(void)
@@ -104,7 +104,7 @@ static inline void xEventGroupSetBits(EventGroupHandle_t eg, uint32_t bits)
     pthread_cond_signal(&eg->cond);
     pthread_mutex_unlock(&eg->lock);
 }
-typedef int              BaseType_t;
+typedef int BaseType_t;
 static inline BaseType_t xTaskCreatePinnedToCore(void (*task_fn)(void *), const char *name, uint32_t stack, void *arg,
                                                  uint32_t prio, TaskHandle_t *handle, int core)
 {
@@ -113,7 +113,7 @@ static inline BaseType_t xTaskCreatePinnedToCore(void (*task_fn)(void *), const 
     (void)prio;
     (void)core;
     pthread_t thread;
-    int       ret = pthread_create(&thread, NULL, (void *(*)(void *))task_fn, arg);
+    int ret = pthread_create(&thread, NULL, (void *(*)(void *))task_fn, arg);
     if (ret == 0) {
         pthread_detach(thread);
         if (handle)
@@ -151,18 +151,18 @@ typedef void (*epd_refresh_cb_t)(rawdraw_rect_t rect, epd_refresh_mode_t mode, v
 
 typedef struct {
     epd_refresh_config_t config;
-    epd_refresh_cb_t     callback;
-    void                *user_data;
-    TaskHandle_t         task_handle;
-    SemaphoreHandle_t    mutex;
-    EventGroupHandle_t   event_group;
-    rawdraw_rect_t       dirty_rect;
-    bool                 has_dirty;
-    int                  partial_count;
-    bool                 full_refresh_pending;
-    bool                 running;
-    int                  screen_width;
-    int                  screen_height;
+    epd_refresh_cb_t callback;
+    void *user_data;
+    TaskHandle_t task_handle;
+    SemaphoreHandle_t mutex;
+    EventGroupHandle_t event_group;
+    rawdraw_rect_t dirty_rect;
+    bool has_dirty;
+    int partial_count;
+    bool full_refresh_pending;
+    bool running;
+    int screen_width;
+    int screen_height;
 } epd_refresh_scheduler_t;
 
 void epd_refresh_init(epd_refresh_scheduler_t *s, epd_refresh_cb_t cb, void *user_data,
@@ -172,7 +172,7 @@ void epd_refresh_stop(epd_refresh_scheduler_t *s);
 void epd_refresh_mark_dirty(epd_refresh_scheduler_t *s, rawdraw_rect_t rect);
 void epd_refresh_trigger(epd_refresh_scheduler_t *s, bool urgent);
 void epd_refresh_request_full(epd_refresh_scheduler_t *s);
-int  epd_refresh_get_partial_count(epd_refresh_scheduler_t *s);
+int epd_refresh_get_partial_count(epd_refresh_scheduler_t *s);
 void epd_refresh_reset_partial_count(epd_refresh_scheduler_t *s);
 bool epd_refresh_is_running(epd_refresh_scheduler_t *s);
 

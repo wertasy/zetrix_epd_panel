@@ -9,11 +9,11 @@ void widget_voice_wakeup_init(widget_voice_wakeup_state_t *state, const lv_font_
 {
     if (!state)
         return;
-    state->state           = WIDGET_VOICE_STATE_IDLE;
-    state->visible         = false;
+    state->state = WIDGET_VOICE_STATE_IDLE;
+    state->visible = false;
     state->overlay_text[0] = '\0';
-    state->state_start_us  = 0;
-    state->font            = font ? font : &BUILTIN_TEXT_FONT;
+    state->state_start_us = 0;
+    state->font = font ? font : &BUILTIN_TEXT_FONT;
     refresh_tracker_init(&state->refresh);
 }
 
@@ -25,7 +25,7 @@ void widget_voice_wakeup_start_recording(widget_voice_wakeup_state_t *state)
     snprintf(state->overlay_text, sizeof(state->overlay_text),
              "\xe5\xbd\x95\xe9\x9f\xb3\xe4\xb8\xad..."); /* "录音中..." */
     state->state_start_us = esp_timer_get_time();
-    state->visible        = true;
+    state->visible = true;
     refresh_mark_dirty(&state->refresh);
 }
 
@@ -49,7 +49,7 @@ void widget_voice_wakeup_show_offline(widget_voice_wakeup_state_t *state)
              "\xe7\xa6\xbb\xe7\xba\xbf\xe7\x8a\xb6\xe6\x80\x81\xe4\xb8\x8b\xe6\x97\xa0\xe6\xb3\x95\xe4\xbd\xbf\xe7\x94"
              "\xa8\xe8\xaf\xad\xe9\x9f\xb3"); /* "离线状态下无法使用语音" */
     state->state_start_us = esp_timer_get_time();
-    state->visible        = true;
+    state->visible = true;
     refresh_mark_dirty(&state->refresh);
 }
 
@@ -67,10 +67,10 @@ void widget_voice_wakeup_reset(widget_voice_wakeup_state_t *state)
 {
     if (!state)
         return;
-    state->state           = WIDGET_VOICE_STATE_IDLE;
-    state->visible         = false;
+    state->state = WIDGET_VOICE_STATE_IDLE;
+    state->visible = false;
     state->overlay_text[0] = '\0';
-    state->state_start_us  = 0;
+    state->state_start_us = 0;
     refresh_mark_clean(&state->refresh);
 }
 
@@ -140,7 +140,7 @@ bool widget_voice_wakeup_render(widget_voice_wakeup_state_t *state, uint8_t *fb,
         return false;
 
     rawdraw_rect_t bounds = widget_voice_wakeup_get_bounds();
-    bounds                = rawdraw_clamp_rect(bounds, width, height);
+    bounds = rawdraw_clamp_rect(bounds, width, height);
     if (rawdraw_rect_area(bounds) <= 0)
         return false;
 

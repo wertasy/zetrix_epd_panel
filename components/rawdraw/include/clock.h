@@ -13,18 +13,18 @@
 #define CLOCK_H 32
 
 typedef struct {
-    int              x;
-    int              y;
+    int x;
+    int y;
     const lv_font_t *font;
-    rawdraw_color_t  color;
-    int              last_minute;
-    char             time_buf[6]; /* "HH:MM\0" */
+    rawdraw_color_t color;
+    int last_minute;
+    char time_buf[6]; /* "HH:MM\0" */
 } epd_clock_t;
 
-void           epd_clock_init(epd_clock_t *c, int x, int y, const lv_font_t *font);
-void           epd_clock_set_position(epd_clock_t *c, int x, int y);
-void           epd_clock_set_font(epd_clock_t *c, const lv_font_t *font);
-void           epd_clock_set_color(epd_clock_t *c, rawdraw_color_t color);
+void epd_clock_init(epd_clock_t *c, int x, int y, const lv_font_t *font);
+void epd_clock_set_position(epd_clock_t *c, int x, int y);
+void epd_clock_set_font(epd_clock_t *c, const lv_font_t *font);
+void epd_clock_set_color(epd_clock_t *c, rawdraw_color_t color);
 rawdraw_rect_t epd_clock_get_bounds(const epd_clock_t *c);
 
 /* Draw clock to framebuffer. Returns true if time changed and was redrawn. */

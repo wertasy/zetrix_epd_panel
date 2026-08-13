@@ -5,12 +5,12 @@
 #include <stdbool.h>
 
 typedef enum {
-    SLEEP_BUSY_SRC_NET      = 1u << 0,
-    SLEEP_BUSY_SRC_AUDIO    = 1u << 1,
-    SLEEP_BUSY_SRC_DISPLAY  = 1u << 2,
-    SLEEP_BUSY_SRC_UI       = 1u << 3,
-    SLEEP_BUSY_SRC_NVS      = 1u << 4,
-    SLEEP_BUSY_SRC_TODO     = 1u << 5,
+    SLEEP_BUSY_SRC_NET = 1u << 0,
+    SLEEP_BUSY_SRC_AUDIO = 1u << 1,
+    SLEEP_BUSY_SRC_DISPLAY = 1u << 2,
+    SLEEP_BUSY_SRC_UI = 1u << 3,
+    SLEEP_BUSY_SRC_NVS = 1u << 4,
+    SLEEP_BUSY_SRC_TODO = 1u << 5,
     SLEEP_BUSY_SRC_PROTOCOL = 1u << 6,
 } sleep_busy_src_t;
 

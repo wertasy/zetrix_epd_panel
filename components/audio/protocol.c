@@ -19,7 +19,7 @@ void protocol_init(protocol_t *p)
     if (!p)
         return;
     memset(p, 0, sizeof(*p));
-    p->server_sample_rate    = 24000;
+    p->server_sample_rate = 24000;
     p->server_frame_duration = 60;
 
     // Get device ID
@@ -138,7 +138,7 @@ static void process_incoming_text(protocol_t *p, const char *text_data, size_t l
 
 static void websocket_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
-    protocol_t                 *p    = (protocol_t *)handler_args;
+    protocol_t *p = (protocol_t *)handler_args;
     esp_websocket_event_data_t *data = (esp_websocket_event_data_t *)event_data;
 
     switch (event_id) {
@@ -181,11 +181,11 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
                 // Decode or parse binary protocol envelope if needed.
                 // Currently placeholder as audio is parked.
                 if (p->on_incoming_audio) {
-                    audio_stream_packet_t pkt = {.sample_rate    = p->server_sample_rate,
+                    audio_stream_packet_t pkt = {.sample_rate = p->server_sample_rate,
                                                  .frame_duration = p->server_frame_duration,
-                                                 .timestamp      = 0,
-                                                 .payload        = (const uint8_t *)data->data_ptr,
-                                                 .payload_len    = data->data_len};
+                                                 .timestamp = 0,
+                                                 .payload = (const uint8_t *)data->data_ptr,
+                                                 .payload_len = data->data_len};
                     p->on_incoming_audio(&pkt, p->audio_ctx);
                 }
             }
@@ -237,7 +237,7 @@ bool protocol_send_text(protocol_t *p, const char *text)
         return false;
     }
 
-    int len  = strlen(json_str);
+    int len = strlen(json_str);
     int sent = esp_websocket_client_send_text(p->ws_client, json_str, len, portMAX_DELAY);
     free(json_str);
 

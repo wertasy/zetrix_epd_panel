@@ -31,8 +31,8 @@ static void draw_battery_icon(uint8_t *fb, int width, int height, int x, int y, 
         const int body_h = 14;
         rawdraw_draw_rect_border(fb, width, height, (rawdraw_rect_t){x, y + 2, body_w, body_h}, 1, battery_color);
         rawdraw_fill_rect(fb, width, height, (rawdraw_rect_t){x + 3, y, 3, 2}, battery_color);
-        const int seg_h  = 3;
-        const int gap    = 1;
+        const int seg_h = 3;
+        const int gap = 1;
         const int filled = level >= 90 ? 3 : (level >= 50 ? 2 : (level > 10 ? 1 : 0));
         for (int i = 0; i < 3; ++i) {
             if (i >= 3 - filled) {
@@ -45,8 +45,8 @@ static void draw_battery_icon(uint8_t *fb, int width, int height, int x, int y, 
         const int body_h = 12;
         rawdraw_draw_rect_border(fb, width, height, (rawdraw_rect_t){x, y, body_w, body_h}, 1, battery_color);
         rawdraw_fill_rect(fb, width, height, (rawdraw_rect_t){x + body_w, y + 3, 2, 6}, battery_color);
-        const int seg_w  = 6;
-        const int gap    = 1;
+        const int seg_w = 6;
+        const int gap = 1;
         const int filled = level >= 90 ? 3 : (level >= 50 ? 2 : (level > 10 ? 1 : 0));
         for (int i = 0; i < filled; ++i) {
             const int sx = x + 2 + i * (seg_w + gap);
@@ -81,7 +81,6 @@ static void draw_server_status_marker(uint8_t *fb, int width, int height, int x,
         rawdraw_draw_rect_border(fb, width, height, (rawdraw_rect_t){x - 3, center_y - 3, 7, 7}, 1, warning);
     }
 }
-
 
 /* ============================================================ */
 /* Seven-segment mini clock                                     */
@@ -144,11 +143,11 @@ static void draw_mini_time_text(uint8_t *fb, int width, int height, int x, int y
 
 void ui_status_bar_draw(struct ui_manager *mgr, uint8_t *fb, int width, int height)
 {
-    int                         bar_height   = STYLE_STATUS_BAR_HEIGHT;
-    int                         padding      = STYLE_STATUS_BAR_PADDING;
-    const lv_font_t            *title_font   = &SourceHanSansSC_Regular_slim;
-    const rawdraw_paint_style_t bg_style     = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    const rawdraw_paint_style_t text_style   = rawdraw_theme_style(THEME_TOKEN_TEXT_PRIMARY);
+    int bar_height = STYLE_STATUS_BAR_HEIGHT;
+    int padding = STYLE_STATUS_BAR_PADDING;
+    const lv_font_t *title_font = &SourceHanSansSC_Regular_slim;
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_paint_style_t text_style = rawdraw_theme_style(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_paint_style_t accent_style = rawdraw_theme_style(THEME_TOKEN_ACCENT);
     const rawdraw_paint_style_t border_style = rawdraw_theme_style(THEME_TOKEN_BORDER);
     const rawdraw_paint_style_t danger_style = rawdraw_theme_style(THEME_TOKEN_DANGER);
@@ -159,12 +158,12 @@ void ui_status_bar_draw(struct ui_manager *mgr, uint8_t *fb, int width, int heig
         (rawdraw_rect_t){1, bar_height - STYLE_SHELL_DIVIDER_THICKNESS, width - 2, STYLE_SHELL_DIVIDER_THICKNESS},
         border_style.border);
 
-    const int center_y          = bar_height / 2;
-    const int sig_bar_w         = 3;
-    const int sig_bar_gap       = 2;
+    const int center_y = bar_height / 2;
+    const int sig_bar_w = 3;
+    const int sig_bar_gap = 2;
     const int sig_bar_heights[] = {6, 9, 12, 15};
-    const int wifi_group_w      = 4 * sig_bar_w + 3 * sig_bar_gap;
-    int       x                 = padding + 3;
+    const int wifi_group_w = 4 * sig_bar_w + 3 * sig_bar_gap;
+    int x = padding + 3;
 
     if (mgr->status_bar.wifi_connected) {
         for (int i = 0; i < 4; ++i) {
@@ -190,13 +189,13 @@ void ui_status_bar_draw(struct ui_manager *mgr, uint8_t *fb, int width, int heig
     int left_content_x = marker_x + 14;
     if (mgr->status_bar.bluetooth_enabled) {
         const char *bt_icon = FA_SETTINGS_BLUETOOTH;
-        const int   bt_y    = rawdraw_layout_ink_centered_text_top_y(&fa_settings_16, bt_icon, center_y, 0);
+        const int bt_y = rawdraw_layout_ink_centered_text_top_y(&fa_settings_16, bt_icon, center_y, 0);
         rawdraw_draw_styled_text(fb, width, height, left_content_x, bt_y, bt_icon, &fa_settings_16, &accent_style);
         left_content_x += rawdraw_measure_text_width(bt_icon, &fa_settings_16) + 8;
     }
 
-    char       date_str[32] = {0};
-    const bool hide_date    = strcmp(mgr->status_bar.date_format, "hidden") == 0;
+    char date_str[32] = {0};
+    const bool hide_date = strcmp(mgr->status_bar.date_format, "hidden") == 0;
     if (!hide_date) {
         if (mgr->status_bar.server_date[0] != '\0') {
             if (strcmp(mgr->status_bar.date_format, "iso") == 0) {
@@ -233,7 +232,7 @@ void ui_status_bar_draw(struct ui_manager *mgr, uint8_t *fb, int width, int heig
     }
 
     const int battery_slot_w = 30;
-    int       right_x        = width - padding;
+    int right_x = width - padding;
     if (mgr->status_bar.battery_level >= 0) {
         const int battery_h = mgr->status_bar.battery_vertical ? 16 : 12;
         const int battery_w = mgr->status_bar.battery_vertical ? 9 : 26;
@@ -250,7 +249,7 @@ void ui_status_bar_draw(struct ui_manager *mgr, uint8_t *fb, int width, int heig
 
     const char *title =
         mgr->status_bar.central_text[0] != '\0' ? mgr->status_bar.central_text : mgr->status_bar.page_title;
-    const int   right_safe = (left_safe + 40 > right_x - 2) ? left_safe + 40 : right_x - 2;
+    const int right_safe = (left_safe + 40 > right_x - 2) ? left_safe + 40 : right_x - 2;
     const char *title_icon = NULL;
     for (int i = 0; i < mgr->quick_count; ++i) {
         if (mgr->quick_items[i]->id == mgr->current_page) {
@@ -267,14 +266,14 @@ void ui_status_bar_draw(struct ui_manager *mgr, uint8_t *fb, int width, int heig
     char display_title[64];
     ui_text_fit_to_width(title, title_font, text_max_w, display_title, sizeof(display_title));
     int title_text_w = rawdraw_measure_text_width(display_title, title_font);
-    int title_w      = title_icon_w + title_icon_gap + title_text_w;
-    int title_x      = (width - title_w) / 2;
+    int title_w = title_icon_w + title_icon_gap + title_text_w;
+    int title_x = (width - title_w) / 2;
     if (title_x < left_safe)
         title_x = left_safe;
     if (title_x + title_w > right_safe)
         title_x = (left_safe > right_safe - title_w) ? left_safe : (right_safe - title_w);
-    const int title_y      = rawdraw_layout_ink_centered_text_top_y_in_box(title_font, display_title, 0, bar_height, 0);
-    int       title_text_x = title_x;
+    const int title_y = rawdraw_layout_ink_centered_text_top_y_in_box(title_font, display_title, 0, bar_height, 0);
+    int title_text_x = title_x;
     if (title_icon_w > 0) {
         const int icon_y = rawdraw_layout_ink_centered_text_top_y_in_box(&fa_settings_16, title_icon, 0, bar_height, 0);
         rawdraw_draw_styled_text(fb, width, height, title_x, icon_y, title_icon, &fa_settings_16, &text_style);

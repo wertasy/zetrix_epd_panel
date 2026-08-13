@@ -28,18 +28,18 @@ void widget_panel_init(widget_panel_t *panel, int x, int y, int w, int h, int ra
     if (!panel)
         return;
     memset(panel, 0, sizeof(*panel));
-    panel->bounds.x         = x;
-    panel->bounds.y         = y;
-    panel->bounds.w         = w;
-    panel->bounds.h         = h;
-    panel->radius           = radius;
-    panel->title_height     = 0;
-    panel->padding          = STYLE_PANEL_PADDING;
-    panel->border_width     = STYLE_PANEL_BORDER_WIDTH;
-    panel->title_enabled    = true;
-    panel->bg_color         = RAWDRAW_COLOR_WHITE;
-    panel->border_color     = RAWDRAW_COLOR_BLACK;
-    panel->title_bg_color   = RAWDRAW_COLOR_WHITE;
+    panel->bounds.x = x;
+    panel->bounds.y = y;
+    panel->bounds.w = w;
+    panel->bounds.h = h;
+    panel->radius = radius;
+    panel->title_height = 0;
+    panel->padding = STYLE_PANEL_PADDING;
+    panel->border_width = STYLE_PANEL_BORDER_WIDTH;
+    panel->title_enabled = true;
+    panel->bg_color = RAWDRAW_COLOR_WHITE;
+    panel->border_color = RAWDRAW_COLOR_BLACK;
+    panel->title_bg_color = RAWDRAW_COLOR_WHITE;
     panel->title_text_color = RAWDRAW_COLOR_BLACK;
 }
 
@@ -110,7 +110,7 @@ void widget_panel_set_colors(widget_panel_t *panel, rawdraw_color_t bg, rawdraw_
 {
     if (!panel)
         return;
-    panel->bg_color     = bg;
+    panel->bg_color = bg;
     panel->border_color = border;
 }
 
@@ -118,7 +118,7 @@ void widget_panel_set_title_colors(widget_panel_t *panel, rawdraw_color_t bg, ra
 {
     if (!panel)
         return;
-    panel->title_bg_color   = bg;
+    panel->title_bg_color = bg;
     panel->title_text_color = text;
 }
 
@@ -153,10 +153,10 @@ rawdraw_rect_t widget_panel_get_title_bounds(const widget_panel_t *panel)
     if (!panel)
         return r;
     int th = widget_panel_calculate_title_height(panel);
-    r.x    = panel->bounds.x;
-    r.y    = panel->bounds.y;
-    r.w    = panel->bounds.w;
-    r.h    = th;
+    r.x = panel->bounds.x;
+    r.y = panel->bounds.y;
+    r.w = panel->bounds.w;
+    r.h = th;
     return r;
 }
 
@@ -166,11 +166,11 @@ rawdraw_rect_t widget_panel_get_content_bounds(const widget_panel_t *panel)
     if (!panel)
         return r;
     int th = widget_panel_calculate_title_height(panel);
-    int p  = panel->padding;
-    r.x    = panel->bounds.x + p;
-    r.y    = panel->bounds.y + th + p;
-    r.w    = panel->bounds.w - 2 * p;
-    r.h    = panel->bounds.h - th - 2 * p;
+    int p = panel->padding;
+    r.x = panel->bounds.x + p;
+    r.y = panel->bounds.y + th + p;
+    r.w = panel->bounds.w - 2 * p;
+    r.h = panel->bounds.h - th - 2 * p;
     return r;
 }
 
@@ -189,7 +189,7 @@ void widget_panel_render(const widget_panel_t *panel, uint8_t *fb, int fb_width,
 
     rawdraw_paint_style_t panel_style = rawdraw_theme_component(ROLE_PANEL);
     if (panel->bg_color != RAWDRAW_COLOR_WHITE || panel->border_color != RAWDRAW_COLOR_BLACK) {
-        panel_style.bg     = panel->bg_color;
+        panel_style.bg = panel->bg_color;
         panel_style.border = panel->border_color;
     }
     panel_style.border_width = (uint8_t)panel->border_width;
@@ -202,11 +202,11 @@ void widget_panel_render(const widget_panel_t *panel, uint8_t *fb, int fb_width,
         int th = widget_panel_calculate_title_height(panel);
         if (th > 0) {
             rawdraw_rect_t title_bg = {panel->bounds.x, panel->bounds.y, panel->bounds.w, th};
-            title_bg                = rawdraw_clamp_rect(title_bg, fb_width, fb_height);
+            title_bg = rawdraw_clamp_rect(title_bg, fb_width, fb_height);
 
             rawdraw_paint_style_t title_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
-            title_style.bg                    = panel->title_bg_color;
-            title_style.fg                    = panel->title_text_color;
+            title_style.bg = panel->title_bg_color;
+            title_style.fg = panel->title_text_color;
             rawdraw_draw_styled_rect(fb, fb_width, fb_height, title_bg, &title_style);
 
             if (panel->title_font) {

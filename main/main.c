@@ -33,7 +33,7 @@
 static const char *TAG = "main_app";
 
 static charge_status_t s_charge_status;
-static TimerHandle_t   s_clock_timer = NULL;
+static TimerHandle_t s_clock_timer = NULL;
 
 /* ------------------------------------------------------------------ */
 /* Button callbacks (routed to the Application singleton)              */
@@ -41,7 +41,7 @@ static void application_main_task(void *arg);
 
 /* ------------------------------------------------------------------ */
 
-static bool s_suppress_next_up_click   = false;
+static bool s_suppress_next_up_click = false;
 static bool s_suppress_next_down_click = false;
 
 static void button_up_click_cb(void *arg, void *usr_data)
@@ -170,7 +170,7 @@ static void render_ui_and_refresh(bool force_full)
 
     xSemaphoreTake(mutex, portMAX_DELAY);
     epd_clear();
-    uint8_t      *fb  = get_framebuffer();
+    uint8_t *fb = get_framebuffer();
     ui_manager_t *mgr = (ui_manager_t *)application_get_ui_manager();
     if (mgr && fb) {
         ui_manager_render_all(mgr, fb, EXAMPLE_LCD_WIDTH, EXAMPLE_LCD_HEIGHT);
@@ -191,8 +191,7 @@ static void ui_refresh_cb(rawdraw_rect_t rect, bool urgent, void *user_data)
     (void)rect;
     (void)user_data;
     ui_manager_t *mgr = (ui_manager_t *)application_get_ui_manager();
-    ESP_LOGI(TAG, "refresh_cb: urgent=%d page=%d", urgent ? 1 : 0,
-             mgr ? (int)ui_manager_get_current_page(mgr) : -1);
+    ESP_LOGI(TAG, "refresh_cb: urgent=%d page=%d", urgent ? 1 : 0, mgr ? (int)ui_manager_get_current_page(mgr) : -1);
     render_ui_and_refresh(urgent);
 }
 
@@ -252,19 +251,19 @@ void app_main(void)
 
     audio_player_play_tone(1000, 100);
 
-    settings_handle_t wifi_handle  = settings_open("wifi", false);
-    char              ssid[32]     = {0};
-    char              password[64] = {0};
+    settings_handle_t wifi_handle = settings_open("wifi", false);
+    char ssid[32] = {0};
+    char password[64] = {0};
     if (wifi_handle) {
         settings_get_string(wifi_handle, "ssid", ssid, sizeof(ssid), "");
         settings_get_string(wifi_handle, "password", password, sizeof(password), "");
         settings_close(wifi_handle);
     }
 
-    const char *kconfig_ssid     = CONFIG_DEFAULT_WIFI_SSID;
+    const char *kconfig_ssid = CONFIG_DEFAULT_WIFI_SSID;
     const char *kconfig_password = CONFIG_DEFAULT_WIFI_PASSWORD;
     if (strlen(kconfig_ssid) == 0) {
-        kconfig_ssid     = "ZecTrix-AP";
+        kconfig_ssid = "ZecTrix-AP";
         kconfig_password = "12345678";
     }
 
@@ -310,14 +309,14 @@ void app_main(void)
     }
 
     epd_spi_t spi_data = {
-        .cs         = EPD_CS_PIN,
-        .dc         = EPD_DC_PIN,
-        .rst        = EPD_RST_PIN,
-        .busy       = EPD_BUSY_PIN,
-        .mosi       = EPD_MOSI_PIN,
-        .scl        = EPD_SCK_PIN,
-        .power      = EPD_PWR_PIN,
-        .spi_host   = EPD_SPI_NUM,
+        .cs = EPD_CS_PIN,
+        .dc = EPD_DC_PIN,
+        .rst = EPD_RST_PIN,
+        .busy = EPD_BUSY_PIN,
+        .mosi = EPD_MOSI_PIN,
+        .scl = EPD_SCK_PIN,
+        .power = EPD_PWR_PIN,
+        .spi_host = EPD_SPI_NUM,
         .buffer_len = ((EXAMPLE_LCD_WIDTH * 2 + 7) / 8) * EXAMPLE_LCD_HEIGHT,
         .panel_type = EPD_PANEL_4COLOR_SSD2683,
     };
@@ -336,21 +335,21 @@ void app_main(void)
     };
 
     button_gpio_config_t up_gpio_cfg = {
-        .gpio_num     = TODO_UP_BUTTON_GPIO,
+        .gpio_num = TODO_UP_BUTTON_GPIO,
         .active_level = 0,
     };
     button_handle_t up_btn;
     ESP_ERROR_CHECK(iot_button_new_gpio_device(&btn_cfg, &up_gpio_cfg, &up_btn));
 
     button_gpio_config_t down_gpio_cfg = {
-        .gpio_num     = TODO_DOWN_BUTTON_GPIO,
+        .gpio_num = TODO_DOWN_BUTTON_GPIO,
         .active_level = 0,
     };
     button_handle_t down_btn;
     ESP_ERROR_CHECK(iot_button_new_gpio_device(&btn_cfg, &down_gpio_cfg, &down_btn));
 
     button_gpio_config_t confirm_gpio_cfg = {
-        .gpio_num     = TODO_CONFIRM_BUTTON_GPIO,
+        .gpio_num = TODO_CONFIRM_BUTTON_GPIO,
         .active_level = 0,
     };
     button_handle_t confirm_btn;
@@ -383,7 +382,6 @@ void app_main(void)
      * refresh instead of flashing the page twice. */
     application_update_status_bar();
     render_ui_and_refresh(true);
-
 
     s_clock_timer = xTimerCreate("clock_timer", pdMS_TO_TICKS(1000), pdTRUE, NULL, clock_timer_callback);
     if (s_clock_timer) {

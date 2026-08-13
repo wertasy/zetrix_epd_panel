@@ -51,11 +51,11 @@ typedef struct settings_page settings_page_t;
  * callback (C++ std::function<void()> -> fn pointer + ctx).
  */
 typedef struct {
-    char                      label[SETTINGS_PAGE_ITEM_LABEL_LEN];
-    char                      value[SETTINGS_PAGE_ITEM_VALUE_LEN];
-    const char               *icon;
+    char label[SETTINGS_PAGE_ITEM_LABEL_LEN];
+    char value[SETTINGS_PAGE_ITEM_VALUE_LEN];
+    const char *icon;
     settings_page_item_type_t type;
-    bool                      checked;
+    bool checked;
     void (*on_click)(void *ctx);
     void *on_click_ctx;
 } settings_page_item_t;
@@ -72,75 +72,75 @@ struct settings_page {
 
     /* Declarative menu model. */
     settings_page_item_t items[SETTINGS_PAGE_MAX_ITEMS];
-    int                  item_count;
-    int                  selected_index;
-    int                  scroll_offset; /* preserved for compatibility; item-window scrolling is primary */
-    int                  first_visible_index;
+    int item_count;
+    int selected_index;
+    int scroll_offset; /* preserved for compatibility; item-window scrolling is primary */
+    int first_visible_index;
 
     /* Debug / category hint state. */
-    bool    showing_debug_info;
+    bool showing_debug_info;
     int64_t debug_hint_until_us;
     int64_t category_hint_until_us;
-    char    firmware_version[SETTINGS_PAGE_VERSION_LEN];
-    char    mac_address[32];
-    char    chip_model[32];
+    char firmware_version[SETTINGS_PAGE_VERSION_LEN];
+    char mac_address[32];
+    char chip_model[32];
 
     /* About dialog state. */
     bool showing_about_dialog;
 
     /* Volume dialog state. */
-    bool                           showing_volume_dialog;
-    int                            volume_dialog_value;
+    bool showing_volume_dialog;
+    int volume_dialog_value;
     settings_page_volume_handler_t volume_dialog_handler;
-    void                          *volume_dialog_ctx;
+    void *volume_dialog_ctx;
 
     /* Storage dialog state. */
     bool showing_storage_dialog;
     char storage_used[32];
     char storage_total[32];
-    int  storage_photos;
-    int  storage_txts;
+    int storage_photos;
+    int storage_txts;
 
     /* Server address dialog state. */
-    bool                           showing_server_dialog;
-    char                           server_current_addr[SETTINGS_PAGE_ADDR_LEN];
-    char                           server_local_addr[SETTINGS_PAGE_ADDR_LEN];
-    char                           server_remote_addr[SETTINGS_PAGE_ADDR_LEN];
-    int                            server_selected; /* 0=local, 1=remote */
+    bool showing_server_dialog;
+    char server_current_addr[SETTINGS_PAGE_ADDR_LEN];
+    char server_local_addr[SETTINGS_PAGE_ADDR_LEN];
+    char server_remote_addr[SETTINGS_PAGE_ADDR_LEN];
+    int server_selected; /* 0=local, 1=remote */
     settings_page_server_handler_t server_dialog_handler;
-    void                          *server_dialog_ctx;
+    void *server_dialog_ctx;
 
     /* Server address list dialog state. */
-    bool                                showing_server_list_dialog;
-    char                                server_list_addresses[SETTINGS_PAGE_MAX_SERVER_ADDRS][SETTINGS_PAGE_ADDR_LEN];
-    int                                 server_list_count;
-    char                                server_list_current[SETTINGS_PAGE_ADDR_LEN];
-    int                                 server_list_selected;
-    int                                 server_list_scroll_offset;
+    bool showing_server_list_dialog;
+    char server_list_addresses[SETTINGS_PAGE_MAX_SERVER_ADDRS][SETTINGS_PAGE_ADDR_LEN];
+    int server_list_count;
+    char server_list_current[SETTINGS_PAGE_ADDR_LEN];
+    int server_list_selected;
+    int server_list_scroll_offset;
     settings_page_server_list_handler_t server_list_dialog_handler;
-    void                               *server_list_dialog_ctx;
+    void *server_list_dialog_ctx;
 
     /* Theme picker dialog state. */
-    bool                          showing_theme_dialog;
-    int                           theme_selected;
+    bool showing_theme_dialog;
+    int theme_selected;
     settings_page_theme_handler_t theme_dialog_handler;
-    void                         *theme_dialog_ctx;
+    void *theme_dialog_ctx;
 
     /* OTA update dialog state. */
-    bool                        showing_ota_dialog;
-    char                        ota_versions[SETTINGS_PAGE_MAX_OTA_VERSIONS][SETTINGS_PAGE_OTA_FIRMWARE_LEN];
-    int                         ota_version_count;
-    char                        ota_current_version[SETTINGS_PAGE_OTA_FIRMWARE_LEN];
-    int                         ota_selected_index;
-    int                         ota_progress_percent;
-    char                        ota_status_text[SETTINGS_PAGE_OTA_STATUS_LEN];
-    int                         ota_state; /* 2=selecting, 4/5/6=downloading, 7=failed */
+    bool showing_ota_dialog;
+    char ota_versions[SETTINGS_PAGE_MAX_OTA_VERSIONS][SETTINGS_PAGE_OTA_FIRMWARE_LEN];
+    int ota_version_count;
+    char ota_current_version[SETTINGS_PAGE_OTA_FIRMWARE_LEN];
+    int ota_selected_index;
+    int ota_progress_percent;
+    char ota_status_text[SETTINGS_PAGE_OTA_STATUS_LEN];
+    int ota_state; /* 2=selecting, 4/5/6=downloading, 7=failed */
     settings_page_ota_handler_t ota_dialog_handler;
-    void                       *ota_dialog_ctx;
+    void *ota_dialog_ctx;
 
     /* OTA confirm dialog state. */
     bool showing_ota_confirm_dialog;
-    int  ota_confirm_selected; /* 0=confirm update, 1=cancel */
+    int ota_confirm_selected; /* 0=confirm update, 1=cancel */
     char ota_confirm_firmware_name[SETTINGS_PAGE_OTA_FIRMWARE_LEN];
 
     /* Fonts. */
@@ -159,8 +159,8 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
 void settings_page_set_items(page_renderer_t *self, const settings_page_item_t *items, int count);
 void settings_page_update_item(page_renderer_t *self, int index, const char *value);
 void settings_page_update_checked(page_renderer_t *self, int index, bool checked);
-int  settings_page_get_item_count(const page_renderer_t *self);
-int  settings_page_get_selected_index(const page_renderer_t *self);
+int settings_page_get_item_count(const page_renderer_t *self);
+int settings_page_get_selected_index(const page_renderer_t *self);
 
 /* Debug info + device identity. */
 void settings_page_show_debug_info(page_renderer_t *self);
@@ -191,14 +191,14 @@ void settings_page_show_server_dialog(page_renderer_t *self, const char *current
                                       const char *remote_addr);
 void settings_page_hide_server_dialog(page_renderer_t *self);
 bool settings_page_is_server_dialog_showing(const page_renderer_t *self);
-int  settings_page_get_server_dialog_selection(const page_renderer_t *self);
+int settings_page_get_server_dialog_selection(const page_renderer_t *self);
 void settings_page_set_server_dialog_handler(page_renderer_t *self, settings_page_server_handler_t handler, void *ctx);
 
 /* Server address list dialog (history). */
-void        settings_page_show_server_list_dialog(page_renderer_t *self, const char *const *addresses, int count,
-                                                  const char *current_addr);
-void        settings_page_hide_server_list_dialog(page_renderer_t *self);
-bool        settings_page_is_server_list_dialog_showing(const page_renderer_t *self);
+void settings_page_show_server_list_dialog(page_renderer_t *self, const char *const *addresses, int count,
+                                           const char *current_addr);
+void settings_page_hide_server_list_dialog(page_renderer_t *self);
+bool settings_page_is_server_list_dialog_showing(const page_renderer_t *self);
 const char *settings_page_get_server_list_selection(const page_renderer_t *self);
 void settings_page_set_server_list_dialog_handler(page_renderer_t *self, settings_page_server_list_handler_t handler,
                                                   void *ctx);
@@ -243,10 +243,10 @@ void settings_page_clear_dialog_region(uint8_t *fb, int width, int height, int x
 
 typedef struct {
     rawdraw_theme_id_t id;
-    const char        *name; /* display name */
+    const char *name; /* display name */
 } settings_theme_entry_t;
 
-int                           settings_page_theme_count(void);
+int settings_page_theme_count(void);
 const settings_theme_entry_t *settings_page_theme_at(int index);
 
 #ifdef __cplusplus

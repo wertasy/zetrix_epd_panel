@@ -28,12 +28,12 @@ char *ui_text_fit_to_width(const char *text, const lv_font_t *font, int max_widt
 
     /* Greedily append characters while "prefix..." still fits. */
     const size_t ellipsis_len = 3; /* "..." in UTF-8 */
-    size_t       out_len      = 0;
-    const char  *p            = text;
+    size_t out_len = 0;
+    const char *p = text;
     while (*p) {
         /* Decode one UTF-8 character. */
         unsigned char c = (unsigned char)*p;
-        int           seq_len;
+        int seq_len;
         if (c < 0x80) {
             seq_len = 1;
         } else if ((c & 0xE0) == 0xC0) {
@@ -51,7 +51,7 @@ char *ui_text_fit_to_width(const char *text, const lv_font_t *font, int max_widt
         }
 
         /* Tentatively append this char plus "...". */
-        char   tmp[256];
+        char tmp[256];
         size_t tmp_len = out_len;
         memcpy(tmp, out, out_len);
         memcpy(tmp + tmp_len, p, (size_t)seq_len);
@@ -126,16 +126,16 @@ void ui_text_wrap_lines(const lv_font_t *font, const char *text, int max_width, 
     if (!font || max_width <= 0 || !text || !*text)
         return;
 
-    int  line_count = 0;
+    int line_count = 0;
     char current[128];
-    current[0]        = '\0';
+    current[0] = '\0';
     const int cur_cap = (int)sizeof(current);
 
-    const char *p             = text;
+    const char *p = text;
     const char *last_consumed = text; /* tracks progress for ellipsis check */
     while (*p) {
-        const char    *start = p;
-        const uint32_t ch    = utf8_next(&p);
+        const char *start = p;
+        const uint32_t ch = utf8_next(&p);
         if (ch == 0)
             break;
         const size_t seq_len = (size_t)(p - start);
@@ -148,7 +148,7 @@ void ui_text_wrap_lines(const lv_font_t *font, const char *text, int max_width, 
                 out[line_count][line_buf_size - 1] = '\0';
                 ++line_count;
             }
-            current[0]    = '\0';
+            current[0] = '\0';
             last_consumed = p;
             if (line_count >= max_lines)
                 break;
@@ -165,14 +165,14 @@ void ui_text_wrap_lines(const lv_font_t *font, const char *text, int max_width, 
             }
             memcpy(current, start, seq_len);
             current[seq_len] = '\0';
-            last_consumed    = p;
+            last_consumed = p;
             if (line_count >= max_lines)
                 break;
             continue;
         }
 
         /* Tentatively append this char and measure. */
-        char         next_line[128];
+        char next_line[128];
         const size_t cur_len = strlen(current);
         memcpy(next_line, current, cur_len);
         memcpy(next_line + cur_len, start, seq_len);
@@ -187,7 +187,7 @@ void ui_text_wrap_lines(const lv_font_t *font, const char *text, int max_width, 
             }
             memcpy(current, start, seq_len);
             current[seq_len] = '\0';
-            last_consumed    = p;
+            last_consumed = p;
             if (line_count >= max_lines)
                 break;
         } else {

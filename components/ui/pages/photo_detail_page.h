@@ -19,14 +19,14 @@ typedef struct {
     page_renderer_t base;
 
     photo_info_t photos[PHOTO_DETAIL_MAX_PHOTOS];
-    int          photo_count;
-    int          selected_index;
-    bool         metadata_open;
+    int photo_count;
+    int selected_index;
+    bool metadata_open;
 
     uint8_t *current_photo_data;
     uint32_t current_photo_size;
-    int      current_photo_width;
-    int      current_photo_height;
+    int current_photo_width;
+    int current_photo_height;
 
     const lv_font_t *font;
     const lv_font_t *title_font;
@@ -38,14 +38,14 @@ void photo_detail_page_render(page_renderer_t *self, uint8_t *fb, int width, int
 bool photo_detail_page_handle_input(page_renderer_t *self, const ui_button_event_t *event);
 
 /* Data interface. */
-void           photo_detail_page_refresh_photo_list(page_renderer_t *self);
-void           photo_detail_page_set_selection(page_renderer_t *self, int index);
-bool           photo_detail_page_is_metadata_open(const page_renderer_t *self);
-bool           photo_detail_page_is_current_photo_bwry2bpp(const page_renderer_t *self);
+void photo_detail_page_refresh_photo_list(page_renderer_t *self);
+void photo_detail_page_set_selection(page_renderer_t *self, int index);
+bool photo_detail_page_is_metadata_open(const page_renderer_t *self);
+bool photo_detail_page_is_current_photo_bwry2bpp(const page_renderer_t *self);
 const uint8_t *photo_detail_page_get_current_photo_data(const page_renderer_t *self);
-uint32_t       photo_detail_page_get_current_photo_size(const page_renderer_t *self);
-int            photo_detail_page_get_current_photo_width(const page_renderer_t *self);
-int            photo_detail_page_get_current_photo_height(const page_renderer_t *self);
+uint32_t photo_detail_page_get_current_photo_size(const page_renderer_t *self);
+int photo_detail_page_get_current_photo_width(const page_renderer_t *self);
+int photo_detail_page_get_current_photo_height(const page_renderer_t *self);
 
 #ifdef __cplusplus
 }

@@ -38,7 +38,7 @@ void car_move_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
 bool car_move_page_handle_input(page_renderer_t *self, const ui_button_event_t *event);
 
 /* Data interface. */
-void        car_move_page_set_phone(page_renderer_t *self, const char *phone);
+void car_move_page_set_phone(page_renderer_t *self, const char *phone);
 const char *car_move_page_get_phone(const page_renderer_t *self);
 const char *car_move_page_get_tel_payload(const page_renderer_t *self);
 

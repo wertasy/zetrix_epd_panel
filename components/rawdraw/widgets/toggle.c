@@ -33,18 +33,18 @@ void widget_toggle_init(widget_toggle_t *t, int x, int y, int w, int h)
     if (!t)
         return;
     memset(t, 0, sizeof(*t));
-    t->x                  = x;
-    t->y                  = y;
-    t->w                  = w;
-    t->h                  = h;
-    t->state              = false;
-    t->font               = NULL;
-    t->callback           = NULL;
+    t->x = x;
+    t->y = y;
+    t->w = w;
+    t->h = h;
+    t->state = false;
+    t->font = NULL;
+    t->callback = NULL;
     t->callback_user_data = NULL;
-    t->track_on_color     = RAWDRAW_COLOR_BLACK;
-    t->track_off_color    = RAWDRAW_COLOR_WHITE;
-    t->thumb_color        = RAWDRAW_COLOR_WHITE;
-    t->border_color       = RAWDRAW_COLOR_BLACK;
+    t->track_on_color = RAWDRAW_COLOR_BLACK;
+    t->track_off_color = RAWDRAW_COLOR_WHITE;
+    t->thumb_color = RAWDRAW_COLOR_WHITE;
+    t->border_color = RAWDRAW_COLOR_BLACK;
 }
 
 /* ============================================================
@@ -97,7 +97,7 @@ void widget_toggle_set_callback(widget_toggle_t *t, widget_toggle_callback_t cb,
 {
     if (!t)
         return;
-    t->callback           = cb;
+    t->callback = cb;
     t->callback_user_data = user_data;
 }
 
@@ -106,10 +106,10 @@ void widget_toggle_set_colors(widget_toggle_t *t, rawdraw_color_t track_on, rawd
 {
     if (!t)
         return;
-    t->track_on_color  = track_on;
+    t->track_on_color = track_on;
     t->track_off_color = track_off;
-    t->thumb_color     = thumb;
-    t->border_color    = border;
+    t->thumb_color = thumb;
+    t->border_color = border;
 }
 
 /* ============================================================
@@ -182,10 +182,10 @@ rawdraw_point_t widget_toggle_get_thumb_center(const widget_toggle_t *t)
     rawdraw_point_t p = {0, 0};
     if (!t)
         return p;
-    int radius  = t->h / 2;
+    int radius = t->h / 2;
     int padding = STYLE_TOGGLE_PADDING;
-    p.x         = t->state ? (t->x + t->w - radius - padding) : (t->x + radius + padding);
-    p.y         = t->y + t->h / 2;
+    p.x = t->state ? (t->x + t->w - radius - padding) : (t->x + radius + padding);
+    p.y = t->y + t->h / 2;
     return p;
 }
 
@@ -210,11 +210,11 @@ void widget_toggle_render(const widget_toggle_t *t, uint8_t *fb, int fb_width, i
     const bool default_colors = t->track_on_color == RAWDRAW_COLOR_BLACK && t->track_off_color == RAWDRAW_COLOR_WHITE &&
                                 t->thumb_color == RAWDRAW_COLOR_WHITE && t->border_color == RAWDRAW_COLOR_BLACK;
 
-    rawdraw_color_t        track_fill   = t->state ? t->track_on_color : t->track_off_color;
-    rawdraw_color_t        track_border = t->border_color;
-    rawdraw_color_t        thumb_fill   = t->state ? t->thumb_color : RAWDRAW_COLOR_BLACK;
-    rawdraw_color_t        thumb_inner  = RAWDRAW_COLOR_WHITE;
-    rawdraw_color_t        label_color  = RAWDRAW_COLOR_BLACK;
+    rawdraw_color_t track_fill = t->state ? t->track_on_color : t->track_off_color;
+    rawdraw_color_t track_border = t->border_color;
+    rawdraw_color_t thumb_fill = t->state ? t->thumb_color : RAWDRAW_COLOR_BLACK;
+    rawdraw_color_t thumb_inner = RAWDRAW_COLOR_WHITE;
+    rawdraw_color_t label_color = RAWDRAW_COLOR_BLACK;
     rawdraw_dither_token_t track_dither = DITHER_NONE;
 
     if (default_colors) {
@@ -222,12 +222,12 @@ void widget_toggle_render(const widget_toggle_t *t, uint8_t *fb, int fb_width, i
             rawdraw_theme_component(t->state ? ROLE_SETTINGS_SELECTED : ROLE_SETTINGS_ROW);
         rawdraw_paint_style_t disabled_style = rawdraw_theme_style(THEME_TOKEN_DISABLED);
 
-        track_fill   = active_style.bg;
+        track_fill = active_style.bg;
         track_border = active_style.border;
         track_dither = t->state ? DITHER_NONE : disabled_style.dither;
-        thumb_fill   = t->state ? active_style.fg : active_style.border;
-        thumb_inner  = t->state ? rawdraw_theme_color_for(THEME_TOKEN_BACKGROUND_PRIMARY) : active_style.bg;
-        label_color  = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+        thumb_fill = t->state ? active_style.fg : active_style.border;
+        thumb_inner = t->state ? rawdraw_theme_color_for(THEME_TOKEN_BACKGROUND_PRIMARY) : active_style.bg;
+        label_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     }
 
     /* Draw track background (pill shape, styled). */
@@ -236,8 +236,8 @@ void widget_toggle_render(const widget_toggle_t *t, uint8_t *fb, int fb_width, i
     rawdraw_draw_styled_round_rect(fb, fb_width, fb_height, track, radius, &track_style);
 
     /* Draw thumb circle. */
-    rawdraw_point_t thumb   = widget_toggle_get_thumb_center(t);
-    int             thumb_r = radius - 2;
+    rawdraw_point_t thumb = widget_toggle_get_thumb_center(t);
+    int thumb_r = radius - 2;
     if (thumb_r < 1)
         thumb_r = 1;
 

@@ -28,17 +28,17 @@ void widget_button_init(widget_button_t *btn, int x, int y, int w, int h)
     if (!btn)
         return;
     memset(btn, 0, sizeof(*btn));
-    btn->x                  = x;
-    btn->y                  = y;
-    btn->w                  = w;
-    btn->h                  = h;
-    btn->radius             = STYLE_BUTTON_RADIUS;
-    btn->pressed            = false;
-    btn->callback           = NULL;
+    btn->x = x;
+    btn->y = y;
+    btn->w = w;
+    btn->h = h;
+    btn->radius = STYLE_BUTTON_RADIUS;
+    btn->pressed = false;
+    btn->callback = NULL;
     btn->callback_user_data = NULL;
-    btn->bg_color           = RAWDRAW_COLOR_WHITE;
-    btn->fg_color           = RAWDRAW_COLOR_BLACK;
-    btn->border_color       = RAWDRAW_COLOR_BLACK;
+    btn->bg_color = RAWDRAW_COLOR_WHITE;
+    btn->fg_color = RAWDRAW_COLOR_BLACK;
+    btn->border_color = RAWDRAW_COLOR_BLACK;
 }
 
 /* ============================================================
@@ -100,7 +100,7 @@ void widget_button_set_callback(widget_button_t *btn, widget_button_callback_t c
 {
     if (!btn)
         return;
-    btn->callback           = cb;
+    btn->callback = cb;
     btn->callback_user_data = user_data;
 }
 
@@ -108,8 +108,8 @@ void widget_button_set_colors(widget_button_t *btn, rawdraw_color_t bg, rawdraw_
 {
     if (!btn)
         return;
-    btn->bg_color     = bg;
-    btn->fg_color     = fg;
+    btn->bg_color = bg;
+    btn->fg_color = fg;
     btn->border_color = border;
 }
 
@@ -180,7 +180,7 @@ void widget_button_render(const widget_button_t *btn, uint8_t *fb, int fb_width,
         return;
 
     rawdraw_rect_t bounds = widget_button_get_bounds(btn);
-    bounds                = rawdraw_clamp_rect(bounds, fb_width, fb_height);
+    bounds = rawdraw_clamp_rect(bounds, fb_width, fb_height);
     if (rawdraw_rect_area(bounds) <= 0)
         return;
 
@@ -189,8 +189,8 @@ void widget_button_render(const widget_button_t *btn, uint8_t *fb, int fb_width,
     /* Custom colors override the theme; pressed state inverts bg/fg/border. */
     if (btn->bg_color != RAWDRAW_COLOR_WHITE || btn->fg_color != RAWDRAW_COLOR_BLACK ||
         btn->border_color != RAWDRAW_COLOR_BLACK) {
-        style.bg     = btn->pressed ? btn->fg_color : btn->bg_color;
-        style.fg     = btn->pressed ? btn->bg_color : btn->fg_color;
+        style.bg = btn->pressed ? btn->fg_color : btn->bg_color;
+        style.fg = btn->pressed ? btn->bg_color : btn->fg_color;
         style.border = btn->pressed ? btn->fg_color : btn->border_color;
     }
 
@@ -200,7 +200,7 @@ void widget_button_render(const widget_button_t *btn, uint8_t *fb, int fb_width,
     /* Icon, centered (shifted up when a label is present) */
     if (btn->icon_code[0] != '\0' && btn->icon_font) {
         int icon_size = (int)btn->icon_font->line_height;
-        int icon_x    = btn->x + (btn->w - icon_size) / 2;
+        int icon_x = btn->x + (btn->w - icon_size) / 2;
         int text_half = 0;
         if (btn->text[0] != '\0') {
             text_half = btn->text_font ? (int)(btn->text_font->line_height / 2) : STYLE_SPACING_MD;

@@ -59,14 +59,14 @@ static void draw_ring_arc(uint8_t *fb, int width, int height, int cx, int cy, in
     if (inner_r < 1)
         inner_r = 1;
 
-    const float PI_val     = 3.14159265f;
-    const float TWO_PI     = 2.0f * PI_val;
+    const float PI_val = 3.14159265f;
+    const float TWO_PI = 2.0f * PI_val;
     const float DEG_TO_RAD = PI_val / 180.0f;
 
     /* Normalize boundaries to math radians. Screen y is down, so atan2(dy,dx)
      * increases clockwise; the (deg - 90) shift maps clock 0 deg -> straight up. */
     float start_math = (start_deg - 90.0f) * DEG_TO_RAD;
-    float end_math   = (end_deg - 90.0f) * DEG_TO_RAD;
+    float end_math = (end_deg - 90.0f) * DEG_TO_RAD;
     while (start_math < 0)
         start_math += TWO_PI;
     while (start_math >= TWO_PI)
@@ -83,11 +83,11 @@ static void draw_ring_arc(uint8_t *fb, int width, int height, int cx, int cy, in
      * cross(p, u_a) = dx*sin(a) - dy*cos(a) = -|p|*sin(theta - a):
      *   <= 0  <=> pixel is clockwise-or-equal to a
      *   >= 0  <=> pixel is counter-clockwise-or-equal to a          */
-    const int Q  = (1 << 20);
-    int       Ss = (int)lroundf(sinf(start_math) * (float)Q);
-    int       Cs = (int)lroundf(cosf(start_math) * (float)Q);
-    int       Se = (int)lroundf(sinf(end_math) * (float)Q);
-    int       Ce = (int)lroundf(cosf(end_math) * (float)Q);
+    const int Q = (1 << 20);
+    int Ss = (int)lroundf(sinf(start_math) * (float)Q);
+    int Cs = (int)lroundf(cosf(start_math) * (float)Q);
+    int Se = (int)lroundf(sinf(end_math) * (float)Q);
+    int Ce = (int)lroundf(cosf(end_math) * (float)Q);
     /* Arc <= 180 deg is the intersection of the two boundary half-planes; an arc
      * > 180 deg is their union (each cross-product test is exact within +-180 deg). */
     int use_or = (arc_span > PI_val);
@@ -102,14 +102,14 @@ static void draw_ring_arc(uint8_t *fb, int width, int height, int cx, int cy, in
 
         /* |dx| <= dx_max guarantees dx^2 + dy^2 <= outer_r^2 (outer test implicit). */
         int dx_max = ring_isqrt(outer_r_sq - dy * dy);
-        int dy_sq  = dy * dy;
+        int dy_sq = dy * dy;
 
         for (int dx = -dx_max; dx <= dx_max; dx++) {
             if (dx * dx + dy_sq < inner_r_sq)
                 continue; /* inside the hole */
 
-            int cs     = dx * Ss - dy * Cs; /* <= 0 => clockwise-or-equal of start */
-            int ce     = dx * Se - dy * Ce; /* >= 0 => ccw-or-equal of end         */
+            int cs = dx * Ss - dy * Cs; /* <= 0 => clockwise-or-equal of start */
+            int ce = dx * Se - dy * Ce; /* >= 0 => ccw-or-equal of end         */
             int in_arc = use_or ? (cs <= 0 || ce >= 0) : (cs <= 0 && ce >= 0);
             if (in_arc) {
                 int px = cx + dx;
@@ -150,8 +150,8 @@ void rawdraw_draw_circular_progress_with_label(uint8_t *fb, int width, int heigh
                                    RAWDRAW_COLOR_BLACK);
 
     if (label && font) {
-        int text_w  = rawdraw_measure_text_width(label, font);
-        int text_h  = (int)font->line_height;
+        int text_w = rawdraw_measure_text_width(label, font);
+        int text_h = (int)font->line_height;
         int label_x = center.x - text_w / 2;
         int label_y = center.y - text_h / 2;
         rawdraw_draw_text(fb, width, height, label_x, label_y, label, font,
@@ -168,14 +168,14 @@ void widget_progress_bar_init(widget_progress_bar_t *bar, int x, int y, int w, i
     if (!bar)
         return;
     memset(bar, 0, sizeof(*bar));
-    bar->bounds.x      = x;
-    bar->bounds.y      = y;
-    bar->bounds.w      = w;
-    bar->bounds.h      = h;
-    bar->value         = 0;
-    bar->radius        = STYLE_PROGRESS_RADIUS;
-    bar->bg_color      = RAWDRAW_COLOR_WHITE;
-    bar->fg_color      = RAWDRAW_COLOR_BLACK;
+    bar->bounds.x = x;
+    bar->bounds.y = y;
+    bar->bounds.w = w;
+    bar->bounds.h = h;
+    bar->value = 0;
+    bar->radius = STYLE_PROGRESS_RADIUS;
+    bar->bg_color = RAWDRAW_COLOR_WHITE;
+    bar->fg_color = RAWDRAW_COLOR_BLACK;
     bar->custom_colors = false;
 }
 
@@ -226,7 +226,7 @@ void widget_progress_bar_set_bg_color(widget_progress_bar_t *bar, rawdraw_color_
 {
     if (!bar)
         return;
-    bar->bg_color      = color;
+    bar->bg_color = color;
     bar->custom_colors = true;
 }
 
@@ -234,7 +234,7 @@ void widget_progress_bar_set_fg_color(widget_progress_bar_t *bar, rawdraw_color_
 {
     if (!bar)
         return;
-    bar->fg_color      = color;
+    bar->fg_color = color;
     bar->custom_colors = true;
 }
 
@@ -257,7 +257,7 @@ void widget_progress_bar_render(const widget_progress_bar_t *bar, uint8_t *fb, i
 
     /* Clamp radius to half the smaller dimension. */
     int max_radius = (bounds.w < bounds.h ? bounds.w : bounds.h) / 2;
-    int r          = bar->radius;
+    int r = bar->radius;
     if (r > max_radius)
         r = max_radius;
     if (r < 0)
@@ -272,13 +272,13 @@ void widget_progress_bar_render(const widget_progress_bar_t *bar, uint8_t *fb, i
 
     /* Draw label if set */
     if (bar->label[0] != '\0' && bar->label_font) {
-        int text_w  = rawdraw_measure_text_width(bar->label, bar->label_font);
-        int text_h  = (int)bar->label_font->line_height;
+        int text_w = rawdraw_measure_text_width(bar->label, bar->label_font);
+        int text_h = (int)bar->label_font->line_height;
         int label_x = bounds.x + (bounds.w - text_w) / 2;
         int label_y = bounds.y + (bounds.h - text_h) / 2;
 
         /* Choose color based on position relative to fill */
-        int             fill_x     = bounds.x + (bounds.w * bar->value) / 100;
+        int fill_x = bounds.x + (bounds.w * bar->value) / 100;
         rawdraw_color_t text_color = (label_x < fill_x) ? style.bg : style.fg;
 
         rawdraw_draw_text(fb, fb_width, fb_height, label_x, label_y, bar->label, bar->label_font, text_color);
@@ -294,13 +294,13 @@ void widget_circular_gauge_init(widget_circular_gauge_t *gauge, int cx, int cy, 
     if (!gauge)
         return;
     memset(gauge, 0, sizeof(*gauge));
-    gauge->cx            = cx;
-    gauge->cy            = cy;
-    gauge->radius        = radius;
-    gauge->thickness     = thickness;
-    gauge->value         = 0;
-    gauge->bg_color      = RAWDRAW_COLOR_WHITE;
-    gauge->fg_color      = RAWDRAW_COLOR_BLACK;
+    gauge->cx = cx;
+    gauge->cy = cy;
+    gauge->radius = radius;
+    gauge->thickness = thickness;
+    gauge->value = 0;
+    gauge->bg_color = RAWDRAW_COLOR_WHITE;
+    gauge->fg_color = RAWDRAW_COLOR_BLACK;
     gauge->custom_colors = false;
 }
 
@@ -356,7 +356,7 @@ void widget_circular_gauge_set_bg_color(widget_circular_gauge_t *gauge, rawdraw_
 {
     if (!gauge)
         return;
-    gauge->bg_color      = color;
+    gauge->bg_color = color;
     gauge->custom_colors = true;
 }
 
@@ -364,7 +364,7 @@ void widget_circular_gauge_set_fg_color(widget_circular_gauge_t *gauge, rawdraw_
 {
     if (!gauge)
         return;
-    gauge->fg_color      = color;
+    gauge->fg_color = color;
     gauge->custom_colors = true;
 }
 
@@ -389,8 +389,8 @@ void widget_circular_gauge_render(const widget_circular_gauge_t *gauge, uint8_t 
     rawdraw_color_t fg = gauge->fg_color;
     if (!gauge->custom_colors) {
         rawdraw_paint_style_t style = rawdraw_theme_component(ROLE_PROGRESS);
-        bg                          = style.bg;
-        fg                          = style.fg;
+        bg = style.bg;
+        fg = style.fg;
     }
 
     rawdraw_point_t center = {gauge->cx, gauge->cy};
@@ -399,8 +399,8 @@ void widget_circular_gauge_render(const widget_circular_gauge_t *gauge, uint8_t 
 
     /* Draw center label */
     if (gauge->label[0] != '\0' && gauge->label_font) {
-        int text_w  = rawdraw_measure_text_width(gauge->label, gauge->label_font);
-        int text_h  = (int)gauge->label_font->line_height;
+        int text_w = rawdraw_measure_text_width(gauge->label, gauge->label_font);
+        int text_h = (int)gauge->label_font->line_height;
         int label_x = gauge->cx - text_w / 2;
         int label_y = gauge->cy - text_h / 2;
         rawdraw_draw_text(fb, fb_width, fb_height, label_x, label_y, gauge->label, gauge->label_font,

@@ -42,10 +42,10 @@ bool storage_manager_init(void)
 {
 #ifdef ESP_PLATFORM
     esp_vfs_littlefs_conf_t conf = {
-        .base_path              = "/spiffs",
-        .partition_label        = "assets",
+        .base_path = "/spiffs",
+        .partition_label = "assets",
         .format_if_mount_failed = true,
-        .dont_mount             = false,
+        .dont_mount = false,
     };
     esp_err_t ret = esp_vfs_littlefs_register(&conf);
     if (ret == ESP_ERR_INVALID_STATE) {
@@ -86,12 +86,12 @@ void storage_manager_get_info(storage_info_t *out_info)
     memset(out_info, 0, sizeof(*out_info));
 
 #ifdef ESP_PLATFORM
-    size_t    total = 0, used = 0;
+    size_t total = 0, used = 0;
     esp_err_t ret = esp_littlefs_info("assets", &total, &used);
     if (ret == ESP_OK) {
         out_info->total_bytes = (uint32_t)total;
-        out_info->used_bytes  = (uint32_t)used;
-        out_info->free_bytes  = out_info->total_bytes - out_info->used_bytes;
+        out_info->used_bytes = (uint32_t)used;
+        out_info->free_bytes = out_info->total_bytes - out_info->used_bytes;
     } else {
         ESP_LOGE(TAG, "esp_littlefs_info failed");
     }
@@ -110,7 +110,7 @@ void storage_manager_get_info(storage_info_t *out_info)
     }
 
     struct dirent *entry;
-    uint32_t       calculated_used_bytes = 0;
+    uint32_t calculated_used_bytes = 0;
     while ((entry = readdir(dir)) != NULL) {
         const char *name = entry->d_name;
         if (!name || name[0] == '\0')
@@ -129,12 +129,12 @@ void storage_manager_get_info(storage_info_t *out_info)
             continue;
 
         // Classify by extension (case-insensitive)
-        const char *ext      = strrchr(name, '.');
-        bool        is_photo = false;
-        bool        is_txt   = false;
+        const char *ext = strrchr(name, '.');
+        bool is_photo = false;
+        bool is_txt = false;
         if (ext) {
             char lower_ext[8];
-            int  ei;
+            int ei;
             for (ei = 0; ei < 7 && ext[ei]; ei++) {
                 lower_ext[ei] = (char)tolower((unsigned char)ext[ei]);
             }
@@ -157,7 +157,7 @@ void storage_manager_get_info(storage_info_t *out_info)
             storage_file_info_t *f_info = &out_info->files[out_info->file_count];
             strncpy(f_info->name, name, STORAGE_FILENAME_MAX_LEN - 1);
             f_info->name[STORAGE_FILENAME_MAX_LEN - 1] = '\0';
-            f_info->size                               = (uint32_t)st.st_size;
+            f_info->size = (uint32_t)st.st_size;
             strncpy(f_info->type, is_photo ? "image" : (is_txt ? "document" : "other"), STORAGE_TYPE_MAX_LEN - 1);
             f_info->type[STORAGE_TYPE_MAX_LEN - 1] = '\0';
             out_info->file_count++;
@@ -169,10 +169,10 @@ void storage_manager_get_info(storage_info_t *out_info)
 
 #ifndef ESP_PLATFORM
     out_info->used_bytes = calculated_used_bytes;
-    out_info->free_bytes = out_info->total_bytes > out_info->used_bytes ? out_info->total_bytes - out_info->used_bytes : 0;
+    out_info->free_bytes =
+        out_info->total_bytes > out_info->used_bytes ? out_info->total_bytes - out_info->used_bytes : 0;
 #endif
 }
-
 
 bool storage_manager_delete_file(const char *filename)
 {
@@ -211,7 +211,7 @@ int storage_manager_list_txt_files(char txt_files[][STORAGE_FILENAME_MAX_LEN], i
     if (!dir)
         return 0;
 
-    int            count = 0;
+    int count = 0;
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
         const char *name = entry->d_name;
@@ -220,7 +220,7 @@ int storage_manager_list_txt_files(char txt_files[][STORAGE_FILENAME_MAX_LEN], i
         const char *ext = strrchr(name, '.');
         if (ext) {
             char lower_ext[8];
-            int  ei;
+            int ei;
             for (ei = 0; ei < 7 && ext[ei]; ei++) {
                 lower_ext[ei] = (char)tolower((unsigned char)ext[ei]);
             }
@@ -299,7 +299,7 @@ bool storage_manager_write_txt_file(const char *filename, const char *content)
         return false;
     }
 
-    size_t len     = strlen(content);
+    size_t len = strlen(content);
     size_t written = fwrite(content, 1, len, f);
     fclose(f);
 

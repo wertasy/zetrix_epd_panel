@@ -37,15 +37,15 @@ typedef struct {
     int x, y, w, h;
     int radius;
 
-    char             icon_code[WIDGET_BUTTON_ICON_LEN]; /* "" = no icon */
+    char icon_code[WIDGET_BUTTON_ICON_LEN]; /* "" = no icon */
     const lv_font_t *icon_font;
 
-    char             text[WIDGET_BUTTON_TEXT_LEN]; /* "" = no label */
+    char text[WIDGET_BUTTON_TEXT_LEN]; /* "" = no label */
     const lv_font_t *text_font;
 
-    bool                     pressed;
+    bool pressed;
     widget_button_callback_t callback;
-    void                    *callback_user_data;
+    void *callback_user_data;
 
     rawdraw_color_t bg_color;
     rawdraw_color_t fg_color;
@@ -75,7 +75,7 @@ bool widget_button_handle_input(widget_button_t *btn, const ui_button_event_t *e
 
 /* ---- geometry / rendering ---- */
 rawdraw_rect_t widget_button_get_bounds(const widget_button_t *btn);
-void           widget_button_render(const widget_button_t *btn, uint8_t *fb, int fb_width, int fb_height);
+void widget_button_render(const widget_button_t *btn, uint8_t *fb, int fb_width, int fb_height);
 
 #ifdef __cplusplus
 }

@@ -37,11 +37,11 @@ static const char *TAG = "ble_image";
 /* ------------------------------------------------------------------ */
 /* Module state                                                        */
 /* ------------------------------------------------------------------ */
-static uint8_t           *s_image_buffer  = NULL;
-static uint16_t           s_expected_size = 0;
-static uint16_t           s_received_size = 0;
-static ble_image_status_t s_status        = BLE_IMAGE_STATUS_IDLE;
-static bool               s_initialized   = false;
+static uint8_t *s_image_buffer = NULL;
+static uint16_t s_expected_size = 0;
+static uint16_t s_received_size = 0;
+static ble_image_status_t s_status = BLE_IMAGE_STATUS_IDLE;
+static bool s_initialized = false;
 
 #ifdef ESP_PLATFORM
 /* Guards all shared state below. NULL until ble_image_receiver_init(). */
@@ -182,7 +182,7 @@ void ble_image_receiver_reset(void)
     BLE_LOCK();
     s_expected_size = 0;
     s_received_size = 0;
-    s_status        = BLE_IMAGE_STATUS_IDLE;
+    s_status = BLE_IMAGE_STATUS_IDLE;
     BLE_UNLOCK();
 }
 
@@ -251,7 +251,7 @@ int ble_image_receiver_save_to_storage(void)
      * slow file I/O below never blocks the BLE receive path or races a reset. */
     uint16_t expected_size = 0;
     uint16_t received_size = 0;
-    uint8_t *snapshot      = NULL;
+    uint8_t *snapshot = NULL;
 
     BLE_LOCK();
     bool complete = (s_status == BLE_IMAGE_STATUS_COMPLETE && s_received_size == s_expected_size);
@@ -278,8 +278,8 @@ int ble_image_receiver_save_to_storage(void)
     uint32_t r = esp_random();
     snprintf(info.id, sizeof(info.id), "ble%08lx", (unsigned long)r);
     snprintf(info.title, sizeof(info.title), "BLE Push");
-    info.width     = STYLE_SCREEN_WIDTH;
-    info.height    = (uint16_t)(expected_size / (STYLE_SCREEN_WIDTH / 8u));
+    info.width = STYLE_SCREEN_WIDTH;
+    info.height = (uint16_t)(expected_size / (STYLE_SCREEN_WIDTH / 8u));
     info.file_size = expected_size;
     info.timestamp = 0; /* let photo_storage stamp it if it chooses */
 

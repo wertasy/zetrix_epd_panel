@@ -18,21 +18,21 @@ extern "C" {
 #define WEATHER_DETAIL_MAX_HOURS 12
 
 typedef struct {
-    char    label[8];
-    char    icon_code[WEATHER_ICON_LEN];
-    char    weather_text[16];
+    char label[8];
+    char icon_code[WEATHER_ICON_LEN];
+    char weather_text[16];
     int32_t temp;
 } weather_hour_point_t;
 
 typedef struct {
     page_renderer_t base;
 
-    weather_data_t       data;
+    weather_data_t data;
     weather_hour_point_t hourly[WEATHER_DETAIL_MAX_HOURS];
-    int                  hourly_count;
-    int                  selected_hour;
-    bool                 detail_open;
-    bool                 has_data;
+    int hourly_count;
+    int selected_hour;
+    bool detail_open;
+    bool has_data;
 
     const lv_font_t *font;
     const lv_font_t *title_font;

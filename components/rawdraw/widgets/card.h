@@ -25,24 +25,24 @@ extern "C" {
 
 typedef struct {
     rawdraw_rect_t bounds;
-    int            radius;
-    int            border_width;
-    int            padding;
+    int radius;
+    int border_width;
+    int padding;
 
-    char             title[WIDGET_CARD_TITLE_LEN]; /* "" = no title bar text */
+    char title[WIDGET_CARD_TITLE_LEN]; /* "" = no title bar text */
     const lv_font_t *title_font;
-    int              title_height; /* 0 = auto */
-    bool             title_enabled;
+    int title_height; /* 0 = auto */
+    bool title_enabled;
 
     bool shadow_enabled;
-    int  shadow_offset;
+    int shadow_offset;
 
     rawdraw_color_t bg_color;
     rawdraw_color_t border_color;
     rawdraw_color_t title_bg_color;
     rawdraw_color_t title_text_color;
     rawdraw_color_t shadow_color;
-    bool            custom_colors;
+    bool custom_colors;
 } widget_card_t;
 
 /* ---- lifecycle ---- */
@@ -67,7 +67,7 @@ void widget_card_set_shadow_color(widget_card_t *card, rawdraw_color_t color);
 rawdraw_rect_t widget_card_get_bounds(const widget_card_t *card);
 rawdraw_rect_t widget_card_get_title_bounds(const widget_card_t *card);
 rawdraw_rect_t widget_card_get_content_bounds(const widget_card_t *card);
-int            widget_card_calculate_title_height(const widget_card_t *card);
+int widget_card_calculate_title_height(const widget_card_t *card);
 
 /* ---- rendering ---- */
 void widget_card_render(const widget_card_t *card, uint8_t *fb, int fb_width, int fb_height);

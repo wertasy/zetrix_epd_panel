@@ -8,11 +8,11 @@
 #include <esp_timer.h>
 
 typedef struct {
-    int            sample_rate;
-    int            frame_duration;
-    uint32_t       timestamp;
+    int sample_rate;
+    int frame_duration;
+    uint32_t timestamp;
     const uint8_t *payload;
-    size_t         payload_len;
+    size_t payload_len;
 } audio_stream_packet_t;
 
 typedef enum {
@@ -35,33 +35,33 @@ typedef void (*proto_state_cb)(void *ctx);
 typedef void (*proto_error_cb)(const char *msg, void *ctx);
 
 struct protocol {
-    int  server_sample_rate;
-    int  server_frame_duration;
+    int server_sample_rate;
+    int server_frame_duration;
     char session_id[40];
     char device_id[32];
     char wss_url[128];
 
-    proto_incoming_json_cb  on_incoming_json;
-    void                   *json_ctx;
+    proto_incoming_json_cb on_incoming_json;
+    void *json_ctx;
     proto_incoming_audio_cb on_incoming_audio;
-    void                   *audio_ctx;
-    proto_text_cb           on_incoming_text;
-    void                   *text_ctx;
-    proto_state_cb          on_connected;
-    void                   *connected_ctx;
-    proto_state_cb          on_disconnected;
-    void                   *disconnected_ctx;
-    proto_state_cb          on_idle_timeout;
-    void                   *idle_ctx;
-    proto_error_cb          on_network_error;
-    void                   *err_ctx;
+    void *audio_ctx;
+    proto_text_cb on_incoming_text;
+    void *text_ctx;
+    proto_state_cb on_connected;
+    void *connected_ctx;
+    proto_state_cb on_disconnected;
+    void *disconnected_ctx;
+    proto_state_cb on_idle_timeout;
+    void *idle_ctx;
+    proto_error_cb on_network_error;
+    void *err_ctx;
 
     // WebSocket Client
-    void              *ws_client;
-    bool               ws_connected;
+    void *ws_client;
+    bool ws_connected;
     esp_timer_handle_t idle_timer;
-    int64_t            last_rx_ms;
-    int                last_opcode;
+    int64_t last_rx_ms;
+    int last_opcode;
 };
 
 void protocol_init(protocol_t *p);
@@ -78,9 +78,9 @@ void protocol_stop(protocol_t *p);
 void protocol_destroy(protocol_t *p);
 
 #ifndef ESP_PLATFORM
-#define cJSON_CreateObject test_cJSON_CreateObject
-#define cJSON_PrintUnformatted test_cJSON_PrintUnformatted
-cJSON* test_cJSON_CreateObject(void);
-char* test_cJSON_PrintUnformatted(const cJSON* item);
+#    define cJSON_CreateObject test_cJSON_CreateObject
+#    define cJSON_PrintUnformatted test_cJSON_PrintUnformatted
+cJSON *test_cJSON_CreateObject(void);
+char *test_cJSON_PrintUnformatted(const cJSON *item);
 #endif
 #endif // PROTOCOL_H_

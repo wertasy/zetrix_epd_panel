@@ -28,21 +28,21 @@
 
 void settings_page_render_volume_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t modal_style    = rawdraw_theme_component(ROLE_MODAL);
-    const rawdraw_paint_style_t shadow_style   = rawdraw_theme_style(THEME_TOKEN_SHADOW);
+    const rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
+    const rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
     const rawdraw_paint_style_t progress_style = rawdraw_theme_component(ROLE_PROGRESS);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border         = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const rawdraw_paint_style_t track_style    = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    const rawdraw_color_t       accent         = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
-    const rawdraw_color_t       progress_fill  = settings_page_token_ink_on_paper(THEME_TOKEN_PROGRESS_FILL);
-    const int                   dialog_w       = STYLE_DIALOG_W;
-    const int                   dialog_h       = STYLE_DIALOG_H_MD;
-    const int                   dialog_x       = (width - dialog_w) / 2;
-    const int                   dialog_y       = (height - dialog_h) / 2;
-    const int                   inner_x        = dialog_x + 18;
-    const int                   inner_w        = dialog_w - 36;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_paint_style_t track_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_color_t accent = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
+    const rawdraw_color_t progress_fill = settings_page_token_ink_on_paper(THEME_TOKEN_PROGRESS_FILL);
+    const int dialog_w = STYLE_DIALOG_W;
+    const int dialog_h = STYLE_DIALOG_H_MD;
+    const int dialog_x = (width - dialog_w) / 2;
+    const int dialog_y = (height - dialog_h) / 2;
+    const int inner_x = dialog_x + 18;
+    const int inner_w = dialog_w - 36;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x, dialog_y, dialog_w, dialog_h, STYLE_BORDER_RADIUS_LG,
                                       kVolumeDialogClearPad);
@@ -52,8 +52,8 @@ void settings_page_render_volume_dialog(settings_page_t *r, uint8_t *fb, int wid
     rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){dialog_x, dialog_y, dialog_w, dialog_h},
                                    STYLE_BORDER_RADIUS_LG, &modal_style);
 
-    const char *title   = "音量调整";
-    const int   title_w = rawdraw_measure_text_width(title, r->font);
+    const char *title = "音量调整";
+    const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y(r->font, title, dialog_y + 24, kTextOpticalNudgeY), title,
                       r->font, text);
@@ -98,23 +98,23 @@ void settings_page_render_volume_dialog(settings_page_t *r, uint8_t *fb, int wid
 
 void settings_page_render_storage_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t modal_style    = rawdraw_theme_component(ROLE_MODAL);
-    const rawdraw_paint_style_t shadow_style   = rawdraw_theme_style(THEME_TOKEN_SHADOW);
+    const rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
+    const rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
     const rawdraw_paint_style_t progress_style = rawdraw_theme_component(ROLE_PROGRESS);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border         = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const rawdraw_paint_style_t track_style    = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    const rawdraw_color_t       accent         = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
-    const rawdraw_color_t       progress_fill  = settings_page_token_ink_on_paper(THEME_TOKEN_PROGRESS_FILL);
-    const int                   dialog_w       = 316;
-    const int                   dialog_h       = 180;
-    const int                   dialog_x       = (width - dialog_w) / 2;
-    const int                   dialog_y       = STYLE_STATUS_BAR_HEIGHT + 30;
-    const int                   content_right  = dialog_x + dialog_w - 20;
-    const int                   titlebar_h     = 28;
-    const int                   shadow_offset  = 2;
-    const int                   row_h          = kAboutRowHeight;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_paint_style_t track_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_color_t accent = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
+    const rawdraw_color_t progress_fill = settings_page_token_ink_on_paper(THEME_TOKEN_PROGRESS_FILL);
+    const int dialog_w = 316;
+    const int dialog_h = 180;
+    const int dialog_x = (width - dialog_w) / 2;
+    const int dialog_y = STYLE_STATUS_BAR_HEIGHT + 30;
+    const int content_right = dialog_x + dialog_w - 20;
+    const int titlebar_h = 28;
+    const int shadow_offset = 2;
+    const int row_h = kAboutRowHeight;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -131,8 +131,8 @@ void settings_page_render_storage_dialog(settings_page_t *r, uint8_t *fb, int wi
     rawdraw_draw_line(fb, width, height, (rawdraw_point_t){dialog_x + 18, dialog_y + 10},
                       (rawdraw_point_t){dialog_x + 10, dialog_y + 18}, accent);
 
-    const char *title   = "存储空间";
-    const int   title_w = rawdraw_measure_text_width(title, r->font);
+    const char *title = "存储空间";
+    const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y_in_box(r->font, title, dialog_y, titlebar_h, 0), title,
                       r->font, text);
@@ -149,10 +149,10 @@ void settings_page_render_storage_dialog(settings_page_t *r, uint8_t *fb, int wi
     const int icon_y = dialog_y + titlebar_h + 16;
     rawdraw_draw_rect_border(fb, width, height, (rawdraw_rect_t){icon_x, icon_y, 46, 38}, 2, accent);
     const int fill_pct = 60; /* default moderate fill for visual */
-    const int bar_x    = icon_x + 7;
-    const int bar_w    = 32;
-    const int bar_h    = 20;
-    const int bar_y    = icon_y + 7;
+    const int bar_x = icon_x + 7;
+    const int bar_w = 32;
+    const int bar_h = 20;
+    const int bar_y = icon_y + 7;
     rawdraw_draw_styled_rect(fb, width, height, (rawdraw_rect_t){bar_x, bar_y, bar_w, bar_h}, &track_style);
     rawdraw_draw_rect_border(fb, width, height, (rawdraw_rect_t){bar_x, bar_y, bar_w, bar_h}, 1, progress_style.border);
     int fill_w = (bar_w - 2) * fill_pct / 100;
@@ -176,15 +176,15 @@ void settings_page_render_storage_dialog(settings_page_t *r, uint8_t *fb, int wi
         {"TXT数量", txts_buf},
     };
     const int row_count = (int)(sizeof(rows) / sizeof(rows[0]));
-    const int rows_x    = dialog_x + 88;
-    int       y         = dialog_y + titlebar_h + 12;
+    const int rows_x = dialog_x + 88;
+    int y = dialog_y + titlebar_h + 12;
     for (int i = 0; i < row_count; ++i) {
         const int center_y = y + row_h / 2;
         rawdraw_draw_text(fb, width, height, rows_x,
                           rawdraw_layout_ink_centered_text_top_y(r->font, rows[i].label, center_y, 0), rows[i].label,
                           r->font, text);
         const int value_left_min = rows_x + 84;
-        char      display_value[SETTINGS_PAGE_ITEM_VALUE_LEN];
+        char display_value[SETTINGS_PAGE_ITEM_VALUE_LEN];
         ui_text_fit_to_width(rows[i].value, r->value_font, RD_MAX(0, content_right - value_left_min), display_value,
                              sizeof(display_value));
         const int value_w = rawdraw_measure_text_width(display_value, r->value_font);
@@ -198,21 +198,21 @@ void settings_page_render_storage_dialog(settings_page_t *r, uint8_t *fb, int wi
 
 void settings_page_render_server_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t modal_style    = rawdraw_theme_component(ROLE_MODAL);
-    const rawdraw_paint_style_t shadow_style   = rawdraw_theme_style(THEME_TOKEN_SHADOW);
+    const rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
+    const rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border         = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const rawdraw_color_t       danger         = settings_page_token_ink_on_paper(THEME_TOKEN_DANGER);
-    const int                   dialog_w       = 316;
-    const int                   dialog_h       = STYLE_DIALOG_H_LG;
-    const int                   dialog_x       = (width - dialog_w) / 2;
-    const int                   dialog_y       = STYLE_STATUS_BAR_HEIGHT + 30;
-    const int                   content_right  = dialog_x + dialog_w - 20;
-    const int                   titlebar_h     = 28;
-    const int                   shadow_offset  = 2;
-    const int                   row_h          = kAboutRowHeight;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_color_t danger = settings_page_token_ink_on_paper(THEME_TOKEN_DANGER);
+    const int dialog_w = 316;
+    const int dialog_h = STYLE_DIALOG_H_LG;
+    const int dialog_x = (width - dialog_w) / 2;
+    const int dialog_y = STYLE_STATUS_BAR_HEIGHT + 30;
+    const int content_right = dialog_x + dialog_w - 20;
+    const int titlebar_h = 28;
+    const int shadow_offset = 2;
+    const int row_h = kAboutRowHeight;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -229,8 +229,8 @@ void settings_page_render_server_dialog(settings_page_t *r, uint8_t *fb, int wid
     rawdraw_draw_line(fb, width, height, (rawdraw_point_t){dialog_x + 18, dialog_y + 10},
                       (rawdraw_point_t){dialog_x + 10, dialog_y + 18}, danger);
 
-    const char *title   = "服务地址";
-    const int   title_w = rawdraw_measure_text_width(title, r->font);
+    const char *title = "服务地址";
+    const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y_in_box(r->font, title, dialog_y, titlebar_h, 0), title,
                       r->font, text);
@@ -242,7 +242,7 @@ void settings_page_render_server_dialog(settings_page_t *r, uint8_t *fb, int wid
     }
 
     const int rows_x = dialog_x + 18;
-    int       y      = dialog_y + titlebar_h + 10;
+    int y = dialog_y + titlebar_h + 10;
 
     /* Current connection label. */
     char current_label[SETTINGS_PAGE_ADDR_LEN + 16];
@@ -258,7 +258,7 @@ void settings_page_render_server_dialog(settings_page_t *r, uint8_t *fb, int wid
     struct server_option_t {
         const char *label;
         const char *addr;
-        int         index;
+        int index;
     };
     const struct server_option_t options[] = {
         {"本地自发现", r->server_local_addr, 0},
@@ -266,9 +266,9 @@ void settings_page_render_server_dialog(settings_page_t *r, uint8_t *fb, int wid
     };
     const int option_count = (int)(sizeof(options) / sizeof(options[0]));
     for (int i = 0; i < option_count; ++i) {
-        const struct server_option_t *opt         = &options[i];
-        const int                     center_y    = y + row_h / 2;
-        const bool                    is_selected = (r->server_selected == opt->index);
+        const struct server_option_t *opt = &options[i];
+        const int center_y = y + row_h / 2;
+        const bool is_selected = (r->server_selected == opt->index);
 
         if (is_selected) {
             rawdraw_draw_styled_round_rect(fb, width, height,
@@ -298,22 +298,22 @@ void settings_page_render_server_dialog(settings_page_t *r, uint8_t *fb, int wid
 
 void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t modal_style    = rawdraw_theme_component(ROLE_MODAL);
-    const rawdraw_paint_style_t shadow_style   = rawdraw_theme_style(THEME_TOKEN_SHADOW);
+    const rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
+    const rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border         = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const rawdraw_color_t       danger         = settings_page_token_ink_on_paper(THEME_TOKEN_DANGER);
-    const rawdraw_color_t       accent         = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
-    const int                   dialog_w       = 316;
-    const int                   dialog_h       = 220;
-    const int                   dialog_x       = (width - dialog_w) / 2;
-    const int                   dialog_y       = STYLE_STATUS_BAR_HEIGHT + 30;
-    const int                   content_right  = dialog_x + dialog_w - 20;
-    const int                   titlebar_h     = 28;
-    const int                   shadow_offset  = 2;
-    const int                   row_h          = kAboutRowHeight;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_color_t danger = settings_page_token_ink_on_paper(THEME_TOKEN_DANGER);
+    const rawdraw_color_t accent = settings_page_token_ink_on_paper(THEME_TOKEN_ACCENT);
+    const int dialog_w = 316;
+    const int dialog_h = 220;
+    const int dialog_x = (width - dialog_w) / 2;
+    const int dialog_y = STYLE_STATUS_BAR_HEIGHT + 30;
+    const int content_right = dialog_x + dialog_w - 20;
+    const int titlebar_h = 28;
+    const int shadow_offset = 2;
+    const int row_h = kAboutRowHeight;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -330,8 +330,8 @@ void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, in
     rawdraw_draw_line(fb, width, height, (rawdraw_point_t){dialog_x + 18, dialog_y + 10},
                       (rawdraw_point_t){dialog_x + 10, dialog_y + 18}, danger);
 
-    const char *title   = "服务地址历史";
-    const int   title_w = rawdraw_measure_text_width(title, r->font);
+    const char *title = "服务地址历史";
+    const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y_in_box(r->font, title, dialog_y, titlebar_h, 0), title,
                       r->font, text);
@@ -343,8 +343,8 @@ void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, in
     }
 
     const int rows_x = dialog_x + 18;
-    int       y      = dialog_y + titlebar_h + 10;
-    const int total  = r->server_list_count;
+    int y = dialog_y + titlebar_h + 10;
+    const int total = r->server_list_count;
 
     if (total == 0) {
         rawdraw_draw_text(fb, width, height, rows_x,
@@ -359,10 +359,10 @@ void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, in
             if (item_idx >= total)
                 break;
 
-            const char *addr        = r->server_list_addresses[item_idx];
-            const bool  is_selected = (item_idx == r->server_list_selected);
-            const bool  is_current  = (strcmp(addr, r->server_list_current) == 0);
-            const int   center_y    = y + row_h / 2;
+            const char *addr = r->server_list_addresses[item_idx];
+            const bool is_selected = (item_idx == r->server_list_selected);
+            const bool is_current = (strcmp(addr, r->server_list_current) == 0);
+            const int center_y = y + row_h / 2;
 
             if (is_selected) {
                 rawdraw_draw_styled_round_rect(fb, width, height,
@@ -416,24 +416,24 @@ void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, in
 
 void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t modal_style    = rawdraw_theme_component(ROLE_MODAL);
-    const rawdraw_paint_style_t shadow_style   = rawdraw_theme_style(THEME_TOKEN_SHADOW);
+    const rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
+    const rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
     const rawdraw_paint_style_t progress_style = rawdraw_theme_component(ROLE_PROGRESS);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       border         = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const rawdraw_paint_style_t track_style    = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    const rawdraw_color_t       danger         = settings_page_token_ink_on_paper(THEME_TOKEN_DANGER);
-    const rawdraw_color_t       progress_fill  = settings_page_token_ink_on_paper(THEME_TOKEN_PROGRESS_FILL);
-    const int                   dialog_w       = 316;
-    const int                   dialog_h       = 220;
-    const int                   dialog_x       = (width - dialog_w) / 2;
-    const int                   dialog_y       = STYLE_STATUS_BAR_HEIGHT + 30;
-    const int                   content_right  = dialog_x + dialog_w - 20;
-    const int                   titlebar_h     = 28;
-    const int                   shadow_offset  = 2;
-    const int                   row_h          = 28;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_paint_style_t track_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_color_t danger = settings_page_token_ink_on_paper(THEME_TOKEN_DANGER);
+    const rawdraw_color_t progress_fill = settings_page_token_ink_on_paper(THEME_TOKEN_PROGRESS_FILL);
+    const int dialog_w = 316;
+    const int dialog_h = 220;
+    const int dialog_x = (width - dialog_w) / 2;
+    const int dialog_y = STYLE_STATUS_BAR_HEIGHT + 30;
+    const int content_right = dialog_x + dialog_w - 20;
+    const int titlebar_h = 28;
+    const int shadow_offset = 2;
+    const int row_h = 28;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -450,8 +450,8 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
     rawdraw_draw_line(fb, width, height, (rawdraw_point_t){dialog_x + 18, dialog_y + 10},
                       (rawdraw_point_t){dialog_x + 10, dialog_y + 18}, danger);
 
-    const char *title   = "固件更新";
-    const int   title_w = rawdraw_measure_text_width(title, r->font);
+    const char *title = "固件更新";
+    const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y_in_box(r->font, title, dialog_y, titlebar_h, 0), title,
                       r->font, text);
@@ -463,7 +463,7 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
     }
 
     const int rows_x = dialog_x + 18;
-    int       y      = dialog_y + titlebar_h + 10;
+    int y = dialog_y + titlebar_h + 10;
 
     char current_buf[SETTINGS_PAGE_OTA_FIRMWARE_LEN + 16];
     snprintf(current_buf, sizeof(current_buf), "当前: %s",
@@ -474,20 +474,20 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
     y += row_h;
     rawdraw_draw_hline(fb, width, height, y - 4, rows_x, content_right, border);
 
-    const bool selecting   = (r->ota_state == 2);
+    const bool selecting = (r->ota_state == 2);
     const bool downloading = (r->ota_state == 4 || r->ota_state == 5 || r->ota_state == 6);
-    const bool failed      = (r->ota_state == 7);
+    const bool failed = (r->ota_state == 7);
 
     if (selecting && r->ota_version_count > 0) {
-        const int total        = r->ota_version_count;
+        const int total = r->ota_version_count;
         const int visible_rows = RD_MIN(kOtaVisibleRows, total);
-        int       start        = RD_MAX(0, r->ota_selected_index - visible_rows / 2);
+        int start = RD_MAX(0, r->ota_selected_index - visible_rows / 2);
         if (start + visible_rows > total)
             start = RD_MAX(0, total - visible_rows);
         for (int i = 0; i < visible_rows; ++i) {
-            const int  idx         = start + i;
+            const int idx = start + i;
             const bool is_selected = (idx == r->ota_selected_index);
-            const int  center_y    = y + row_h / 2;
+            const int center_y = y + row_h / 2;
             if (is_selected) {
                 rawdraw_draw_styled_round_rect(fb, width, height,
                                                (rawdraw_rect_t){rows_x - 4, y, content_right - rows_x + 8, row_h},
@@ -502,11 +502,11 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
             y += row_h;
         }
     } else if (downloading) {
-        const int   bar_x = rows_x;
-        const int   bar_y = y + 34;
-        const int   bar_w = content_right - rows_x;
-        const int   bar_h = 16;
-        char        status_buf[SETTINGS_PAGE_OTA_STATUS_LEN];
+        const int bar_x = rows_x;
+        const int bar_y = y + 34;
+        const int bar_w = content_right - rows_x;
+        const int bar_h = 16;
+        char status_buf[SETTINGS_PAGE_OTA_STATUS_LEN];
         const char *status_src = r->ota_status_text[0] != '\0' ? r->ota_status_text : "正在更新...";
         ui_text_fit_to_width(status_src, r->font, RD_MAX(0, content_right - rows_x), status_buf, sizeof(status_buf));
         rawdraw_draw_text(fb, width, height, rows_x,
@@ -527,7 +527,7 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
         rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - pct_w) / 2, bar_y + bar_h + 8, pct_buf, r->font,
                           secondary);
     } else {
-        char        status_buf[SETTINGS_PAGE_OTA_STATUS_LEN];
+        char status_buf[SETTINGS_PAGE_OTA_STATUS_LEN];
         const char *status_src =
             r->ota_status_text[0] != '\0' ? r->ota_status_text : (failed ? "更新失败" : "正在获取版本列表...");
         ui_text_fit_to_width(status_src, r->font, RD_MAX(0, content_right - rows_x), status_buf, sizeof(status_buf));
@@ -537,7 +537,7 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
     }
 
     const char *hint = selecting ? "UP/DN 选择  BOOT 更新  长按取消" : "长按取消  BOOT 关闭";
-    char        hint_display[64];
+    char hint_display[64];
     ui_text_fit_to_width(hint, r->font, dialog_w - 40, hint_display, sizeof(hint_display));
     const int hint_center_y = dialog_y + dialog_h - 20;
     rawdraw_draw_text(fb, width, height, dialog_x + 20,
@@ -547,19 +547,19 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
 
 void settings_page_render_ota_confirm_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_paint_style_t bg_style       = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    const rawdraw_paint_style_t modal_style    = rawdraw_theme_component(ROLE_MODAL);
-    const rawdraw_paint_style_t title_style    = rawdraw_theme_style(THEME_TOKEN_BADGE);
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_paint_style_t modal_style = rawdraw_theme_component(ROLE_MODAL);
+    const rawdraw_paint_style_t title_style = rawdraw_theme_style(THEME_TOKEN_BADGE);
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
     /* OTA confirm: show firmware name, UP/DN picks confirm/cancel, BOOT runs. */
-    const int dialog_w   = 280;
-    const int dialog_h   = 160;
-    const int dialog_x   = (width - dialog_w) / 2;
-    const int dialog_y   = (height - dialog_h) / 2;
+    const int dialog_w = 280;
+    const int dialog_h = 160;
+    const int dialog_x = (width - dialog_w) / 2;
+    const int dialog_y = (height - dialog_h) / 2;
     const int titlebar_h = 36;
-    const int row_h      = 28;
+    const int row_h = 28;
 
     rawdraw_draw_styled_rect(fb, width, height,
                              (rawdraw_rect_t){dialog_x - kDialogClearPad, dialog_y - kDialogClearPad,
@@ -575,14 +575,14 @@ void settings_page_render_ota_confirm_dialog(settings_page_t *r, uint8_t *fb, in
                                    (rawdraw_rect_t){dialog_x + 1, dialog_y + 1, dialog_w - 2, titlebar_h - 2},
                                    STYLE_BORDER_RADIUS_MD - 1, &title_style);
 
-    const char *title   = "确认更新?";
-    const int   title_w = rawdraw_measure_text_width(title, r->font);
+    const char *title = "确认更新?";
+    const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y(r->font, title, dialog_y + titlebar_h / 2, 0), title,
                       r->font, title_style.fg);
 
     const int content_x = dialog_x + 20;
-    int       y         = dialog_y + titlebar_h + 15;
+    int y = dialog_y + titlebar_h + 15;
 
     /* Firmware name. */
     char firmware_label[SETTINGS_PAGE_OTA_FIRMWARE_LEN + 8];
@@ -598,7 +598,7 @@ void settings_page_render_ota_confirm_dialog(settings_page_t *r, uint8_t *fb, in
     const char *options[2] = {"确认更新", "取消"};
     for (int i = 0; i < 2; ++i) {
         const bool is_selected = (i == r->ota_confirm_selected);
-        const int  opt_y       = y + i * row_h;
+        const int opt_y = y + i * row_h;
 
         if (is_selected) {
             rawdraw_draw_styled_round_rect(
@@ -613,9 +613,9 @@ void settings_page_render_ota_confirm_dialog(settings_page_t *r, uint8_t *fb, in
     }
 
     /* Hint. */
-    const char *hint   = "UP/DN 选择  BOOT 确认  长按返回";
-    const int   hint_w = rawdraw_measure_text_width(hint, r->font);
-    const int   hint_y = dialog_y + dialog_h - 24;
+    const char *hint = "UP/DN 选择  BOOT 确认  长按返回";
+    const int hint_w = rawdraw_measure_text_width(hint, r->font);
+    const int hint_y = dialog_y + dialog_h - 24;
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - hint_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y(r->font, hint, hint_y, 0), hint, r->font, secondary);
 }

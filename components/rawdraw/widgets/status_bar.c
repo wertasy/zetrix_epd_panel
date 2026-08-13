@@ -35,11 +35,11 @@ void widget_status_bar_init(widget_status_bar_t *sb, const lv_font_t *font)
     if (!sb)
         return;
     memset(sb, 0, sizeof(*sb));
-    sb->visible      = false;
-    sb->text[0]      = '\0';
+    sb->visible = false;
+    sb->text[0] = '\0';
     sb->show_time_us = 0;
     sb->auto_hide_ms = 0;
-    sb->font         = font;
+    sb->font = font;
 }
 
 /* ============================================================
@@ -54,7 +54,7 @@ void widget_status_bar_show(widget_status_bar_t *sb, const char *text, int64_t a
     strncpy(sb->text, text, sizeof(sb->text) - 1);
     sb->text[sizeof(sb->text) - 1] = '\0';
 
-    sb->visible      = true;
+    sb->visible = true;
     sb->show_time_us = now_us;
     sb->auto_hide_ms = auto_hide_ms;
 }
@@ -88,8 +88,8 @@ rawdraw_rect_t widget_status_bar_get_bounds(const widget_status_bar_t *sb, int f
 {
     (void)sb;
     int height = WIDGET_STATUS_BAR_HEIGHT;
-    int y      = fb_height - height;
-    int w      = fb_width;
+    int y = fb_height - height;
+    int w = fb_width;
 
     /* Reserve the clock zone: if the status bar would overlap the clock's
      * vertical band, narrow the width so we never draw under it. In practice
@@ -114,13 +114,13 @@ bool widget_status_bar_render(widget_status_bar_t *sb, uint8_t *fb, int fb_width
         return false;
 
     rawdraw_rect_t bounds = widget_status_bar_get_bounds(sb, fb_width, fb_height);
-    bounds                = rawdraw_clamp_rect(bounds, fb_width, fb_height);
+    bounds = rawdraw_clamp_rect(bounds, fb_width, fb_height);
     if (rawdraw_rect_area(bounds) <= 0)
         return false;
 
-    rawdraw_paint_style_t bar_style  = rawdraw_theme_component(ROLE_STATUS_BAR);
-    rawdraw_color_t       border     = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    rawdraw_color_t       text_color = bar_style.fg;
+    rawdraw_paint_style_t bar_style = rawdraw_theme_component(ROLE_STATUS_BAR);
+    rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    rawdraw_color_t text_color = bar_style.fg;
 
     /* Clear background. */
     rawdraw_draw_styled_rect(fb, fb_width, fb_height, bounds, &bar_style);

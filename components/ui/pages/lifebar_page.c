@@ -32,7 +32,7 @@ static const char *kLifebarQuotes[] = {
 #define LIFEBAR_NUM_QUOTES ((int)(sizeof(kLifebarQuotes) / sizeof(kLifebarQuotes[0])))
 
 static const lv_font_t *const kLifebarTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kLifebarBodyFont  = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kLifebarBodyFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kLifebarSmallFont = &SourceHanSansSC_Regular_slim;
 
 /* Round down to the nearest multiple of 8 (e-paper anti-aliasing grid). */
@@ -60,13 +60,13 @@ static int days_in_month(int y, int m)
 
 static void update_stats(lifebar_page_t *r)
 {
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm_now;
     localtime_r(&now, &tm_now);
 
-    const int cur_year  = tm_now.tm_year + 1900;
+    const int cur_year = tm_now.tm_year + 1900;
     const int cur_month = tm_now.tm_mon + 1; /* 1-based */
-    const int cur_day   = tm_now.tm_mday;
+    const int cur_day = tm_now.tm_mday;
 
     /* Days elapsed since birth */
     int total_days = 0;
@@ -91,7 +91,7 @@ static void update_stats(lifebar_page_t *r)
     }
 
     /* Age */
-    r->age_years  = cur_year - LIFEBAR_BIRTH_YEAR;
+    r->age_years = cur_year - LIFEBAR_BIRTH_YEAR;
     r->age_months = cur_month - LIFEBAR_BIRTH_MONTH;
     if (r->age_months < 0) {
         r->age_years--;
@@ -105,7 +105,7 @@ static void update_stats(lifebar_page_t *r)
         }
     }
 
-    r->days_elapsed   = total_days;
+    r->days_elapsed = total_days;
     r->days_remaining = lifespan_days - total_days;
     if (r->days_remaining < 0)
         r->days_remaining = 0;
@@ -127,18 +127,18 @@ static void update_stats(lifebar_page_t *r)
 
 static void render_header(lifebar_page_t *r, uint8_t *fb, int width, int height, int y)
 {
-    const rawdraw_color_t text      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
 
     /* Title */
-    const char *title   = "人生进度";
-    const int   title_w = rawdraw_measure_text_width(title, r->title_font);
+    const char *title = "人生进度";
+    const int title_w = rawdraw_measure_text_width(title, r->title_font);
     rawdraw_draw_text(fb, width, height, align_x8((width - title_w) / 2), y, title, r->title_font, text);
 
     /* Subtitle */
-    const char *sub   = "每一天都值得珍惜";
-    const int   sub_w = rawdraw_measure_text_width(sub, r->small_font);
-    const int   sub_y = y + r->title_font->line_height + STYLE_SPACING_XXS;
+    const char *sub = "每一天都值得珍惜";
+    const int sub_w = rawdraw_measure_text_width(sub, r->small_font);
+    const int sub_y = y + r->title_font->line_height + STYLE_SPACING_XXS;
     rawdraw_draw_text(fb, width, height, align_x8((width - sub_w) / 2), sub_y, sub, r->small_font, secondary);
 }
 
@@ -149,17 +149,17 @@ static void render_quote(lifebar_page_t *r, uint8_t *fb, int width, int height, 
     }
 
     /* Pick quote by day (rotates daily) */
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm_buf;
     localtime_r(&now, &tm_buf);
-    const int   idx   = (tm_buf.tm_yday) % LIFEBAR_NUM_QUOTES;
+    const int idx = (tm_buf.tm_yday) % LIFEBAR_NUM_QUOTES;
     const char *quote = kLifebarQuotes[idx];
 
     /* Draw quote lines */
-    char        line[64];
-    int         line_idx  = 0;
-    const int   max_lines = 2;
-    const char *p         = quote;
+    char line[64];
+    int line_idx = 0;
+    const int max_lines = 2;
+    const char *p = quote;
 
     while (*p && line_idx < max_lines) {
         int i = 0;
@@ -181,18 +181,18 @@ static void render_quote(lifebar_page_t *r, uint8_t *fb, int width, int height, 
 static void render_gauge(lifebar_page_t *r, uint8_t *fb, int width, int height, int y_start)
 {
     const rawdraw_paint_style_t progress_style = rawdraw_theme_component(ROLE_PROGRESS);
-    const rawdraw_color_t       text           = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       accent         = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t accent = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
 
     /* Gauge geometry */
-    const int gauge_r         = 70;
+    const int gauge_r = 70;
     const int gauge_thickness = 8;
-    const int cx              = width / 2;
-    int       cy              = y_start + gauge_r + 5;
+    const int cx = width / 2;
+    int cy = y_start + gauge_r + 5;
 
     /* If the gauge doesn't fit within the content area, shift it up */
-    const int gauge_bottom   = cy + gauge_r;
+    const int gauge_bottom = cy + gauge_r;
     const int content_bottom = r->base.height - STYLE_SPACING_SM;
     if (gauge_bottom > content_bottom) {
         cy = content_bottom - gauge_r;
@@ -212,7 +212,7 @@ static void render_gauge(lifebar_page_t *r, uint8_t *fb, int width, int height, 
     rawdraw_draw_text(fb, width, height, pct_x, pct_y, pct_buf, r->title_font, accent);
 
     /* === Stats below gauge === */
-    int       stats_y      = cy + gauge_r + gauge_thickness + STYLE_SPACING_MD;
+    int stats_y = cy + gauge_r + gauge_thickness + STYLE_SPACING_MD;
     const int bottom_limit = r->base.height - STYLE_SPACING_SM;
 
     /* Quote needs at least 2 lines */
@@ -261,20 +261,20 @@ static void render_gauge(lifebar_page_t *r, uint8_t *fb, int width, int height, 
 
 void lifebar_page_init(page_renderer_t *self, int width, int height)
 {
-    lifebar_page_t *r               = (lifebar_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    lifebar_page_t *r = (lifebar_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->title_font                   = kLifebarTitleFont;
-    r->body_font                    = kLifebarBodyFont;
-    r->small_font                   = kLifebarSmallFont;
-    r->age_years                    = 0;
-    r->age_months                   = 0;
-    r->days_elapsed                 = 0;
-    r->days_remaining               = 0;
-    r->weekends_remaining           = 0;
-    r->life_pct                     = 0;
-    r->visible                      = true;
+    r->title_font = kLifebarTitleFont;
+    r->body_font = kLifebarBodyFont;
+    r->small_font = kLifebarSmallFont;
+    r->age_years = 0;
+    r->age_months = 0;
+    r->days_elapsed = 0;
+    r->days_remaining = 0;
+    r->weekends_remaining = 0;
+    r->life_pct = 0;
+    r->visible = true;
     update_stats(r);
 }
 
@@ -292,21 +292,21 @@ void lifebar_page_render(page_renderer_t *self, uint8_t *fb, int width, int heig
     lifebar_page_t *r = (lifebar_page_t *)self;
     if (!fb)
         return;
-    const rawdraw_color_t text      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
 
     if (!r->visible) {
         /* Show hidden placeholder */
-        const char *msg   = "人生进度页已隐藏";
-        const int   msg_w = rawdraw_measure_text_width(msg, r->small_font);
-        const int   msg_x = align_x8((width - msg_w) / 2);
-        const int   msg_y = rawdraw_layout_ink_centered_text_top_y(r->small_font, msg, height / 2, 0);
+        const char *msg = "人生进度页已隐藏";
+        const int msg_w = rawdraw_measure_text_width(msg, r->small_font);
+        const int msg_x = align_x8((width - msg_w) / 2);
+        const int msg_y = rawdraw_layout_ink_centered_text_top_y(r->small_font, msg, height / 2, 0);
         rawdraw_draw_text(fb, width, height, msg_x, msg_y, msg, r->small_font, text);
 
-        const char *hint   = "在设置中重新开启";
-        const int   hint_w = rawdraw_measure_text_width(hint, r->small_font);
-        const int   hint_x = align_x8((width - hint_w) / 2);
-        const int   hint_y = msg_y + r->small_font->line_height + STYLE_SPACING_SM;
+        const char *hint = "在设置中重新开启";
+        const int hint_w = rawdraw_measure_text_width(hint, r->small_font);
+        const int hint_x = align_x8((width - hint_w) / 2);
+        const int hint_y = msg_y + r->small_font->line_height + STYLE_SPACING_SM;
         rawdraw_draw_text(fb, width, height, hint_x, hint_y, hint, r->small_font, secondary);
         r->base.needs_full_refresh_flag = false;
         return;
@@ -343,7 +343,7 @@ void lifebar_page_set_visible(page_renderer_t *self, bool visible)
     lifebar_page_t *r = (lifebar_page_t *)self;
     if (r->visible == visible)
         return;
-    r->visible                      = visible;
+    r->visible = visible;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -360,18 +360,17 @@ bool lifebar_page_is_visible(const page_renderer_t *self)
 EXT_RAM_BSS_ATTR lifebar_page_t s_lifebar_instance;
 
 const page_renderer_ops_t lifebar_page_ops = {
-    .init                    = lifebar_page_init,
-    .enter                   = lifebar_page_enter,
-    .render                  = lifebar_page_render,
-    .handle_input            = lifebar_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = lifebar_page_init,
+    .enter = lifebar_page_enter,
+    .render = lifebar_page_render,
+    .handle_input = lifebar_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_LIFEBAR, "人生进度", NULL, true, 100, &lifebar_page_ops,
-              &s_lifebar_instance.base);
+PAGE_REGISTER(UI_PAGE_LIFEBAR, "人生进度", NULL, true, 100, &lifebar_page_ops, &s_lifebar_instance.base);

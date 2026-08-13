@@ -83,11 +83,11 @@ void text_chunker_init(text_chunker_t *tc, text_chunker_cb_t cb, void *ctx)
 {
     if (!tc)
         return;
-    tc->callback          = cb;
-    tc->callback_ctx      = ctx;
-    tc->buffer            = malloc(TEXT_CHUNKER_MAX_BUFFER);
-    tc->buffer_len        = 0;
-    tc->buffer_cap        = tc->buffer ? TEXT_CHUNKER_MAX_BUFFER : 0;
+    tc->callback = cb;
+    tc->callback_ctx = ctx;
+    tc->buffer = malloc(TEXT_CHUNKER_MAX_BUFFER);
+    tc->buffer_len = 0;
+    tc->buffer_cap = tc->buffer ? TEXT_CHUNKER_MAX_BUFFER : 0;
     tc->last_emit_time_ms = 0;
     if (tc->buffer) {
         tc->buffer[0] = '\0';
@@ -112,7 +112,7 @@ static bool try_emit_chunk_ex(text_chunker_t *tc, bool force)
         return false;
     }
 
-    int64_t now_ms  = esp_timer_get_time() / 1000;
+    int64_t now_ms = esp_timer_get_time() / 1000;
     int64_t elapsed = now_ms - tc->last_emit_time_ms;
 
     if (!force && elapsed < MIN_CHUNK_INTERVAL_MS && tc->last_emit_time_ms > 0) {
@@ -144,7 +144,7 @@ static bool try_emit_chunk_ex(text_chunker_t *tc, bool force)
         memmove(tc->buffer, tc->buffer + boundary, tc->buffer_len - boundary);
         tc->buffer_len -= boundary;
         tc->buffer[tc->buffer_len] = '\0';
-        tc->last_emit_time_ms      = now_ms;
+        tc->last_emit_time_ms = now_ms;
 
         return true;
     }
@@ -203,7 +203,6 @@ void text_chunker_feed(text_chunker_t *tc, const char *text)
     while (try_emit_chunk(tc)) {
     }
 }
-
 
 void text_chunker_flush(text_chunker_t *tc)
 {

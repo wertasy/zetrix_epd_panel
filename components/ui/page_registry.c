@@ -24,11 +24,11 @@
 
 #define MAX_PAGES UI_PAGE_COUNT
 
-static page_entry_t        s_entries[MAX_PAGES];
+static page_entry_t s_entries[MAX_PAGES];
 static const page_entry_t *s_quick_switch[MAX_PAGES];
-static int                 s_quick_switch_count;
-static int                 s_total;
-static bool                s_finalized;
+static int s_quick_switch_count;
+static int s_total;
+static bool s_finalized;
 
 /* Called by PAGE_REGISTER constructors (before main). */
 void page_registry_add(const page_entry_t *entry)
@@ -60,7 +60,7 @@ void page_registry_init(void)
     }
     for (int i = 1; i < s_quick_switch_count; i++) {
         const page_entry_t *key = s_quick_switch[i];
-        int                 j   = i - 1;
+        int j = i - 1;
         while (j >= 0 && s_quick_switch[j]->order > key->order) {
             s_quick_switch[j + 1] = s_quick_switch[j];
             j--;

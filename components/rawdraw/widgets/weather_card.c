@@ -80,14 +80,14 @@ void widget_weather_card_init(widget_weather_card_t *card, int x, int y, int w)
 {
     if (!card)
         return;
-    card->x            = x;
-    card->y            = y;
-    card->w            = w;
+    card->x = x;
+    card->y = y;
+    card->w = w;
     card->city_name[0] = '\0';
-    card->has_data     = false;
-    card->temp_font    = &weather_icons_48;
-    card->info_font    = &SourceHanSansSC_Regular_slim;
-    card->icon_font    = &weather_icons_48;
+    card->has_data = false;
+    card->temp_font = &weather_icons_48;
+    card->info_font = &SourceHanSansSC_Regular_slim;
+    card->icon_font = &weather_icons_48;
     refresh_tracker_init(&card->refresh);
     memset(&card->data, 0, sizeof(card->data));
 }
@@ -111,7 +111,7 @@ void widget_weather_card_set_data(widget_weather_card_t *card, const widget_weat
 {
     if (!card || !data)
         return;
-    card->data     = *data;
+    card->data = *data;
     card->has_data = true;
     refresh_mark_dirty(&card->refresh);
 }
@@ -148,37 +148,37 @@ bool widget_weather_card_render(widget_weather_card_t *card, uint8_t *fb, int wi
         return false;
 
     rawdraw_rect_t base_rect = {card->x, card->y, card->w, WIDGET_WEATHER_CARD_MAX_HEIGHT};
-    rawdraw_rect_t bounds    = rawdraw_align_x8(base_rect);
-    bounds                   = rawdraw_clamp_rect(bounds, width, height);
+    rawdraw_rect_t bounds = rawdraw_align_x8(base_rect);
+    bounds = rawdraw_clamp_rect(bounds, width, height);
     if (rawdraw_rect_area(bounds) <= 0)
         return false;
 
-    rawdraw_paint_style_t card_style      = rawdraw_theme_component(ROLE_CARD_ELEVATED);
-    rawdraw_paint_style_t badge_style     = rawdraw_theme_style(THEME_TOKEN_BADGE);
-    rawdraw_paint_style_t chip_style      = rawdraw_theme_component(ROLE_CARD_DEFAULT);
-    rawdraw_color_t       text_color      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    rawdraw_color_t       secondary_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    rawdraw_color_t       border_color    = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    rawdraw_paint_style_t card_style = rawdraw_theme_component(ROLE_CARD_ELEVATED);
+    rawdraw_paint_style_t badge_style = rawdraw_theme_style(THEME_TOKEN_BADGE);
+    rawdraw_paint_style_t chip_style = rawdraw_theme_component(ROLE_CARD_DEFAULT);
+    rawdraw_color_t text_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    rawdraw_color_t secondary_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    rawdraw_color_t border_color = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
 
     rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
     rawdraw_draw_styled_rect(fb, width, height, bounds, &bg_style);
 
-    rawdraw_rect_t        shadow_rect  = {bounds.x + 2, bounds.y + 2, bounds.w, bounds.h};
+    rawdraw_rect_t shadow_rect = {bounds.x + 2, bounds.y + 2, bounds.w, bounds.h};
     rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
     rawdraw_draw_styled_round_rect(fb, width, height, shadow_rect, STYLE_CARD_RADIUS, &shadow_style);
 
     rawdraw_draw_styled_round_rect(fb, width, height, bounds, STYLE_BORDER_RADIUS_MD, &card_style);
 
-    int card_left  = bounds.x + 14;
-    int card_top   = bounds.y + 12;
+    int card_left = bounds.x + 14;
+    int card_top = bounds.y + 12;
     int card_right = bounds.x + bounds.w - 14;
 
     // Header tag
     const char *city = (card->city_name[0] != '\0') ? card->city_name : card->data.city;
     if (city[0] == '\0')
         city = "天气";
-    int            city_tag_w = rawdraw_measure_text_width(city, card->info_font) + 18;
-    rawdraw_rect_t city_rect  = {card_left, card_top, city_tag_w, 16};
+    int city_tag_w = rawdraw_measure_text_width(city, card->info_font) + 18;
+    rawdraw_rect_t city_rect = {card_left, card_top, city_tag_w, 16};
     rawdraw_draw_styled_round_rect(fb, width, height, city_rect, STYLE_BORDER_RADIUS_PILL, &badge_style);
     rawdraw_draw_styled_text(fb, width, height, card_left + 9, card_top + 1, city, card->info_font, &badge_style);
 
@@ -190,10 +190,10 @@ bool widget_weather_card_render(widget_weather_card_t *card, uint8_t *fb, int wi
                           (int)secondary_color);
     }
 
-    int                   body_y = card_top + 26;
-    widget_weather_icon_t icon   = widget_weather_card_parse_icon(card->data.weather_text);
-    int                   icon_x = card_left;
-    int                   icon_y = body_y + 8;
+    int body_y = card_top + 26;
+    widget_weather_icon_t icon = widget_weather_card_parse_icon(card->data.weather_text);
+    int icon_x = card_left;
+    int icon_y = body_y + 8;
     draw_weather_icon_char(fb, width, height, icon_x, icon_y, icon, card->icon_font);
 
     int col2_x = icon_x + 58;
@@ -214,7 +214,7 @@ bool widget_weather_card_render(widget_weather_card_t *card, uint8_t *fb, int wi
     }
 
     int stats_y = body_y + 46;
-    int chip_x  = col2_x;
+    int chip_x = col2_x;
 
     if (card->data.wind_dir[0] != '\0') {
         char wind_buf[128];
@@ -223,7 +223,7 @@ bool widget_weather_card_render(widget_weather_card_t *card, uint8_t *fb, int wi
         } else {
             snprintf(wind_buf, sizeof(wind_buf), "%s", card->data.wind_dir);
         }
-        int            chip_w    = rawdraw_measure_text_width(wind_buf, card->info_font) + 14;
+        int chip_w = rawdraw_measure_text_width(wind_buf, card->info_font) + 14;
         rawdraw_rect_t chip_rect = {chip_x, stats_y, chip_w, 18};
         rawdraw_draw_styled_round_rect(fb, width, height, chip_rect, STYLE_BORDER_RADIUS_PILL, &chip_style);
         rawdraw_draw_styled_text(fb, width, height, chip_x + 7, stats_y + 2, wind_buf, card->info_font, &chip_style);
@@ -233,7 +233,7 @@ bool widget_weather_card_render(widget_weather_card_t *card, uint8_t *fb, int wi
     if (card->data.humidity[0] != '\0') {
         char hum_buf[64];
         snprintf(hum_buf, sizeof(hum_buf), "湿度 %s%%", card->data.humidity);
-        int            chip_w    = rawdraw_measure_text_width(hum_buf, card->info_font) + 14;
+        int chip_w = rawdraw_measure_text_width(hum_buf, card->info_font) + 14;
         rawdraw_rect_t chip_rect = {chip_x, stats_y, chip_w, 18};
         rawdraw_draw_styled_round_rect(fb, width, height, chip_rect, STYLE_BORDER_RADIUS_PILL, &chip_style);
         rawdraw_draw_styled_text(fb, width, height, chip_x + 7, stats_y + 2, hum_buf, card->info_font, &chip_style);

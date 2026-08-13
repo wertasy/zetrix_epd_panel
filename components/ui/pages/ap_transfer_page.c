@@ -23,7 +23,7 @@
 
 #define AP_TRANSFER_DEFAULT_AP_IP "192.168.4.1"
 
-static const lv_font_t *const kApTransferFont      = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kApTransferFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kApTransferTitleFont = &SourceHanSansSC_Medium_slim;
 
 /* ------------------------------------------------------------------ */
@@ -32,7 +32,7 @@ static const lv_font_t *const kApTransferTitleFont = &SourceHanSansSC_Medium_sli
 
 static bool looks_like_ipv4(const char *value)
 {
-    int dots   = 0;
+    int dots = 0;
     int digits = 0;
     if (!value)
         return false;
@@ -55,13 +55,13 @@ static bool looks_like_ipv4(const char *value)
 
 static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t *fb, int width, int height)
 {
-    const rawdraw_color_t text         = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t secondary    = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t accent       = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
-    const rawdraw_color_t border       = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const int             content_top  = 35;
-    const int             line_spacing = 28;
-    const int             left_margin  = 20;
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t accent = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const int content_top = 35;
+    const int line_spacing = 28;
+    const int left_margin = 20;
 
     int y = content_top;
 
@@ -69,10 +69,10 @@ static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t 
     rawdraw_draw_rect_border(fb, width, height, (rawdraw_rect_t){left_margin, y, 60, 60}, 2, accent);
 
     /* WiFi signal bars inside */
-    const int bar_x     = left_margin + 10;
-    const int bar_y     = y + 30;
-    const int bar_w     = 8;
-    const int bar_gap   = 4;
+    const int bar_x = left_margin + 10;
+    const int bar_y = y + 30;
+    const int bar_w = 8;
+    const int bar_gap = 4;
     const int heights[] = {8, 16, 24, 32};
     for (int i = 0; i < 4; i++) {
         rawdraw_draw_rect(fb, width, height, bar_x + i * (bar_w + bar_gap), bar_y - heights[i], bar_w, heights[i],
@@ -85,7 +85,7 @@ static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t 
      * while the e-paper is busy, so relying on status_message_ made the
      * address occasionally disappear and only show "启动中...". */
     const char *ip = looks_like_ipv4(r->status_message) ? r->status_message : AP_TRANSFER_DEFAULT_AP_IP;
-    char        url_buf[AP_TRANSFER_MSG_LEN + 16];
+    char url_buf[AP_TRANSFER_MSG_LEN + 16];
     const char *url;
     if (r->url_text[0] != '\0') {
         url = r->url_text;
@@ -106,7 +106,7 @@ static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t 
         state_hint[sizeof(state_hint) - 1] = '\0';
     }
 
-    char        ssid_line[AP_TRANSFER_TEXT_LEN + 8];
+    char ssid_line[AP_TRANSFER_TEXT_LEN + 8];
     const char *ssid = r->ssid_text[0] != '\0' ? r->ssid_text : "InkScreen-AP";
     snprintf(ssid_line, sizeof(ssid_line), "连接 %s", ssid);
 
@@ -125,7 +125,7 @@ static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t 
         const char *line = lines[i];
         if (line[0] != '\0') {
             /* Highlight URL */
-            const bool       is_url   = (strncmp(line, "http://", 7) == 0);
+            const bool is_url = (strncmp(line, "http://", 7) == 0);
             const lv_font_t *use_font = is_url ? r->title_font : r->font;
             rawdraw_draw_text(fb, width, height, left_margin + 75,
                               rawdraw_layout_ink_centered_text_top_y(use_font, line, y, 0), line, use_font,
@@ -146,10 +146,10 @@ static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t 
 static void ap_transfer_page_render_status(ap_transfer_page_t *r, uint8_t *fb, int width, int height)
 {
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t danger    = rawdraw_theme_color_for(THEME_TOKEN_DANGER);
-    const rawdraw_color_t accent    = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
-    const rawdraw_color_t border    = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
-    const int             center_y  = height / 2;
+    const rawdraw_color_t danger = rawdraw_theme_color_for(THEME_TOKEN_DANGER);
+    const rawdraw_color_t accent = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const int center_y = height / 2;
 
     /* Status based on state */
     const char *status_text = "";
@@ -204,7 +204,7 @@ static void ap_transfer_page_render_status(ap_transfer_page_t *r, uint8_t *fb, i
     }
 
     const char *ip = looks_like_ipv4(r->status_message) ? r->status_message : AP_TRANSFER_DEFAULT_AP_IP;
-    char        url_buf[AP_TRANSFER_MSG_LEN + 16];
+    char url_buf[AP_TRANSFER_MSG_LEN + 16];
     const char *url;
     if (r->url_text[0] != '\0') {
         url = r->url_text;
@@ -234,15 +234,15 @@ void ap_transfer_page_init(page_renderer_t *self, int width, int height)
     ap_transfer_page_t *r = (ap_transfer_page_t *)self;
     if (!r)
         return;
-    r->base.width        = width;
-    r->base.height       = height;
-    r->state             = AP_TRANSFER_STATE_WAITING_CONNECTION;
+    r->base.width = width;
+    r->base.height = height;
+    r->state = AP_TRANSFER_STATE_WAITING_CONNECTION;
     r->status_message[0] = '\0';
-    r->font              = kApTransferFont;
-    r->title_font        = kApTransferTitleFont;
+    r->font = kApTransferFont;
+    r->title_font = kApTransferTitleFont;
     ap_transfer_page_use_default_instructions(self);
-    r->exit_callback                = NULL;
-    r->exit_callback_ctx            = NULL;
+    r->exit_callback = NULL;
+    r->exit_callback_ctx = NULL;
     r->base.needs_full_refresh_flag = true;
     ESP_LOGI(TAG, "ApTransferPage initialized: %dx%d", width, height);
 }
@@ -253,10 +253,10 @@ void ap_transfer_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
     if (!r || !fb)
         return;
 
-    const rawdraw_paint_style_t bg_style    = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
     const rawdraw_paint_style_t title_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
-    const rawdraw_color_t       text        = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       border      = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
 
     /* Clear to white */
     rawdraw_draw_styled_rect(fb, width, height, (rawdraw_rect_t){0, 0, width, height}, &bg_style);
@@ -271,8 +271,8 @@ void ap_transfer_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
     rawdraw_draw_hline(fb, width, height, titlebar_h, 1, width - 2, border);
 
     /* Title */
-    const char *title   = r->title_text[0] == '\0' ? "WiFi 传图" : r->title_text;
-    const int   title_w = rawdraw_measure_text_width(title, r->title_font);
+    const char *title = r->title_text[0] == '\0' ? "WiFi 传图" : r->title_text;
+    const int title_w = rawdraw_measure_text_width(title, r->title_font);
     rawdraw_draw_text(fb, width, height, (width - title_w) / 2,
                       rawdraw_layout_ink_centered_text_top_y_in_box(r->title_font, title, 1, titlebar_h, 0), title,
                       r->title_font, text);
@@ -376,7 +376,7 @@ void ap_transfer_page_set_exit_callback(page_renderer_t *self, void (*callback)(
     ap_transfer_page_t *r = (ap_transfer_page_t *)self;
     if (!r)
         return;
-    r->exit_callback     = callback;
+    r->exit_callback = callback;
     r->exit_callback_ctx = ctx;
 }
 
@@ -387,16 +387,16 @@ void ap_transfer_page_set_exit_callback(page_renderer_t *self, void (*callback)(
 EXT_RAM_BSS_ATTR ap_transfer_page_t s_ap_transfer_instance;
 
 const page_renderer_ops_t ap_transfer_page_ops = {
-    .init                    = ap_transfer_page_init,
-    .render                  = ap_transfer_page_render,
-    .handle_input            = ap_transfer_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = ap_transfer_page_init,
+    .render = ap_transfer_page_render,
+    .handle_input = ap_transfer_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
 PAGE_REGISTER(UI_PAGE_AP_TRANSFER, "传图模式", NULL, false, 999, &ap_transfer_page_ops, &s_ap_transfer_instance.base);

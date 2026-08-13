@@ -21,32 +21,32 @@ struct ui_manager {
 
     ui_page_id_t current_page;
 
-    ui_manager_status_bar_t     status_bar;
-    ui_manager_refresh_cb_t     refresh_cb;
-    void                       *refresh_ctx;
+    ui_manager_status_bar_t status_bar;
+    ui_manager_refresh_cb_t refresh_cb;
+    void *refresh_ctx;
     ui_manager_page_switch_cb_t page_switch_cb;
-    void                       *page_switch_ctx;
+    void *page_switch_ctx;
 
     bool quick_switch_open;
-    int  quick_switch_index;
-    int  quick_switch_first_visible;
+    int quick_switch_index;
+    int quick_switch_first_visible;
     const page_entry_t *quick_items[UI_PAGE_COUNT];
-    int                 quick_count;
+    int quick_count;
 
     widget_voice_wakeup_state_t voice_wakeup;
 
     esp_timer_handle_t gallery_slideshow_timer;
-    volatile bool      clock_refresh_pending;
-    volatile bool      transient_refresh_pending;
-    volatile bool      active_page_refresh_pending;
-    volatile bool      gallery_slideshow_pending;
-    int                last_clock_minute_key;
-    int                gallery_slideshow_interval_minutes;
+    volatile bool clock_refresh_pending;
+    volatile bool transient_refresh_pending;
+    volatile bool active_page_refresh_pending;
+    volatile bool gallery_slideshow_pending;
+    int last_clock_minute_key;
+    int gallery_slideshow_interval_minutes;
 
     epd_clock_t clock;
 
     void (*data_refresh_cb)(ui_page_id_t page, void *ctx);
-    void  *data_refresh_ctx;
+    void *data_refresh_ctx;
 };
 
 /* ---- Sub-module functions (defined in ui_status_bar.c / ui_quick_switch.c) ---- */

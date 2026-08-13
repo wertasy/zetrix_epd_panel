@@ -42,11 +42,11 @@ void rawdraw_draw_progress(uint8_t *fb, int width, int height, rawdraw_rect_t r,
                            rawdraw_color_t bg_color, rawdraw_color_t fg_color, int radius);
 void rawdraw_draw_progress_with_label(uint8_t *fb, int width, int height, int x, int y, int w, int h, int value_pct,
                                       const char *label, const lv_font_t *font);
-int  rawdraw_measure_text_width(const char *text, const lv_font_t *font);
-int  rawdraw_measure_text_height(const lv_font_t *font);
+int rawdraw_measure_text_width(const char *text, const lv_font_t *font);
+int rawdraw_measure_text_height(const lv_font_t *font);
 rawdraw_rect_t rawdraw_measure_text_bounds(const char *text, const lv_font_t *font, int max_width);
-void           rawdraw_fill_rect(uint8_t *fb, int width, int height, rawdraw_rect_t r, rawdraw_color_t color);
-void           rawdraw_invert_region(uint8_t *fb, int width, int height, rawdraw_rect_t r);
+void rawdraw_fill_rect(uint8_t *fb, int width, int height, rawdraw_rect_t r, rawdraw_color_t color);
+void rawdraw_invert_region(uint8_t *fb, int width, int height, rawdraw_rect_t r);
 void rawdraw_copy_region(const uint8_t *src, uint8_t *dst, int width, int height, rawdraw_rect_t src_r, int dst_x,
                          int dst_y);
 /* Rotate a 2bpp source (sw x sh) by 90° into dst. Source pixel (sx, sy) maps to
@@ -56,11 +56,11 @@ void rawdraw_blit_rotated_90(const uint8_t *src, int sw, int sh, uint8_t *dst, i
 void rawdraw_clear(uint8_t *fb, int width, int height, rawdraw_color_t fill);
 void rawdraw_draw_stripe_rect(uint8_t *fb, int width, int height, rawdraw_rect_t r);
 rawdraw_color_t rawdraw_get_pixel(const uint8_t *fb, int width, int height, int x, int y);
-bool            rawdraw_point_in_rounded_rect(int px, int py, rawdraw_rect_t r, int radius);
+bool rawdraw_point_in_rounded_rect(int px, int py, rawdraw_rect_t r, int radius);
 
 rawdraw_rect_t rawdraw_align_x8(rawdraw_rect_t r);
 rawdraw_rect_t rawdraw_clamp_rect(rawdraw_rect_t r, int width, int height);
 rawdraw_rect_t rawdraw_rect_union(rawdraw_rect_t a, rawdraw_rect_t b);
-int            rawdraw_rect_area(rawdraw_rect_t r);
+int rawdraw_rect_area(rawdraw_rect_t r);
 
 #endif // COMPONENTS_RAWDRAW_INCLUDE_RAWDRAW_EXT_H_

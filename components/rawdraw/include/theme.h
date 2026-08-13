@@ -74,39 +74,39 @@ typedef enum {
 } rawdraw_refresh_cost_t;
 
 typedef struct {
-    rawdraw_color_t        fg;
-    rawdraw_color_t        bg;
-    rawdraw_color_t        border;
+    rawdraw_color_t fg;
+    rawdraw_color_t bg;
+    rawdraw_color_t border;
     rawdraw_dither_token_t dither;
-    uint8_t                border_width;
-    bool                   invert_text;
+    uint8_t border_width;
+    bool invert_text;
     rawdraw_refresh_cost_t refresh_cost;
 } rawdraw_paint_style_t;
 
 typedef struct {
-    rawdraw_theme_id_t    id;
-    const char           *key;
-    const char           *display_name;
+    rawdraw_theme_id_t id;
+    const char *key;
+    const char *display_name;
     rawdraw_paint_style_t tokens[THEME_TOKEN_COUNT];
 } rawdraw_theme_definition_t;
 
 // Theme Manager C APIs
-rawdraw_theme_id_t                rawdraw_theme_current_id(void);
+rawdraw_theme_id_t rawdraw_theme_current_id(void);
 const rawdraw_theme_definition_t *rawdraw_theme_current(void);
 const rawdraw_theme_definition_t *rawdraw_theme_get(rawdraw_theme_id_t id);
-bool                              rawdraw_theme_set(rawdraw_theme_id_t id);
-bool                              rawdraw_theme_set_by_key(const char *key);
-rawdraw_paint_style_t             rawdraw_theme_style(rawdraw_theme_token_t token);
-rawdraw_paint_style_t             rawdraw_theme_component(rawdraw_component_role_t role);
-rawdraw_color_t                   rawdraw_theme_color_for(rawdraw_theme_token_t token);
-int                               rawdraw_theme_count(void);
-rawdraw_theme_id_t                rawdraw_theme_at(int index);
-const char                       *rawdraw_theme_key(rawdraw_theme_id_t id);
-const char                       *rawdraw_theme_display_name(rawdraw_theme_id_t id);
-rawdraw_theme_id_t                rawdraw_theme_from_key(const char *key, rawdraw_theme_id_t fallback);
-rawdraw_paint_style_t             rawdraw_make_paint(rawdraw_color_t fg, rawdraw_color_t bg, rawdraw_color_t border,
-                                                     rawdraw_dither_token_t dither, uint8_t border_width,
-                                                     rawdraw_refresh_cost_t refresh_cost);
+bool rawdraw_theme_set(rawdraw_theme_id_t id);
+bool rawdraw_theme_set_by_key(const char *key);
+rawdraw_paint_style_t rawdraw_theme_style(rawdraw_theme_token_t token);
+rawdraw_paint_style_t rawdraw_theme_component(rawdraw_component_role_t role);
+rawdraw_color_t rawdraw_theme_color_for(rawdraw_theme_token_t token);
+int rawdraw_theme_count(void);
+rawdraw_theme_id_t rawdraw_theme_at(int index);
+const char *rawdraw_theme_key(rawdraw_theme_id_t id);
+const char *rawdraw_theme_display_name(rawdraw_theme_id_t id);
+rawdraw_theme_id_t rawdraw_theme_from_key(const char *key, rawdraw_theme_id_t fallback);
+rawdraw_paint_style_t rawdraw_make_paint(rawdraw_color_t fg, rawdraw_color_t bg, rawdraw_color_t border,
+                                         rawdraw_dither_token_t dither, uint8_t border_width,
+                                         rawdraw_refresh_cost_t refresh_cost);
 void rawdraw_dither_lut_init(void);
 
 // Styled drawing APIs (always passing height parameter)

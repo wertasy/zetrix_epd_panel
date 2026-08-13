@@ -30,10 +30,10 @@
  * components/rawdraw/include/rawdraw_util.h won't conflict if this translation
  * unit ever gains access to them. */
 #ifndef likely
-#define likely(x)   __builtin_expect(!!(x), 1)
+#    define likely(x) __builtin_expect(!!(x), 1)
 #endif
 #ifndef unlikely
-#define unlikely(x) __builtin_expect(!!(x), 0)
+#    define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
 #ifdef ESP_PLATFORM
@@ -84,11 +84,11 @@ static const char *TAG = "PhotoStorage";
 #define INDEX_VERSION 2
 
 #ifdef ESP_PLATFORM
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
+#    include <freertos/FreeRTOS.h>
+#    include <freertos/semphr.h>
 static SemaphoreHandle_t s_photo_mutex = NULL;
 #else
-#include <pthread.h>
+#    include <pthread.h>
 static pthread_mutex_t s_photo_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
@@ -133,25 +133,17 @@ static bool is_safe_photo_id(const char *id)
 }
 
 static photo_info_t s_photos[PHOTO_MAX_PHOTOS];
-static int          s_photo_count = 0;
-static bool         s_initialized = false;
+static int s_photo_count = 0;
+static bool s_initialized = false;
 
 #define HASH_BUCKETS_COUNT 32
 #define HASH_BUCKET_MASK (HASH_BUCKETS_COUNT - 1)
 
-static int photo_hash_buckets[HASH_BUCKETS_COUNT] = {
-    -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1
-};
-static int s_photo_hash_next[PHOTO_MAX_PHOTOS] = {
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
-};
+static int photo_hash_buckets[HASH_BUCKETS_COUNT] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                                                     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+static int s_photo_hash_next[PHOTO_MAX_PHOTOS] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                                                  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                                                  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
 static unsigned int djb2_hash(const char *str)
 {
@@ -196,8 +188,8 @@ static int find_photo_index_by_id(const char *id)
 }
 
 /* Forward declarations of static helpers. */
-static int  save_index(void);
-static int  write_meta_file(const photo_info_t *info);
+static int save_index(void);
+static int write_meta_file(const photo_info_t *info);
 static bool load_meta_file(const char *meta_path, photo_info_t *out_info);
 static void apply_default_metadata(photo_info_t *info);
 
@@ -219,7 +211,7 @@ static bool is_digits_string(const char *value)
 
 static void format_epoch_date(uint64_t epoch, char *out, size_t out_size)
 {
-    time_t    ts;
+    time_t ts;
     struct tm tm_buf;
     if (!out || out_size == 0)
         return;
@@ -285,7 +277,7 @@ static void write_json_string(FILE *f, const char *s)
 
 static int write_meta_file(const photo_info_t *info)
 {
-    char  meta_path[PHOTO_MAX_PATH];
+    char meta_path[PHOTO_MAX_PATH];
     FILE *f;
 
     if (!info || info->id[0] == '\0')
@@ -324,12 +316,12 @@ static int write_meta_file(const photo_info_t *info)
 
 static bool load_meta_file(const char *meta_path, photo_info_t *out_info)
 {
-    FILE  *f;
-    long   len;
+    FILE *f;
+    long len;
     size_t read_len;
-    char  *json_buf;
+    char *json_buf;
     cJSON *root;
-    bool   ok = false;
+    bool ok = false;
 
     if (!meta_path || !out_info)
         return false;
@@ -370,8 +362,8 @@ static bool load_meta_file(const char *meta_path, photo_info_t *out_info)
         cjson_copy_str(root, "date", out_info->date, sizeof(out_info->date));
         cjson_copy_str(root, "location", out_info->location, sizeof(out_info->location));
         cjson_copy_str(root, "body", out_info->body, sizeof(out_info->body));
-        out_info->width     = (uint16_t)cjson_get_int(root, "width", 0);
-        out_info->height    = (uint16_t)cjson_get_int(root, "height", 0);
+        out_info->width = (uint16_t)cjson_get_int(root, "width", 0);
+        out_info->height = (uint16_t)cjson_get_int(root, "height", 0);
         out_info->file_size = (uint32_t)cjson_get_int(root, "file_size", 0);
         out_info->timestamp = (uint32_t)cjson_get_int(root, "timestamp", 0);
         cjson_copy_str(root, "path", out_info->path, sizeof(out_info->path));
@@ -391,10 +383,10 @@ static bool load_meta_file(const char *meta_path, photo_info_t *out_info)
 
 static int save_index(void)
 {
-    FILE    *f       = fopen(PHOTO_INDEX, "wb");
-    uint32_t magic   = INDEX_MAGIC;
+    FILE *f = fopen(PHOTO_INDEX, "wb");
+    uint32_t magic = INDEX_MAGIC;
     uint16_t version = INDEX_VERSION;
-    uint16_t count   = (uint16_t)s_photo_count;
+    uint16_t count = (uint16_t)s_photo_count;
     if (!f) {
         LOGE("Failed to write index %s", PHOTO_INDEX);
         return -1;
@@ -415,7 +407,7 @@ static int save_index(void)
 
 static int rebuild_index_from_meta_files(void)
 {
-    DIR           *dir = opendir(PHOTO_DIR);
+    DIR *dir = opendir(PHOTO_DIR);
     struct dirent *entry;
 
     if (!dir) {
@@ -424,9 +416,9 @@ static int rebuild_index_from_meta_files(void)
     }
     s_photo_count = 0;
     while ((entry = readdir(dir)) != NULL && s_photo_count < PHOTO_MAX_PHOTOS) {
-        const char   *name     = entry->d_name;
-        size_t        name_len = strlen(name);
-        char          meta_path[320];
+        const char *name = entry->d_name;
+        size_t name_len = strlen(name);
+        char meta_path[320];
         photo_info_t *info;
         if (name_len < 6 || strcasecmp(name + name_len - 5, ".meta") != 0) {
             continue;
@@ -451,10 +443,10 @@ static int rebuild_index_from_meta_files(void)
 
 static int load_index(void)
 {
-    FILE    *f       = fopen(PHOTO_INDEX, "rb");
-    uint32_t magic   = 0;
+    FILE *f = fopen(PHOTO_INDEX, "rb");
+    uint32_t magic = 0;
     uint16_t version = 0;
-    uint16_t count   = 0;
+    uint16_t count = 0;
 
     if (!f) {
         s_photo_count = 0;
@@ -540,13 +532,13 @@ int photo_storage_reload_index(void)
 
 int photo_save(const photo_info_t *info, const uint8_t *data_1bpp)
 {
-    char          bin_path[PHOTO_MAX_PATH];
-    FILE         *f;
-    size_t        written;
-    int           existing_index = -1;
+    char bin_path[PHOTO_MAX_PATH];
+    FILE *f;
+    size_t written;
+    int existing_index = -1;
     photo_info_t *entry;
-    photo_info_t  backup_entry;
-    bool          is_update = false;
+    photo_info_t backup_entry;
+    bool is_update = false;
     if (!info || !data_1bpp)
         return -1;
 
@@ -613,8 +605,8 @@ int photo_save(const photo_info_t *info, const uint8_t *data_1bpp)
     int current_count = s_photo_count;
     unlock_photo();
 
-    LOGI("%s photo %s (%dx%d, %lu bytes), total=%d", is_update ? "Updated" : "Saved", info->id,
-         (int)info->width, (int)info->height, (unsigned long)info->file_size, current_count);
+    LOGI("%s photo %s (%dx%d, %lu bytes), total=%d", is_update ? "Updated" : "Saved", info->id, (int)info->width,
+         (int)info->height, (unsigned long)info->file_size, current_count);
     return 0;
 }
 
@@ -628,7 +620,7 @@ int photo_load(const char *id, uint8_t *out_buffer, uint32_t max_size)
     lock_photo();
     int idx = find_photo_index_by_id(id);
     if (idx >= 0) {
-        FILE  *f;
+        FILE *f;
         size_t n;
         if (s_photos[idx].file_size > max_size) {
             LOGE("Buffer too small: %lu > %lu", (unsigned long)s_photos[idx].file_size, (unsigned long)max_size);
@@ -789,8 +781,8 @@ int photo_update_info(const char *id, const photo_info_t *updates)
 
 int photo_move(const char *id, int delta)
 {
-    int          idx = -1;
-    int          target;
+    int idx = -1;
+    int target;
     photo_info_t tmp;
     if (!s_initialized) {
         if (photo_storage_init() != 0)
@@ -812,13 +804,13 @@ int photo_move(const char *id, int delta)
         unlock_photo();
         return -1;
     }
-    tmp              = s_photos[idx];
-    s_photos[idx]    = s_photos[target];
+    tmp = s_photos[idx];
+    s_photos[idx] = s_photos[target];
     s_photos[target] = tmp;
     rebuild_hash_table();
     if (save_index() != 0) {
         s_photos[target] = s_photos[idx];
-        s_photos[idx]    = tmp;
+        s_photos[idx] = tmp;
         rebuild_hash_table();
         unlock_photo();
         return -1;

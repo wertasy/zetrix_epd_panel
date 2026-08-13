@@ -58,8 +58,8 @@ static const char *TAG = "PhotoDL";
 /* ============================================================ */
 
 static char s_server_url[PHOTO_DOWNLOADER_URL_MAX] = {0};
-static bool s_initialized                          = false;
-static bool s_syncing                              = false;
+static bool s_initialized = false;
+static bool s_syncing = false;
 
 #ifdef ESP_PLATFORM
 /* Download buffer: 400x300 1bpp = 15000 bytes. */
@@ -74,8 +74,8 @@ static uint8_t s_photo_buf[PHOTO_DL_BUF_SIZE];
 #ifdef ESP_PLATFORM
 
 typedef struct {
-    char     id[16];
-    char     title[64];
+    char id[16];
+    char title[64];
     uint16_t width;
     uint16_t height;
     uint32_t file_size;
@@ -86,8 +86,8 @@ typedef struct {
 static int parse_photo_list(const char *json, server_photo_entry_t *entries, int max_entries)
 {
     cJSON *root;
-    int    count = 0;
-    int    i;
+    int count = 0;
+    int i;
     if (!json || !entries || max_entries <= 0)
         return -1;
 
@@ -109,8 +109,8 @@ static int parse_photo_list(const char *json, server_photo_entry_t *entries, int
             memset(&entries[i], 0, sizeof(entries[i]));
             cjson_copy_str(elem, "id", entries[i].id, sizeof(entries[i].id));
             cjson_copy_str(elem, "title", entries[i].title, sizeof(entries[i].title));
-            entries[i].width     = (uint16_t)cjson_get_int(elem, "width", 0);
-            entries[i].height    = (uint16_t)cjson_get_int(elem, "height", 0);
+            entries[i].width = (uint16_t)cjson_get_int(elem, "width", 0);
+            entries[i].height = (uint16_t)cjson_get_int(elem, "height", 0);
             entries[i].file_size = (uint32_t)cjson_get_int(elem, "size", 0);
             entries[i].timestamp = (uint32_t)cjson_get_int(elem, "ts", 0);
         }
@@ -131,12 +131,12 @@ static int http_post(const char *url)
 {
     esp_http_client_config_t config = {0};
     esp_http_client_handle_t client;
-    esp_err_t                err;
-    int                      status;
+    esp_err_t err;
+    int status;
 
-    config.url               = url;
-    config.method            = HTTP_METHOD_POST;
-    config.timeout_ms        = 5000;
+    config.url = url;
+    config.method = HTTP_METHOD_POST;
+    config.timeout_ms = 5000;
     config.crt_bundle_attach = esp_crt_bundle_attach;
 
     client = esp_http_client_init(&config);
@@ -156,7 +156,7 @@ static int http_post(const char *url)
 static int download_photo_binary(const char *photo_id, uint8_t *out_buf, uint32_t max_size)
 {
     char url[512];
-    int  n;
+    int n;
 
     snprintf(url, sizeof(url), "%.127s/api/photos/%.15s.bin", s_server_url, photo_id);
     n = http_get_binary(url, out_buf, max_size);
@@ -181,7 +181,7 @@ int photo_downloader_init(const photo_downloader_config_t *cfg)
     }
     snprintf(s_server_url, sizeof(s_server_url), "%s", cfg->server_url);
     s_initialized = true;
-    s_syncing     = false;
+    s_syncing = false;
     LOGI("Photo downloader initialised: %s", s_server_url);
     return 0;
 }
@@ -189,11 +189,11 @@ int photo_downloader_init(const photo_downloader_config_t *cfg)
 int photo_sync(void)
 {
 #ifdef ESP_PLATFORM
-    char                 url[512];
-    char                 list_buf[4096];
-    int                  resp_len;
-    int                  server_count, downloaded = 0;
-    int                  i;
+    char url[512];
+    char list_buf[4096];
+    int resp_len;
+    int server_count, downloaded = 0;
+    int i;
     server_photo_entry_t server_entries[PHOTO_MAX_PHOTOS];
 
     if (!s_initialized) {
@@ -224,7 +224,7 @@ int photo_sync(void)
 
     for (i = 0; i < server_count; i++) {
         photo_info_t info;
-        int          bytes;
+        int bytes;
         if (photo_exists(server_entries[i].id))
             continue;
 
@@ -238,8 +238,8 @@ int photo_sync(void)
          * -Wformat-truncation knows it fits in the 16-byte field. */
         snprintf(info.id, sizeof(info.id), "%.15s", server_entries[i].id);
         snprintf(info.title, sizeof(info.title), "%s", server_entries[i].title);
-        info.width     = server_entries[i].width;
-        info.height    = server_entries[i].height;
+        info.width = server_entries[i].width;
+        info.height = server_entries[i].height;
         info.file_size = (uint32_t)bytes;
         info.timestamp = server_entries[i].timestamp;
 
@@ -267,9 +267,9 @@ int photo_sync(void)
 int photo_download_single(const char *photo_id)
 {
 #ifdef ESP_PLATFORM
-    char         url[256];
-    char         list_buf[4096];
-    int          resp_len, bytes;
+    char url[256];
+    char list_buf[4096];
+    int resp_len, bytes;
     photo_info_t info;
 
     if (!s_initialized || !photo_id)
@@ -284,10 +284,10 @@ int photo_download_single(const char *photo_id)
         return -1;
 
     /* Best-effort metadata fetch from the server list. */
-    bool                 found_meta = false;
+    bool found_meta = false;
     server_photo_entry_t matched_entry;
     server_photo_entry_t *server_entries = malloc(sizeof(server_photo_entry_t) * PHOTO_MAX_PHOTOS);
-    
+
     if (server_entries) {
         snprintf(url, sizeof(url), "%.127s/api/photos", s_server_url);
         resp_len = http_get_text(url, list_buf, sizeof(list_buf));
@@ -308,12 +308,12 @@ int photo_download_single(const char *photo_id)
     snprintf(info.id, sizeof(info.id), "%s", photo_id);
     if (found_meta) {
         snprintf(info.title, sizeof(info.title), "%s", matched_entry.title);
-        info.width     = matched_entry.width;
-        info.height    = matched_entry.height;
+        info.width = matched_entry.width;
+        info.height = matched_entry.height;
     } else {
         snprintf(info.title, sizeof(info.title), "%.15s", photo_id);
-        info.width     = 400;
-        info.height    = 300;
+        info.width = 400;
+        info.height = 300;
     }
     info.file_size = (uint32_t)bytes;
     return photo_save(&info, s_photo_buf);

@@ -33,15 +33,15 @@ void widget_footer_bar_init(widget_footer_bar_t *fb, int screen_width, int scree
     if (!fb)
         return;
     memset(fb, 0, sizeof(*fb));
-    fb->bounds.x       = 0;
-    fb->bounds.y       = screen_height - STYLE_FOOTER_BAR_HEIGHT;
-    fb->bounds.w       = screen_width;
-    fb->bounds.h       = STYLE_FOOTER_BAR_HEIGHT;
-    fb->font           = NULL;
-    fb->left_text[0]   = '\0';
+    fb->bounds.x = 0;
+    fb->bounds.y = screen_height - STYLE_FOOTER_BAR_HEIGHT;
+    fb->bounds.w = screen_width;
+    fb->bounds.h = STYLE_FOOTER_BAR_HEIGHT;
+    fb->font = NULL;
+    fb->left_text[0] = '\0';
     fb->center_text[0] = '\0';
-    fb->right_text[0]  = '\0';
-    fb->inverted       = false;
+    fb->right_text[0] = '\0';
+    fb->inverted = false;
 }
 
 /* ============================================================
@@ -106,12 +106,12 @@ void widget_footer_bar_render(const widget_footer_bar_t *fb, uint8_t *framebuffe
     if (rawdraw_rect_area(bounds) <= 0)
         return;
 
-    rawdraw_paint_style_t normal   = rawdraw_theme_component(ROLE_STATUS_BAR);
+    rawdraw_paint_style_t normal = rawdraw_theme_component(ROLE_STATUS_BAR);
     rawdraw_paint_style_t selected = rawdraw_theme_style(THEME_TOKEN_SELECTED);
 
-    rawdraw_color_t        bg     = fb->inverted ? selected.bg : normal.bg;
-    rawdraw_color_t        fg     = fb->inverted ? selected.fg : normal.fg;
-    rawdraw_color_t        border = fb->inverted ? selected.border : rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    rawdraw_color_t bg = fb->inverted ? selected.bg : normal.bg;
+    rawdraw_color_t fg = fb->inverted ? selected.fg : normal.fg;
+    rawdraw_color_t border = fb->inverted ? selected.border : rawdraw_theme_color_for(THEME_TOKEN_BORDER);
     rawdraw_dither_token_t dither = fb->inverted ? selected.dither : normal.dither;
 
     rawdraw_paint_style_t paint = rawdraw_make_paint(fg, bg, border, dither, 0, REFRESH_STATIC_SAFE);
@@ -122,14 +122,14 @@ void widget_footer_bar_render(const widget_footer_bar_t *fb, uint8_t *framebuffe
                       (int)border);
 
     int center_y = bounds.y + bounds.h / 2;
-    int pad      = STYLE_FOOTER_BAR_PADDING;
+    int pad = STYLE_FOOTER_BAR_PADDING;
 
     /* Determine text_y using ink-centered layout on whichever text exists. */
     const char *primary = fb->left_text[0] != '\0'     ? fb->left_text
                           : fb->center_text[0] != '\0' ? fb->center_text
                           : fb->right_text[0] != '\0'  ? fb->right_text
                                                        : "";
-    int         text_y  = rawdraw_layout_ink_centered_text_top_y(fb->font, primary, center_y, 0);
+    int text_y = rawdraw_layout_ink_centered_text_top_y(fb->font, primary, center_y, 0);
 
     /* Left text. */
     if (fb->left_text[0] != '\0') {

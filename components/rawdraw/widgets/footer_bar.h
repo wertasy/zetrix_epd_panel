@@ -28,7 +28,7 @@ extern "C" {
 #define WIDGET_FOOTER_BAR_TEXT_LEN 64
 
 typedef struct {
-    rawdraw_rect_t   bounds;
+    rawdraw_rect_t bounds;
     const lv_font_t *font;
 
     char left_text[WIDGET_FOOTER_BAR_TEXT_LEN];

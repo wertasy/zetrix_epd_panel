@@ -23,17 +23,17 @@
 #include <time.h>
 
 static const lv_font_t *const kCalendarTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kCalendarBodyFont  = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kCalendarBodyFont = &SourceHanSansSC_Regular_slim;
 
 /* Weekday full names */
 static const char *const kWeekdayFull[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
 
 /* Holiday data source injected into the calendar widget (decouples rawdraw from network). */
 static const holiday_provider_t s_holiday_provider = {
-    .is_holiday         = holiday_fetcher_is_holiday,
-    .is_makeup_workday  = holiday_fetcher_is_makeup_workday,
-    .get_holiday_name   = holiday_fetcher_get_holiday_name,
-    .get_makeup_label   = holiday_fetcher_get_makeup_label,
+    .is_holiday = holiday_fetcher_is_holiday,
+    .is_makeup_workday = holiday_fetcher_is_makeup_workday,
+    .get_holiday_name = holiday_fetcher_get_holiday_name,
+    .get_makeup_label = holiday_fetcher_get_makeup_label,
 };
 
 /* Simplified yiji tables (copied from almanac_page.c) */
@@ -47,7 +47,7 @@ static const char *const kYiTable[][4] = {
 static int weekday_of_date_local(int year, int month, int day)
 {
     static const int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-    int              y   = year;
+    int y = year;
     if (month < 3)
         y--;
     return (y + y / 4 - y / 100 + y / 400 + t[month - 1] + day) % 7;
@@ -64,9 +64,9 @@ static const char *const kJiTable[][3] = {
 
 static void refresh_almanac_data(calendar_page_t *r)
 {
-    r->alm_year    = r->today_year;
-    r->alm_month   = r->today_month;
-    r->alm_day     = r->today_day;
+    r->alm_year = r->today_year;
+    r->alm_month = r->today_month;
+    r->alm_day = r->today_day;
     r->alm_weekday = weekday_of_date_local(r->alm_year, r->alm_month, r->alm_day);
 
     r->alm_lunar = widget_calendar_to_lunar_date(r->alm_year, r->alm_month, r->alm_day);
@@ -110,7 +110,7 @@ static void navigate_almanac_day(calendar_page_t *r, int delta)
         }
     }
     r->alm_weekday = weekday_of_date_local(r->alm_year, r->alm_month, r->alm_day);
-    r->alm_lunar   = widget_calendar_to_lunar_date(r->alm_year, r->alm_month, r->alm_day);
+    r->alm_lunar = widget_calendar_to_lunar_date(r->alm_year, r->alm_month, r->alm_day);
     widget_calendar_get_lunar_year_name(r->alm_year, r->alm_lunar_year_name, (int)sizeof(r->alm_lunar_year_name));
     r->alm_solar_term = widget_calendar_get_solar_term(r->alm_month, r->alm_day);
 
@@ -129,11 +129,11 @@ static void render_almanac_view(calendar_page_t *r, uint8_t *fb, int width, int 
                              (rawdraw_rect_t){0, STYLE_STATUS_BAR_HEIGHT, width, height - STYLE_STATUS_BAR_HEIGHT},
                              &bg_style);
 
-    const rawdraw_color_t text      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t accent    = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
-    const rawdraw_color_t danger    = rawdraw_theme_style(THEME_TOKEN_DANGER).bg;
-    const rawdraw_color_t border    = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    const rawdraw_color_t accent = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
+    const rawdraw_color_t danger = rawdraw_theme_style(THEME_TOKEN_DANGER).bg;
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
 
     int y = STYLE_STATUS_BAR_HEIGHT + 8;
 
@@ -174,7 +174,7 @@ static void render_almanac_view(calendar_page_t *r, uint8_t *fb, int width, int 
     /* 宜 */
     rawdraw_draw_text(fb, width, height, 16, y, "宜", r->title_font, accent);
     int yi_label_w = rawdraw_measure_text_width("宜", r->title_font);
-    int yi_start   = 16 + yi_label_w + 8;
+    int yi_start = 16 + yi_label_w + 8;
     for (int i = 0; i < 4; i++)
         rawdraw_draw_text(fb, width, height, yi_start + i * 60, y, r->alm_yi[i], r->body_font, text);
     y += r->body_font->line_height + 8;
@@ -182,7 +182,7 @@ static void render_almanac_view(calendar_page_t *r, uint8_t *fb, int width, int 
     /* 忌 */
     rawdraw_draw_text(fb, width, height, 16, y, "忌", r->title_font, danger);
     int ji_label_w = rawdraw_measure_text_width("忌", r->title_font);
-    int ji_start   = 16 + ji_label_w + 8;
+    int ji_start = 16 + ji_label_w + 8;
     for (int i = 0; i < 3; i++)
         rawdraw_draw_text(fb, width, height, ji_start + i * 60, y, r->alm_ji[i], r->body_font, text);
 
@@ -199,25 +199,25 @@ static void render_almanac_view(calendar_page_t *r, uint8_t *fb, int width, int 
 
 void calendar_page_init(page_renderer_t *self, int width, int height)
 {
-    calendar_page_t *r              = (calendar_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    calendar_page_t *r = (calendar_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
 
     /* Get today's date. */
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm_buf;
     localtime_r(&now, &tm_buf);
-    r->today_year  = tm_buf.tm_year + 1900;
+    r->today_year = tm_buf.tm_year + 1900;
     r->today_month = tm_buf.tm_mon + 1;
-    r->today_day   = tm_buf.tm_mday;
+    r->today_day = tm_buf.tm_mday;
 
     const int content_top = STYLE_STATUS_BAR_HEIGHT;
     widget_calendar_init(&r->cal, 0, content_top, width, height - content_top);
     widget_calendar_set_holiday_provider(&r->cal, &s_holiday_provider);
 
     r->title_font = kCalendarTitleFont;
-    r->body_font  = kCalendarBodyFont;
+    r->body_font = kCalendarBodyFont;
     r->small_font = kCalendarBodyFont;
     widget_calendar_set_fonts(&r->cal, r->title_font, r->body_font, r->small_font);
     widget_calendar_set_show_lunar(&r->cal, true);
@@ -229,20 +229,20 @@ void calendar_page_init(page_renderer_t *self, int width, int height)
     int32_t saved_y = 0, saved_m = 0;
     if (nvs_state_get_i32("cal_year", &saved_y) && nvs_state_get_i32("cal_month", &saved_m)) {
         if (saved_y >= 2020 && saved_y <= 2050 && saved_m >= 1 && saved_m <= 12) {
-            r->year  = saved_y;
+            r->year = saved_y;
             r->month = saved_m;
         } else {
-            r->year  = r->today_year;
+            r->year = r->today_year;
             r->month = r->today_month;
         }
     } else {
-        r->year  = r->today_year;
+        r->year = r->today_year;
         r->month = r->today_month;
     }
-    r->selected_date.year  = 0;
+    r->selected_date.year = 0;
     r->selected_date.month = 0;
-    r->selected_date.day   = 0;
-    r->show_almanac        = false;
+    r->selected_date.day = 0;
+    r->show_almanac = false;
 }
 
 /* Page gained focus: request a redraw but keep the navigated month. */
@@ -286,7 +286,7 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
             r->base.needs_full_refresh_flag = true;
             return true;
         case BTN_BOOT_CLICK:
-            r->show_almanac               = false;
+            r->show_almanac = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         case BTN_BOOT_LONG_PRESS:
@@ -302,16 +302,16 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
     switch (event->type) {
     case BTN_UP_CLICK:
         widget_calendar_prev_month(&r->cal);
-        r->year                         = r->cal.year;
-        r->month                        = r->cal.month;
+        r->year = r->cal.year;
+        r->month = r->cal.month;
         nvs_state_set_i32("cal_year", r->year);
         nvs_state_set_i32("cal_month", r->month);
         r->base.needs_full_refresh_flag = true;
         return true;
 
         widget_calendar_next_month(&r->cal);
-        r->year                         = r->cal.year;
-        r->month                        = r->cal.month;
+        r->year = r->cal.year;
+        r->month = r->cal.month;
         nvs_state_set_i32("cal_year", r->year);
         nvs_state_set_i32("cal_month", r->month);
         r->base.needs_full_refresh_flag = true;
@@ -320,7 +320,7 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
     case BTN_BOOT_CLICK:
         /* Enter almanac sub-view for today. */
         refresh_almanac_data(r);
-        r->show_almanac               = true;
+        r->show_almanac = true;
         r->base.needs_full_refresh_flag = true;
         return true;
 
@@ -390,17 +390,17 @@ void calendar_page_get_voice_query_context(const page_renderer_t *self, char *ou
 EXT_RAM_BSS_ATTR calendar_page_t s_calendar_instance;
 
 const page_renderer_ops_t calendar_page_ops = {
-    .init                    = calendar_page_init,
-    .enter                   = calendar_page_enter,
-    .render                  = calendar_page_render,
-    .handle_input            = calendar_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = calendar_page_init,
+    .enter = calendar_page_enter,
+    .render = calendar_page_render,
+    .handle_input = calendar_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
 PAGE_REGISTER(UI_PAGE_CALENDAR, "日历", FA_SETTINGS_CALENDAR, true, 30, &calendar_page_ops, &s_calendar_instance.base);

@@ -10,13 +10,13 @@
 #    include <sys/time.h>
 
 struct host_timer {
-    pthread_t       thread;
+    pthread_t thread;
     pthread_mutex_t lock;
-    pthread_cond_t  cond;
+    pthread_cond_t cond;
     void (*callback)(void *arg);
-    void    *arg;
-    bool     active;
-    bool     quit;
+    void *arg;
+    bool active;
+    bool quit;
     uint64_t target_time_ms;
 };
 
@@ -42,11 +42,11 @@ static void *host_timer_worker(void *arg)
                 t->callback(t->arg);
                 pthread_mutex_lock(&t->lock);
             } else {
-                uint64_t       delay = t->target_time_ms - now;
+                uint64_t delay = t->target_time_ms - now;
                 struct timeval now_tv;
                 gettimeofday(&now_tv, NULL);
                 struct timespec ts;
-                ts.tv_sec  = now_tv.tv_sec + (delay / 1000);
+                ts.tv_sec = now_tv.tv_sec + (delay / 1000);
                 ts.tv_nsec = (now_tv.tv_usec + (delay % 1000) * 1000) * 1000;
                 if (ts.tv_nsec >= 1000000000) {
                     ts.tv_sec += ts.tv_nsec / 1000000000;
@@ -65,10 +65,10 @@ static inline struct host_timer *host_timer_create(void (*callback)(void *arg), 
     struct host_timer *t = (struct host_timer *)malloc(sizeof(struct host_timer));
     if (!t)
         return NULL;
-    t->callback       = callback;
-    t->arg            = arg;
-    t->active         = false;
-    t->quit           = false;
+    t->callback = callback;
+    t->arg = arg;
+    t->active = false;
+    t->quit = false;
     t->target_time_ms = 0;
     pthread_mutex_init(&t->lock, NULL);
     pthread_cond_init(&t->cond, NULL);
@@ -97,7 +97,7 @@ static inline void host_timer_start_once(struct host_timer *t, uint64_t timeout_
         return;
     pthread_mutex_lock(&t->lock);
     t->target_time_ms = host_get_time_ms() + (timeout_us / 1000);
-    t->active         = true;
+    t->active = true;
     pthread_cond_broadcast(&t->cond);
     pthread_mutex_unlock(&t->lock);
 }
@@ -107,7 +107,7 @@ static inline void host_timer_delete(struct host_timer *t)
     if (!t)
         return;
     pthread_mutex_lock(&t->lock);
-    t->quit   = true;
+    t->quit = true;
     t->active = false;
     pthread_cond_broadcast(&t->cond);
     pthread_mutex_unlock(&t->lock);
@@ -143,7 +143,7 @@ static void framebuffer_invalidate_rect_no_lock(framebuffer_t *fb, rawdraw_rect_
         return;
     rawdraw_rect_t aligned = rawdraw_align_x8(rawdraw_clamp_rect(r, fb->width, fb->height));
     if (rawdraw_rect_area(aligned) > 0) {
-        fb->dirty   = rawdraw_rect_union(fb->dirty, aligned);
+        fb->dirty = rawdraw_rect_union(fb->dirty, aligned);
         fb->pending = true;
     }
 }
@@ -161,13 +161,13 @@ static void framebuffer_timer_callback(void *arg)
     framebuffer_lock(fb);
     int area = rawdraw_rect_area(fb->dirty);
     if (fb->pending && area > 0) {
-        rawdraw_rect_t r    = fb->dirty;
-        fb->dirty           = (rawdraw_rect_t){0, 0, 0, 0};
-        fb->pending         = false;
+        rawdraw_rect_t r = fb->dirty;
+        fb->dirty = (rawdraw_rect_t){0, 0, 0, 0};
+        fb->pending = false;
         fb->last_refresh_ms = framebuffer_get_time_ms();
 
-        framebuffer_refresh_cb_t cb        = fb->refresh_cb;
-        void                    *user_data = fb->refresh_user_data;
+        framebuffer_refresh_cb_t cb = fb->refresh_cb;
+        void *user_data = fb->refresh_user_data;
         framebuffer_unlock(fb);
 
         if (cb) {
@@ -186,17 +186,17 @@ void framebuffer_init(framebuffer_t *fb, uint8_t *buffer, int width, int height,
 {
     if (!fb)
         return;
-    fb->timer             = NULL;
-    fb->buffer            = buffer;
-    fb->width             = width;
-    fb->height            = height;
-    fb->mutex             = mutex;
-    fb->dirty             = (rawdraw_rect_t){0, 0, 0, 0};
-    fb->pending           = false;
-    fb->refresh_cb        = NULL;
+    fb->timer = NULL;
+    fb->buffer = buffer;
+    fb->width = width;
+    fb->height = height;
+    fb->mutex = mutex;
+    fb->dirty = (rawdraw_rect_t){0, 0, 0, 0};
+    fb->pending = false;
+    fb->refresh_cb = NULL;
     fb->refresh_user_data = NULL;
-    fb->last_refresh_ms   = 0;
-    fb->next_kick_ms      = 0;
+    fb->last_refresh_ms = 0;
+    fb->next_kick_ms = 0;
 
 #ifdef ESP_PLATFORM
     esp_timer_create_args_t timer_args = {.callback = framebuffer_timer_callback, .arg = fb, .name = "fb_refresh"};
@@ -284,7 +284,7 @@ void framebuffer_clear_dirty(framebuffer_t *fb)
     if (!fb)
         return;
     framebuffer_lock(fb);
-    fb->dirty   = (rawdraw_rect_t){0, 0, 0, 0};
+    fb->dirty = (rawdraw_rect_t){0, 0, 0, 0};
     fb->pending = false;
     framebuffer_unlock(fb);
 }
@@ -307,13 +307,13 @@ void framebuffer_request_refresh(framebuffer_t *fb, bool urgent)
 #else
         host_timer_stop(fb->timer);
 #endif
-        rawdraw_rect_t r    = fb->dirty;
-        fb->dirty           = (rawdraw_rect_t){0, 0, 0, 0};
-        fb->pending         = false;
+        rawdraw_rect_t r = fb->dirty;
+        fb->dirty = (rawdraw_rect_t){0, 0, 0, 0};
+        fb->pending = false;
         fb->last_refresh_ms = framebuffer_get_time_ms();
 
-        framebuffer_refresh_cb_t cb        = fb->refresh_cb;
-        void                    *user_data = fb->refresh_user_data;
+        framebuffer_refresh_cb_t cb = fb->refresh_cb;
+        void *user_data = fb->refresh_user_data;
         framebuffer_unlock(fb);
 
         if (cb) {
@@ -351,7 +351,7 @@ void framebuffer_set_refresh_callback(framebuffer_t *fb, framebuffer_refresh_cb_
     if (!fb)
         return;
     framebuffer_lock(fb);
-    fb->refresh_cb        = cb;
+    fb->refresh_cb = cb;
     fb->refresh_user_data = user_data;
     framebuffer_unlock(fb);
 }
@@ -359,7 +359,7 @@ void framebuffer_set_refresh_callback(framebuffer_t *fb, framebuffer_refresh_cb_
 uint8_t *framebuffer_alloc_buffer(int width, int height)
 {
     size_t bytes_per_row = (size_t)(((width + 7) / 8) * 2);
-    size_t size          = bytes_per_row * height;
+    size_t size = bytes_per_row * height;
 #ifdef ESP_PLATFORM
     uint8_t *buf = (uint8_t *)heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!buf) {
@@ -397,8 +397,8 @@ void framebuffer_draw_text(framebuffer_t *fb, int x, int y, const char *text, co
         return;
     framebuffer_lock(fb);
     rawdraw_rect_t bounds = rawdraw_measure_text_bounds(text, font, 0);
-    bounds.x              = x;
-    bounds.y              = y;
+    bounds.x = x;
+    bounds.y = y;
     rawdraw_draw_text(fb->buffer, fb->width, fb->height, x, y, text, font, (int)color);
     framebuffer_invalidate_rect_no_lock(fb, bounds);
     framebuffer_unlock(fb);

@@ -27,18 +27,18 @@ typedef enum {
 
 typedef struct {
     const struct _lv_font_t *resolved_font;
-    uint16_t                 adv_w;
-    uint16_t                 box_w;
-    uint16_t                 box_h;
-    int16_t                  ofs_x;
-    int16_t                  ofs_y;
-    uint16_t                 stride;
-    lv_font_glyph_format_t   format;
-    uint8_t                  is_placeholder : 1;
-    uint8_t                  req_raw_bitmap : 1;
-    int32_t                  outline_stroke_width;
+    uint16_t adv_w;
+    uint16_t box_w;
+    uint16_t box_h;
+    int16_t ofs_x;
+    int16_t ofs_y;
+    uint16_t stride;
+    lv_font_glyph_format_t format;
+    uint8_t is_placeholder : 1;
+    uint8_t req_raw_bitmap : 1;
+    int32_t outline_stroke_width;
     union {
-        uint32_t    index;
+        uint32_t index;
         const void *src;
     } gid;
     lv_cache_entry_t *entry;
@@ -49,16 +49,16 @@ typedef struct _lv_font_t {
                           uint32_t letter_next);
     const void *(*get_glyph_bitmap)(lv_font_glyph_dsc_t *g_dsc, struct _lv_draw_buf_t *draw_buf);
     void (*release_glyph)(const struct _lv_font_t *font, lv_font_glyph_dsc_t *g_dsc);
-    int32_t                  line_height;
-    int32_t                  base_line;
-    uint8_t                  subpx : 2;
-    uint8_t                  kerning : 1;
-    uint8_t                  static_bitmap : 1;
-    int8_t                   underline_position;
-    int8_t                   underline_thickness;
-    const void              *dsc;
+    int32_t line_height;
+    int32_t base_line;
+    uint8_t subpx : 2;
+    uint8_t kerning : 1;
+    uint8_t static_bitmap : 1;
+    int8_t underline_position;
+    int8_t underline_thickness;
+    const void *dsc;
     const struct _lv_font_t *fallback;
-    void                    *user_data;
+    void *user_data;
 } lv_font_t;
 
 #    define LV_FONT_FMT_PLAIN 0
@@ -96,19 +96,19 @@ static inline uint32_t utf8_next(const char **pp)
         return 0;
 
     uint32_t c;
-    int      len;
+    int len;
 
     if (*p < 0x80) {
-        c   = *p;
+        c = *p;
         len = 1;
     } else if ((*p & 0xE0) == 0xC0) {
-        c   = *p & 0x1F;
+        c = *p & 0x1F;
         len = 2;
     } else if ((*p & 0xF0) == 0xE0) {
-        c   = *p & 0x0F;
+        c = *p & 0x0F;
         len = 3;
     } else if ((*p & 0xF8) == 0xF0) {
-        c   = *p & 0x07;
+        c = *p & 0x07;
         len = 4;
     } else {
         *pp += 1;

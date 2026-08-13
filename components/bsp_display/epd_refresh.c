@@ -28,26 +28,26 @@ void epd_refresh_init(epd_refresh_scheduler_t *s, epd_refresh_cb_t cb, void *use
     if (!s)
         return;
     memset(s, 0, sizeof(*s));
-    s->callback             = cb;
-    s->user_data            = user_data;
-    s->mutex                = xSemaphoreCreateMutex();
-    s->event_group          = xEventGroupCreate();
-    s->task_handle          = NULL;
-    s->dirty_rect           = (rawdraw_rect_t){0, 0, 0, 0};
-    s->has_dirty            = false;
-    s->partial_count        = 0;
+    s->callback = cb;
+    s->user_data = user_data;
+    s->mutex = xSemaphoreCreateMutex();
+    s->event_group = xEventGroupCreate();
+    s->task_handle = NULL;
+    s->dirty_rect = (rawdraw_rect_t){0, 0, 0, 0};
+    s->has_dirty = false;
+    s->partial_count = 0;
     s->full_refresh_pending = false;
-    s->running              = false;
-    s->screen_width         = screen_width > 0 ? screen_width : 400;
-    s->screen_height        = screen_height > 0 ? screen_height : 300;
+    s->running = false;
+    s->screen_width = screen_width > 0 ? screen_width : 400;
+    s->screen_height = screen_height > 0 ? screen_height : 300;
 
     if (config) {
         s->config = *config;
     } else {
         s->config.partial_count_threshold = 10;
-        s->config.task_stack_size         = 4096;
-        s->config.task_priority           = 5;
-        s->config.cpu_core                = 1;
+        s->config.task_stack_size = 4096;
+        s->config.task_priority = 5;
+        s->config.cpu_core = 1;
     }
     if (s->config.partial_count_threshold <= 0)
         s->config.partial_count_threshold = 10;
@@ -57,11 +57,11 @@ void epd_refresh_start(epd_refresh_scheduler_t *s)
 {
     if (!s || s->running || s->task_handle)
         return;
-    s->running     = true;
+    s->running = true;
     BaseType_t ret = xTaskCreatePinnedToCore(refresh_task_fn, "epd_refresh", s->config.task_stack_size, s,
                                              s->config.task_priority, &s->task_handle, s->config.cpu_core);
     if (ret != pdPASS) {
-        s->running     = false;
+        s->running = false;
         s->task_handle = NULL;
     }
 }
@@ -91,7 +91,7 @@ void epd_refresh_mark_dirty(epd_refresh_scheduler_t *s, rawdraw_rect_t rect)
         s->dirty_rect = rawdraw_rect_union(s->dirty_rect, rect);
     } else {
         s->dirty_rect = rect;
-        s->has_dirty  = true;
+        s->has_dirty = true;
     }
     if (s->mutex)
         xSemaphoreGive(s->mutex);
@@ -112,7 +112,7 @@ void epd_refresh_request_full(epd_refresh_scheduler_t *s)
     if (!s)
         return;
     s->full_refresh_pending = true;
-    s->partial_count        = 0;
+    s->partial_count = 0;
     epd_refresh_trigger(s, true);
 }
 
@@ -140,25 +140,25 @@ void epd_refresh_process(epd_refresh_scheduler_t *s)
         return;
 
     rawdraw_rect_t rect_to_refresh = {0, 0, 0, 0};
-    bool           do_full         = false;
+    bool do_full = false;
 
     if (s->mutex)
         xSemaphoreTake(s->mutex, portMAX_DELAY);
 
     if (s->full_refresh_pending) {
-        do_full                 = true;
+        do_full = true;
         s->full_refresh_pending = false;
-        rect_to_refresh         = (rawdraw_rect_t){0, 0, s->screen_width, s->screen_height};
-        s->partial_count        = 0;
+        rect_to_refresh = (rawdraw_rect_t){0, 0, s->screen_width, s->screen_height};
+        s->partial_count = 0;
     } else if (s->has_dirty) {
         rect_to_refresh = rawdraw_align_x8(s->dirty_rect);
-        s->has_dirty    = false;
-        s->dirty_rect   = (rawdraw_rect_t){0, 0, 0, 0};
+        s->has_dirty = false;
+        s->dirty_rect = (rawdraw_rect_t){0, 0, 0, 0};
         s->partial_count++;
 
         if (s->partial_count >= s->config.partial_count_threshold) {
-            do_full          = true;
-            rect_to_refresh  = (rawdraw_rect_t){0, 0, s->screen_width, s->screen_height};
+            do_full = true;
+            rect_to_refresh = (rawdraw_rect_t){0, 0, s->screen_width, s->screen_height};
             s->partial_count = 0;
         }
     }

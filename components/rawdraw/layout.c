@@ -35,10 +35,10 @@ rawdraw_text_ink_bounds_t rawdraw_layout_measure_text_ink_bounds(const lv_font_t
         return bounds;
     }
 
-    int         line_index = 0;
-    int         min_y      = INT_MAX;
-    int         max_y      = INT_MIN;
-    const char *p          = text;
+    int line_index = 0;
+    int min_y = INT_MAX;
+    int max_y = INT_MIN;
+    const char *p = text;
 
     while (*p) {
         uint32_t ch = utf8_next(&p);
@@ -56,14 +56,14 @@ rawdraw_text_ink_bounds_t rawdraw_layout_measure_text_ink_bounds(const lv_font_t
         }
 
         lv_font_glyph_dsc_t g = {0};
-        g.resolved_font       = font;
+        g.resolved_font = font;
         if (!lv_font_get_glyph_dsc(font, &g, ch, 0)) {
             continue;
         }
 
         if (g.box_w > 0 && g.box_h > 0) {
-            int line_offset_y    = line_index * (int)font->line_height;
-            int glyph_top_rel    = line_offset_y - (int)g.ofs_y - (int)g.box_h;
+            int line_offset_y = line_index * (int)font->line_height;
+            int glyph_top_rel = line_offset_y - (int)g.ofs_y - (int)g.box_h;
             int glyph_bottom_rel = line_offset_y - (int)g.ofs_y;
 
             if (glyph_top_rel < min_y) {
@@ -76,8 +76,8 @@ rawdraw_text_ink_bounds_t rawdraw_layout_measure_text_ink_bounds(const lv_font_t
     }
 
     if (min_y != INT_MAX && max_y != INT_MIN) {
-        bounds.valid  = true;
-        bounds.top    = min_y;
+        bounds.valid = true;
+        bounds.top = min_y;
         bounds.bottom = max_y;
         bounds.height = max_y - min_y;
     }
@@ -92,7 +92,7 @@ int rawdraw_layout_ink_centered_text_top_y(const lv_font_t *font, const char *te
     }
 
     rawdraw_text_ink_bounds_t bounds = rawdraw_layout_measure_text_ink_bounds(font, text);
-    int                       baseline_y;
+    int baseline_y;
     if (bounds.valid) {
         baseline_y = center_y + visual_offset - (bounds.top + bounds.bottom) / 2;
     } else {

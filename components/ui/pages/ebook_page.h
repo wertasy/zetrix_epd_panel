@@ -28,16 +28,16 @@ typedef struct {
 
     /* File list mode. */
     char files[EBOOK_MAX_FILES][EBOOK_FILENAME_LEN];
-    int  file_count;
-    int  selected_index;
+    int file_count;
+    int selected_index;
 
     /* Reader mode. */
     bool reader_mode;
     bool portrait_reader;
     char reader_filename[EBOOK_FILENAME_LEN];
     char reader_content[EBOOK_READER_CONTENT_LEN];
-    int  current_page; /* 0-based */
-    int  total_pages;
+    int current_page; /* 0-based */
+    int total_pages;
 
     const lv_font_t *font;
     const lv_font_t *title_font;
@@ -49,18 +49,18 @@ void ebook_page_render(page_renderer_t *self, uint8_t *fb, int width, int height
 bool ebook_page_handle_input(page_renderer_t *self, const ui_button_event_t *event);
 
 /* File list mode. */
-void        ebook_page_set_file_list(page_renderer_t *self, const char *const *files, int count);
-int         ebook_page_get_selected_index(const page_renderer_t *self);
+void ebook_page_set_file_list(page_renderer_t *self, const char *const *files, int count);
+int ebook_page_get_selected_index(const page_renderer_t *self);
 const char *ebook_page_get_selected_file(const page_renderer_t *self);
 
 /* Reader mode. */
-void        ebook_page_open_file(page_renderer_t *self, const char *filename, const char *content);
-void        ebook_page_close_reader(page_renderer_t *self);
-bool        ebook_page_is_reader_mode(const page_renderer_t *self);
-bool        ebook_page_is_portrait_reader(const page_renderer_t *self);
+void ebook_page_open_file(page_renderer_t *self, const char *filename, const char *content);
+void ebook_page_close_reader(page_renderer_t *self);
+bool ebook_page_is_reader_mode(const page_renderer_t *self);
+bool ebook_page_is_portrait_reader(const page_renderer_t *self);
 const char *ebook_page_get_reader_filename(const page_renderer_t *self);
-int         ebook_page_get_current_page(const page_renderer_t *self);
-int         ebook_page_get_total_pages(const page_renderer_t *self);
+int ebook_page_get_current_page(const page_renderer_t *self);
+int ebook_page_get_total_pages(const page_renderer_t *self);
 
 #ifdef __cplusplus
 }

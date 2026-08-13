@@ -29,16 +29,15 @@ void rawdraw_set_pixel(uint8_t *fb, int width, int height, int x, int y, int col
         return;
 
     uint16_t bytes_per_row = (width * 2 + 7) >> 3;
-    uint32_t index         = (uint32_t)y * bytes_per_row + (uint32_t)(x >> 2);
-    uint8_t  shift         = (uint8_t)(6 - ((x & 0x03) << 1));
-    uint8_t  mask          = (uint8_t)(0x03U << shift);
-    fb[index]              = (uint8_t)((fb[index] & (uint8_t)~mask) | ((uint8_t)(color & 0x03) << shift));
+    uint32_t index = (uint32_t)y * bytes_per_row + (uint32_t)(x >> 2);
+    uint8_t shift = (uint8_t)(6 - ((x & 0x03) << 1));
+    uint8_t mask = (uint8_t)(0x03U << shift);
+    fb[index] = (uint8_t)((fb[index] & (uint8_t)~mask) | ((uint8_t)(color & 0x03) << shift));
 }
 
 /* P0: Fill a horizontal pixel run using memset for byte-aligned interior.
  * Eliminates 75% of PSRAM read-modify-write cycles for solid fills. */
-void rawdraw_fill_scanline_segment(uint8_t *fb, int fb_width, int fb_height,
-                                   int y, int x_start, int x_end, int color)
+void rawdraw_fill_scanline_segment(uint8_t *fb, int fb_width, int fb_height, int y, int x_start, int x_end, int color)
 {
     if (!fb || y < 0 || y >= fb_height)
         return;
@@ -48,9 +47,9 @@ void rawdraw_fill_scanline_segment(uint8_t *fb, int fb_width, int fb_height,
     if (xs >= xe)
         return;
 
-    uint16_t bpr      = (uint16_t)((fb_width * 2 + 7) >> 3);
-    uint8_t  fill     = rd_color_to_fill_byte(color);
-    uint8_t *row      = fb + (uint32_t)y * bpr;
+    uint16_t bpr = (uint16_t)((fb_width * 2 + 7) >> 3);
+    uint8_t fill = rd_color_to_fill_byte(color);
+    uint8_t *row = fb + (uint32_t)y * bpr;
 
     /* Fast path: pixel range perfectly aligned to byte boundaries */
     if (likely((xs & 0x03) == 0 && (xe & 0x03) == 0)) {
@@ -63,8 +62,8 @@ void rawdraw_fill_scanline_segment(uint8_t *fb, int fb_width, int fb_height,
      * mid:  [mid_start, mid_end) — byte-aligned memset (only if non-empty)
      * tail: [tail_start, xe) — trailing sub-byte pixels
      * tail_start = max(mid_end, mid_start) so tail never starts before head ends. */
-    int mid_start  = (xs + 3) & ~3;   /* round up to next byte boundary */
-    int mid_end    = xe & ~3;          /* round down to byte boundary */
+    int mid_start = (xs + 3) & ~3; /* round up to next byte boundary */
+    int mid_end = xe & ~3; /* round down to byte boundary */
     int tail_start = (mid_end > mid_start) ? mid_end : mid_start;
 
     /* Head */
@@ -86,9 +85,9 @@ void rawdraw_draw_rect(uint8_t *fb, int w, int h, int rx, int ry, int rw, int rh
         return;
 
     int y_start = RD_MAX(0, ry);
-    int y_end   = RD_MIN(h, ry + rh);
+    int y_end = RD_MIN(h, ry + rh);
     int x_start = RD_MAX(0, rx);
-    int x_end   = RD_MIN(w, rx + rw);
+    int x_end = RD_MIN(w, rx + rw);
 
     for (int y = y_start; y < y_end; y++)
         rawdraw_fill_scanline_segment(fb, w, h, y, x_start, x_end, color);
@@ -100,9 +99,9 @@ void rawdraw_draw_dither_rect(uint8_t *fb, int w, int h, int rx, int ry, int rw,
         return;
 
     int y_start = RD_MAX(0, ry);
-    int y_end   = RD_MIN(h, ry + rh);
+    int y_end = RD_MIN(h, ry + rh);
     int x_start = RD_MAX(0, rx);
-    int x_end   = RD_MIN(w, rx + rw);
+    int x_end = RD_MIN(w, rx + rw);
 
     for (int y = y_start; y < y_end; y++) {
         for (int x = x_start; x < x_end; x++) {
@@ -118,23 +117,23 @@ void rawdraw_draw_dither_rect(uint8_t *fb, int w, int h, int rx, int ry, int rw,
 static bool round_rect_row_span(int y, int rx, int ry, int rw, int rh, int radius, int *x_lo, int *x_hi)
 {
     int x_start = rx;
-    int x_end   = rx + rw - 1; /* inclusive */
+    int x_end = rx + rw - 1; /* inclusive */
 
     if (radius > 0) {
-        int top    = ry + radius;
+        int top = ry + radius;
         int bottom = ry + rh - 1 - radius;
 
         if (y < top || y > bottom) {
             /* Corner region: compute x-extent from circle equation.
              * The nearest corner center cy is at top or bottom band edge. */
-            int cy  = (y < top) ? top : bottom;
-            int dy  = y - cy;
-            int d2  = radius * radius - dy * dy;
+            int cy = (y < top) ? top : bottom;
+            int dy = y - cy;
+            int d2 = radius * radius - dy * dy;
             if (d2 < 0)
                 return false; /* entire row outside */
             int dx = isqrt(d2);
             x_start = rx + radius - dx;
-            x_end   = rx + rw - 1 - radius + dx;
+            x_end = rx + rw - 1 - radius + dx;
         }
     }
 
@@ -158,21 +157,21 @@ void rawdraw_draw_round_rect(uint8_t *fb, int w, int h, int rx, int ry, int rw, 
         return;
 
     int max_radius = RD_MIN(rw, rh) / 2;
-    radius         = RD_MIN(radius, max_radius);
+    radius = RD_MIN(radius, max_radius);
     if (radius < 0)
         radius = 0;
 
     int y_start = RD_MAX(0, ry);
-    int y_end   = RD_MIN(h, ry + rh);
+    int y_end = RD_MIN(h, ry + rh);
 
     if (thickness > 0) {
         /* Border: for each row, compute outer span and inner span.
          * Fill border_color on [outer_lo, inner_lo) ∪ (inner_hi, outer_hi],
          * fill fill_color on [inner_lo, inner_hi]. */
-        int inner_rx     = rx + thickness;
-        int inner_ry     = ry + thickness;
-        int inner_rw     = rw - thickness * 2;
-        int inner_rh     = rh - thickness * 2;
+        int inner_rx = rx + thickness;
+        int inner_ry = ry + thickness;
+        int inner_rw = rw - thickness * 2;
+        int inner_rh = rh - thickness * 2;
         int inner_radius = radius - thickness;
         if (inner_radius < 0)
             inner_radius = 0;
@@ -218,16 +217,16 @@ void rawdraw_draw_text(uint8_t *fb, int w, int h, int x, int y, const char *text
     if (!fb || !text || !font)
         return;
 
-    int         cursor_x = x;
-    int         cursor_y = y;
-    const char *p        = text;
+    int cursor_x = x;
+    int cursor_y = y;
+    const char *p = text;
 
     /* Letter spacing for proportional ASCII rendering with CJK fonts.
      * CJK fonts assign uniform cell-width adv_w to ALL characters,
      * which causes overlaps (W, M) and huge gaps (I, l) for Latin text.
      * For ASCII chars we compute: box_w + ofs_x + spacing. */
     const int letter_spacing = (font->line_height + 8) / 16; /* ~2px at 24px, ~1px at 16px */
-    const int space_width    = font->line_height / 4;
+    const int space_width = font->line_height / 4;
 
     while (*p) {
         uint32_t ch = utf8_next(&p);
@@ -247,7 +246,7 @@ void rawdraw_draw_text(uint8_t *fb, int w, int h, int x, int y, const char *text
         }
 
         lv_font_glyph_dsc_t g = {0};
-        g.resolved_font       = font;
+        g.resolved_font = font;
         if (!lv_font_get_glyph_dsc(font, &g, ch, 0)) {
             cursor_x += font->line_height / 2;
             continue;
@@ -261,9 +260,9 @@ void rawdraw_draw_text(uint8_t *fb, int w, int h, int x, int y, const char *text
          * font->static_bitmap, which the lv_font_conv-generated fonts don't
          * set (v7/v8 field set). Direct dispatch with req_raw_bitmap=1 makes
          * lv_font_get_bitmap_fmt_txt return the embedded glyph pointer. */
-        g.req_raw_bitmap      = 1;
+        g.req_raw_bitmap = 1;
         const uint8_t *bitmap = (const uint8_t *)font->get_glyph_bitmap(&g, NULL);
-        g.req_raw_bitmap      = 0;
+        g.req_raw_bitmap = 0;
 
         if (!bitmap) {
             static bool s_warned = false;
@@ -279,19 +278,18 @@ void rawdraw_draw_text(uint8_t *fb, int w, int h, int x, int y, const char *text
             continue;
         }
 
-        int gx       = cursor_x + g.ofs_x;
-        int gy       = cursor_y + font->line_height - font->base_line - g.ofs_y - g.box_h;
+        int gx = cursor_x + g.ofs_x;
+        int gy = cursor_y + font->line_height - font->base_line - g.ofs_y - g.box_h;
         int row_bits = (g.stride > 0) ? (int)(g.stride * 8) : (int)g.box_w;
 
         /* P0: Glyph-box precheck — if the entire box is inside the framebuffer,
          * use the unchecked fast path (no per-pixel bounds check). */
-        bool glyph_fully_visible = (gx >= 0 && gy >= 0 &&
-                                    gx + (int)g.box_w <= w && gy + (int)g.box_h <= h);
+        bool glyph_fully_visible = (gx >= 0 && gy >= 0 && gx + (int)g.box_w <= w && gy + (int)g.box_h <= h);
 
         for (int row = 0; row < (int)g.box_h; row++) {
             for (int col = 0; col < (int)g.box_w; col++) {
-                int  bit_idx = row * row_bits + col;
-                bool pixel   = (bitmap[bit_idx >> 3] >> (7 - (bit_idx & 7))) & 1;
+                int bit_idx = row * row_bits + col;
+                bool pixel = (bitmap[bit_idx >> 3] >> (7 - (bit_idx & 7))) & 1;
 
                 if (pixel) {
                     if (likely(glyph_fully_visible)) {

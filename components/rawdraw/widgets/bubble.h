@@ -24,21 +24,21 @@ typedef enum {
 
 typedef struct {
     widget_bubble_align_t align;
-    int                   margin;
-    int                   max_width;
-    int                   radius;
-    const lv_font_t      *font;
-    int                   line_spacing;
-    int                   padding;
+    int margin;
+    int max_width;
+    int radius;
+    const lv_font_t *font;
+    int line_spacing;
+    int padding;
 
     char text[WIDGET_BUBBLE_TEXT_LEN];
-    int  y;
+    int y;
 
     rawdraw_color_t fill_color;
     rawdraw_color_t text_color;
     rawdraw_color_t border_color;
-    int             border_width;
-    bool            custom_colors;
+    int border_width;
+    bool custom_colors;
 } widget_bubble_t;
 
 /* ---- lifecycle ---- */
@@ -56,17 +56,17 @@ void widget_bubble_set_colors(widget_bubble_t *bubble, rawdraw_color_t fill, raw
                               rawdraw_color_t border, int border_width);
 
 /* ---- content ---- */
-void        widget_bubble_set_text(widget_bubble_t *bubble, const char *text);
-void        widget_bubble_append_text(widget_bubble_t *bubble, const char *chunk);
-void        widget_bubble_clear(widget_bubble_t *bubble);
+void widget_bubble_set_text(widget_bubble_t *bubble, const char *text);
+void widget_bubble_append_text(widget_bubble_t *bubble, const char *chunk);
+void widget_bubble_clear(widget_bubble_t *bubble);
 const char *widget_bubble_get_text(const widget_bubble_t *bubble);
-bool        widget_bubble_has_content(const widget_bubble_t *bubble);
+bool widget_bubble_has_content(const widget_bubble_t *bubble);
 
 /* ---- layout ---- */
-void           widget_bubble_set_y(widget_bubble_t *bubble, int y);
+void widget_bubble_set_y(widget_bubble_t *bubble, int y);
 rawdraw_rect_t widget_bubble_get_bounds(const widget_bubble_t *bubble, int screen_width);
-int            widget_bubble_calculate_height(const widget_bubble_t *bubble);
-int            widget_bubble_calculate_width(const widget_bubble_t *bubble);
+int widget_bubble_calculate_height(const widget_bubble_t *bubble);
+int widget_bubble_calculate_width(const widget_bubble_t *bubble);
 
 /* ---- rendering ---- */
 void widget_bubble_render(widget_bubble_t *bubble, uint8_t *fb, int width, int height);

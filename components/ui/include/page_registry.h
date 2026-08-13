@@ -37,13 +37,13 @@ extern "C" {
  */
 
 typedef struct {
-    ui_page_id_t               id;
-    const char                *name; /* localized display name ("相册") */
-    const char                *icon; /* FA icon string or NULL */
-    bool                       show_in_quick_switch;
-    int                        order; /* quick-switch sort key: smaller first */
+    ui_page_id_t id;
+    const char *name; /* localized display name ("相册") */
+    const char *icon; /* FA icon string or NULL */
+    bool show_in_quick_switch;
+    int order; /* quick-switch sort key: smaller first */
     const page_renderer_ops_t *ops;
-    page_renderer_t           *instance; /* pointer to the page's instance */
+    page_renderer_t *instance; /* pointer to the page's instance */
 } page_entry_t;
 
 /* Internal: called by PAGE_REGISTER constructors. */

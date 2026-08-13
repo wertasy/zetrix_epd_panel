@@ -33,10 +33,10 @@ typedef struct {
 
     /* Lunar data computed via widget_calendar_* helpers. */
     widget_calendar_lunar_date_t lunar;
-    char                         lunar_year_name[16];
-    const char                  *solar_term; /* NULL when the day is not a solar term day */
-    const char                  *yi[4];
-    const char                  *ji[3];
+    char lunar_year_name[16];
+    const char *solar_term; /* NULL when the day is not a solar term day */
+    const char *yi[4];
+    const char *ji[3];
 } almanac_page_t;
 
 /* PageRenderer vtable entry points. */

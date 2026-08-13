@@ -9,7 +9,7 @@
 #endif /* RAWDRAW_UTIL_H_ */
 
 #ifndef likely
-#define likely(x)   __builtin_expect(!!(x), 1)
+#define likely(x) __builtin_expect(!!(x), 1)
 #endif
 #ifndef unlikely
 #define unlikely(x) __builtin_expect(!!(x), 0)

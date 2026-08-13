@@ -24,7 +24,7 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-static const lv_font_t *const kDetailFont      = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kDetailFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kDetailTitleFont = &SourceHanSansSC_Medium_slim;
 
 /* Data management                                                     */
@@ -42,15 +42,15 @@ static void pd_load_photo_data(page_renderer_t *self, int index)
     if (index < 0 || index >= r->photo_count)
         return;
     const photo_info_t *info = &r->photos[index];
-    r->current_photo_data    = (uint8_t *)heap_caps_malloc(info->file_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    r->current_photo_data = (uint8_t *)heap_caps_malloc(info->file_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!r->current_photo_data)
         r->current_photo_data = (uint8_t *)malloc(info->file_size);
     if (!r->current_photo_data)
         return;
     const int bytes_read = photo_load(info->id, r->current_photo_data, info->file_size);
     if (bytes_read > 0) {
-        r->current_photo_size   = (uint32_t)bytes_read;
-        r->current_photo_width  = info->width;
+        r->current_photo_size = (uint32_t)bytes_read;
+        r->current_photo_width = info->width;
         r->current_photo_height = info->height;
     } else {
         free(r->current_photo_data);
@@ -70,9 +70,9 @@ static void pd_clamp_selection(page_renderer_t *self)
 
 static void pd_draw_metadata_modal(page_renderer_t *self, uint8_t *fb, int width, int height)
 {
-    photo_detail_page_t  *r         = (photo_detail_page_t *)self;
-    const photo_info_t   *info      = &r->photos[r->selected_index];
-    const rawdraw_color_t text      = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    photo_detail_page_t *r = (photo_detail_page_t *)self;
+    const photo_info_t *info = &r->photos[r->selected_index];
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
 
     widget_modal_t modal;
@@ -83,8 +83,8 @@ static void pd_draw_metadata_modal(page_renderer_t *self, uint8_t *fb, int width
     widget_modal_render(&modal, fb, width, height);
 
     const rawdraw_rect_t body = widget_modal_get_content_bounds(&modal);
-    int                  y    = body.y;
-    char                 fit[256];
+    int y = body.y;
+    char fit[256];
     ui_text_fit_to_width(info->title, r->title_font, body.w, fit, sizeof(fit));
     rawdraw_draw_text(fb, width, height, body.x, y, fit, r->title_font, text);
     y += r->title_font->line_height + 8;
@@ -104,18 +104,18 @@ static void pd_draw_metadata_modal(page_renderer_t *self, uint8_t *fb, int width
 
 void photo_detail_page_init(page_renderer_t *self, int width, int height)
 {
-    photo_detail_page_t *r  = (photo_detail_page_t *)self;
-    r->base.width           = width;
-    r->base.height          = height;
-    r->metadata_open        = false;
-    r->selected_index       = 0;
-    r->photo_count          = 0;
-    r->current_photo_data   = NULL;
-    r->current_photo_size   = 0;
-    r->current_photo_width  = STYLE_SCREEN_WIDTH;
+    photo_detail_page_t *r = (photo_detail_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
+    r->metadata_open = false;
+    r->selected_index = 0;
+    r->photo_count = 0;
+    r->current_photo_data = NULL;
+    r->current_photo_size = 0;
+    r->current_photo_width = STYLE_SCREEN_WIDTH;
     r->current_photo_height = STYLE_SCREEN_HEIGHT;
-    r->font                 = kDetailFont;
-    r->title_font           = kDetailTitleFont;
+    r->font = kDetailFont;
+    r->title_font = kDetailTitleFont;
     photo_detail_page_refresh_photo_list(self);
     pd_load_photo_data(self, r->selected_index);
     r->base.needs_full_refresh_flag = true;
@@ -139,10 +139,10 @@ void photo_detail_page_render(page_renderer_t *self, uint8_t *fb, int width, int
         widget_modal_center_in_screen(&modal, width, height, 52);
         widget_modal_render(&modal, fb, width, height);
     } else {
-        const int                   frame_x    = 8;
-        const int                   frame_y    = STYLE_STATUS_BAR_HEIGHT + 4;
-        const int                   frame_w    = width - 16;
-        const int                   frame_h    = height - frame_y - 4;
+        const int frame_x = 8;
+        const int frame_y = STYLE_STATUS_BAR_HEIGHT + 4;
+        const int frame_w = width - 16;
+        const int frame_h = height - frame_y - 4;
         const rawdraw_paint_style_t card_style = rawdraw_theme_component(ROLE_CARD_DEFAULT);
         rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){frame_x, frame_y, frame_w, frame_h},
                                        STYLE_BORDER_RADIUS_MD, &card_style);
@@ -165,7 +165,7 @@ void photo_detail_page_render(page_renderer_t *self, uint8_t *fb, int width, int
             if (src_y >= expected_rows)
                 break;
             for (int tx = 0; tx < inner_w; ++tx) {
-                const int             src_x     = (tx * r->current_photo_width) / MAX(1, inner_w);
+                const int src_x = (tx * r->current_photo_width) / MAX(1, inner_w);
                 const rawdraw_color_t src_color = photo_read_pixel(r->current_photo_data, r->current_photo_size,
                                                                    photo_byte_width, bwry2bpp, src_x, src_y);
                 rawdraw_set_pixel(fb, width, height, inner_x + tx, inner_y + ty, src_color);
@@ -185,7 +185,7 @@ bool photo_detail_page_handle_input(page_renderer_t *self, const ui_button_event
     photo_detail_page_t *r = (photo_detail_page_t *)self;
     if (r->metadata_open) {
         if (event->type == BTN_BOOT_CLICK || event->type == BTN_BOOT_LONG_PRESS) {
-            r->metadata_open                = false;
+            r->metadata_open = false;
             r->base.needs_full_refresh_flag = true;
             return true;
         }
@@ -211,7 +211,7 @@ bool photo_detail_page_handle_input(page_renderer_t *self, const ui_button_event
         break;
     case BTN_BOOT_CLICK:
         if (r->photo_count > 0) {
-            r->metadata_open                = true;
+            r->metadata_open = true;
             r->base.needs_full_refresh_flag = true;
             return true;
         }
@@ -229,9 +229,9 @@ bool photo_detail_page_handle_input(page_renderer_t *self, const ui_button_event
 void photo_detail_page_refresh_photo_list(page_renderer_t *self)
 {
     photo_detail_page_t *r = (photo_detail_page_t *)self;
-    r->photo_count         = 0;
+    r->photo_count = 0;
     photo_info_t info;
-    const int    count = photo_get_count();
+    const int count = photo_get_count();
     for (int i = 0; i < count && i < PHOTO_MAX_PHOTOS; ++i) {
         if (photo_get_by_index(i, &info) == 0) {
             r->photos[r->photo_count++] = info;
@@ -243,7 +243,7 @@ void photo_detail_page_refresh_photo_list(page_renderer_t *self)
 void photo_detail_page_set_selection(page_renderer_t *self, int index)
 {
     photo_detail_page_t *r = (photo_detail_page_t *)self;
-    r->selected_index      = index;
+    r->selected_index = index;
     pd_clamp_selection(self);
     pd_load_photo_data(self, r->selected_index);
     r->base.needs_full_refresh_flag = true;
@@ -292,16 +292,16 @@ int photo_detail_page_get_current_photo_height(const page_renderer_t *self)
 EXT_RAM_BSS_ATTR photo_detail_page_t s_photo_detail_instance;
 
 const page_renderer_ops_t photo_detail_page_ops = {
-    .init                    = photo_detail_page_init,
-    .render                  = photo_detail_page_render,
-    .handle_input            = photo_detail_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = photo_detail_page_init,
+    .render = photo_detail_page_render,
+    .handle_input = photo_detail_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
 PAGE_REGISTER(UI_PAGE_PHOTO_DETAIL, "照片详情", NULL, false, 999, &photo_detail_page_ops,

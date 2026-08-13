@@ -20,7 +20,6 @@
 extern "C" {
 #endif
 
-
 /** Initialise photo storage (mounts LittleFS via storage_manager, loads index). */
 int photo_storage_init(void);
 
@@ -39,8 +38,8 @@ int photo_list(photo_info_t *out_list, int max_count);
 /** Delete a photo by ID. @return 0 on success, -1 if not found. */
 int photo_delete(const char *id);
 
-int  photo_get_count(void);
-int  photo_get_by_index(int index, photo_info_t *out);
+int photo_get_count(void);
+int photo_get_by_index(int index, photo_info_t *out);
 bool photo_exists(const char *id);
 
 /** Update editable metadata fields (title/date/location/body) by ID. */

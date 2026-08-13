@@ -18,11 +18,11 @@ extern "C" {
 typedef struct {
     page_renderer_t base;
 
-    weather_data_t   current_data;
-    char             city_name[WEATHER_STR_LEN];
-    char             firmware_version[WEATHER_STR_LEN];
-    bool             has_data;
-    int              page_index; /* selected forecast day index */
+    weather_data_t current_data;
+    char city_name[WEATHER_STR_LEN];
+    char firmware_version[WEATHER_STR_LEN];
+    bool has_data;
+    int page_index; /* selected forecast day index */
     const lv_font_t *font;
     const lv_font_t *title_font;
 } weather_page_t;

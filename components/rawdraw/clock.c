@@ -8,10 +8,10 @@ void epd_clock_init(epd_clock_t *c, int x, int y, const lv_font_t *font)
 {
     if (!c)
         return;
-    c->x           = x;
-    c->y           = y;
-    c->font        = font;
-    c->color       = RAWDRAW_COLOR_RED;
+    c->x = x;
+    c->y = y;
+    c->font = font;
+    c->color = RAWDRAW_COLOR_RED;
     c->last_minute = -1;
     c->time_buf[0] = '\0';
 }
@@ -53,7 +53,7 @@ bool epd_clock_draw(epd_clock_t *c, uint8_t *fb, int width, int height)
     if (!c || !fb || !c->font)
         return false;
 
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm;
     localtime_r(&now, &tm);
 
@@ -83,8 +83,8 @@ bool epd_clock_draw_with_clear(epd_clock_t *c, uint8_t *fb, int width, int heigh
 const char *epd_clock_get_time_string(void)
 {
     static char buf[6];
-    time_t      now = time(NULL);
-    struct tm   tm;
+    time_t now = time(NULL);
+    struct tm tm;
     localtime_r(&now, &tm);
     if (tm.tm_year + 1900 < 2020) {
         snprintf(buf, sizeof(buf), "--:--");
@@ -98,7 +98,7 @@ void epd_clock_get_date_string(char *buf, int buf_size, bool iso_format)
 {
     if (!buf || buf_size <= 0)
         return;
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm;
     localtime_r(&now, &tm);
 

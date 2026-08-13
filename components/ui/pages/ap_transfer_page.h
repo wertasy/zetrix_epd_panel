@@ -31,13 +31,13 @@ typedef struct {
     page_renderer_t base;
 
     ap_transfer_state_t state;
-    char                status_message[AP_TRANSFER_MSG_LEN];
-    char                title_text[AP_TRANSFER_TEXT_LEN];
-    char                ssid_text[AP_TRANSFER_TEXT_LEN];
-    char                password_text[AP_TRANSFER_TEXT_LEN];
-    char                url_text[AP_TRANSFER_TEXT_LEN];
-    char                hint_text[AP_TRANSFER_TEXT_LEN];
-    char                exit_hint_text[AP_TRANSFER_TEXT_LEN];
+    char status_message[AP_TRANSFER_MSG_LEN];
+    char title_text[AP_TRANSFER_TEXT_LEN];
+    char ssid_text[AP_TRANSFER_TEXT_LEN];
+    char password_text[AP_TRANSFER_TEXT_LEN];
+    char url_text[AP_TRANSFER_TEXT_LEN];
+    char hint_text[AP_TRANSFER_TEXT_LEN];
+    char exit_hint_text[AP_TRANSFER_TEXT_LEN];
 
     void (*exit_callback)(void *ctx);
     void *exit_callback_ctx;
@@ -52,14 +52,14 @@ void ap_transfer_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
 bool ap_transfer_page_handle_input(page_renderer_t *self, const ui_button_event_t *event);
 
 /* Data interface. */
-void                ap_transfer_page_set_state(page_renderer_t *self, ap_transfer_state_t state, const char *message);
+void ap_transfer_page_set_state(page_renderer_t *self, ap_transfer_state_t state, const char *message);
 ap_transfer_state_t ap_transfer_page_get_state(const page_renderer_t *self);
-const char         *ap_transfer_page_get_status_message(const page_renderer_t *self);
-void                ap_transfer_page_use_default_instructions(page_renderer_t *self);
-void                ap_transfer_page_set_instruction_content(page_renderer_t *self, const char *title, const char *ssid,
-                                                             const char *password, const char *url, const char *hint,
-                                                             const char *exit_hint);
-void                ap_transfer_page_set_exit_callback(page_renderer_t *self, void (*callback)(void *ctx), void *ctx);
+const char *ap_transfer_page_get_status_message(const page_renderer_t *self);
+void ap_transfer_page_use_default_instructions(page_renderer_t *self);
+void ap_transfer_page_set_instruction_content(page_renderer_t *self, const char *title, const char *ssid,
+                                              const char *password, const char *url, const char *hint,
+                                              const char *exit_hint);
+void ap_transfer_page_set_exit_callback(page_renderer_t *self, void (*callback)(void *ctx), void *ctx);
 
 #ifdef __cplusplus
 }

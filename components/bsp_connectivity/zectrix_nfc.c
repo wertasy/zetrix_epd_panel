@@ -10,15 +10,15 @@
 
 static const char *TAG = "nfc";
 
-static gpio_num_t           s_power_gpio               = GPIO_NUM_NC;
-static gpio_num_t           s_fd_gpio                  = GPIO_NUM_NC;
-static int                  s_fd_active_level          = 1;
-static TaskHandle_t         s_field_task               = NULL;
-static nfc_field_callback_t s_field_callback           = NULL;
-static void                *s_field_callback_user_data = NULL;
+static gpio_num_t s_power_gpio = GPIO_NUM_NC;
+static gpio_num_t s_fd_gpio = GPIO_NUM_NC;
+static int s_fd_active_level = 1;
+static TaskHandle_t s_field_task = NULL;
+static nfc_field_callback_t s_field_callback = NULL;
+static void *s_field_callback_user_data = NULL;
 
-static _Atomic bool s_initialized   = false;
-static _Atomic bool s_powered       = false;
+static _Atomic bool s_initialized = false;
+static _Atomic bool s_powered = false;
 static _Atomic bool s_field_present = false;
 
 static void nfc_fd_isr_handler(void *arg)
@@ -82,16 +82,16 @@ bool nfc_init(gpio_num_t power_gpio, gpio_num_t fd_gpio, int fd_active_level)
         return true;
     }
 
-    s_power_gpio      = power_gpio;
-    s_fd_gpio         = fd_gpio;
+    s_power_gpio = power_gpio;
+    s_fd_gpio = fd_gpio;
     s_fd_active_level = fd_active_level;
 
     gpio_config_t power_cfg = {
         .pin_bit_mask = 1ULL << s_power_gpio,
-        .mode         = GPIO_MODE_OUTPUT,
-        .pull_up_en   = GPIO_PULLUP_DISABLE,
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type    = GPIO_INTR_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
     };
     if (gpio_config(&power_cfg) != ESP_OK) {
         atomic_store(&s_initialized, false);
@@ -101,10 +101,10 @@ bool nfc_init(gpio_num_t power_gpio, gpio_num_t fd_gpio, int fd_active_level)
 
     gpio_config_t fd_cfg = {
         .pin_bit_mask = 1ULL << s_fd_gpio,
-        .mode         = GPIO_MODE_INPUT,
-        .pull_up_en   = GPIO_PULLUP_ENABLE,
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type    = GPIO_INTR_ANYEDGE,
+        .intr_type = GPIO_INTR_ANYEDGE,
     };
     if (gpio_config(&fd_cfg) != ESP_OK) {
         atomic_store(&s_initialized, false);
@@ -130,9 +130,9 @@ bool nfc_init(gpio_num_t power_gpio, gpio_num_t fd_gpio, int fd_active_level)
         return false;
     }
 
-    uint8_t   uid[7];
-    esp_err_t uid_ret   = nfc_read_uid(uid);
-    bool      has_field = nfc_is_powered() && (gpio_get_level(s_fd_gpio) == s_fd_active_level);
+    uint8_t uid[7];
+    esp_err_t uid_ret = nfc_read_uid(uid);
+    bool has_field = nfc_is_powered() && (gpio_get_level(s_fd_gpio) == s_fd_active_level);
     nfc_update_field_state(has_field);
 
     ESP_LOGI(TAG, "NFC C port initialized, uid_ret=%s", esp_err_to_name(uid_ret));
@@ -183,7 +183,7 @@ bool nfc_has_field(void)
 
 void nfc_set_field_callback(nfc_field_callback_t callback, void *user_data)
 {
-    s_field_callback           = callback;
+    s_field_callback = callback;
     s_field_callback_user_data = user_data;
 }
 
@@ -241,19 +241,19 @@ esp_err_t nfc_read_user_data(uint16_t offset, uint8_t *out, size_t len)
     if (len == 0)
         return ESP_OK;
 
-    size_t   remaining      = len;
-    size_t   dst_offset     = 0;
+    size_t remaining = len;
+    size_t dst_offset = 0;
     uint16_t current_offset = offset;
 
     while (remaining > 0) {
-        uint16_t block_index     = current_offset / NFC_BLOCK_SIZE;
-        uint8_t  block_addr      = (uint8_t)(NFC_USER_DATA_START_BLOCK + block_index);
-        size_t   in_block_offset = current_offset % NFC_BLOCK_SIZE;
-        size_t   chunk =
+        uint16_t block_index = current_offset / NFC_BLOCK_SIZE;
+        uint8_t block_addr = (uint8_t)(NFC_USER_DATA_START_BLOCK + block_index);
+        size_t in_block_offset = current_offset % NFC_BLOCK_SIZE;
+        size_t chunk =
             (remaining < (NFC_BLOCK_SIZE - in_block_offset)) ? remaining : (NFC_BLOCK_SIZE - in_block_offset);
 
-        uint8_t   block[NFC_BLOCK_SIZE] = {0};
-        esp_err_t ret                   = nfc_read_block(block_addr, block);
+        uint8_t block[NFC_BLOCK_SIZE] = {0};
+        esp_err_t ret = nfc_read_block(block_addr, block);
         if (ret != ESP_OK)
             return ret;
 
@@ -273,13 +273,13 @@ esp_err_t nfc_write_user_data(uint16_t offset, const uint8_t *data, size_t len)
     if (len == 0)
         return ESP_OK;
 
-    size_t   remaining      = len;
-    size_t   src_offset     = 0;
+    size_t remaining = len;
+    size_t src_offset = 0;
     uint16_t current_offset = offset;
 
     while (remaining > 0) {
         uint8_t block_addr = (uint8_t)(NFC_USER_DATA_START_BLOCK + (current_offset / NFC_BLOCK_SIZE));
-        size_t  chunk      = (remaining < NFC_BLOCK_SIZE) ? remaining : NFC_BLOCK_SIZE;
+        size_t chunk = (remaining < NFC_BLOCK_SIZE) ? remaining : NFC_BLOCK_SIZE;
 
         uint8_t block[NFC_BLOCK_SIZE] = {0};
         if (chunk < NFC_BLOCK_SIZE) {
@@ -304,8 +304,8 @@ esp_err_t nfc_read_uid(uint8_t uid[7])
 {
     if (!uid)
         return ESP_ERR_INVALID_ARG;
-    uint8_t   block[NFC_BLOCK_SIZE] = {0};
-    esp_err_t ret                   = nfc_read_block(0x00, block);
+    uint8_t block[NFC_BLOCK_SIZE] = {0};
+    esp_err_t ret = nfc_read_block(0x00, block);
     if (ret == ESP_OK) {
         memcpy(uid, block, 7);
     }
@@ -317,23 +317,23 @@ esp_err_t nfc_write_uri_ndef(const char *uri)
     if (!uri)
         return ESP_ERR_INVALID_ARG;
 
-    uint8_t     prefix_code = 0x00;
-    const char *suffix      = uri;
+    uint8_t prefix_code = 0x00;
+    const char *suffix = uri;
     if (strncmp(uri, "https://www.", 12) == 0) {
         prefix_code = 0x02;
-        suffix      = uri + 12;
+        suffix = uri + 12;
     } else if (strncmp(uri, "http://www.", 11) == 0) {
         prefix_code = 0x01;
-        suffix      = uri + 11;
+        suffix = uri + 11;
     } else if (strncmp(uri, "https://", 8) == 0) {
         prefix_code = 0x04;
-        suffix      = uri + 8;
+        suffix = uri + 8;
     } else if (strncmp(uri, "http://", 7) == 0) {
         prefix_code = 0x03;
-        suffix      = uri + 7;
+        suffix = uri + 7;
     }
 
-    size_t suffix_len  = strlen(suffix);
+    size_t suffix_len = strlen(suffix);
     size_t payload_len = 1 + suffix_len;
 
     // Validate overall length. The maximum extra overhead is 5 (for TLV) + 8 (for NDEF) = 13.
@@ -379,7 +379,7 @@ esp_err_t nfc_write_uri_ndef(const char *uri)
         tlv[1] = (uint8_t)ndef_len;
         memcpy(tlv + 2, ndef_msg, ndef_len);
         tlv[2 + ndef_len] = 0xFE;
-        tlv_len           = 3 + ndef_len;
+        tlv_len = 3 + ndef_len;
     } else {
         tlv[0] = 0x03;
         tlv[1] = 0xFF;
@@ -387,7 +387,7 @@ esp_err_t nfc_write_uri_ndef(const char *uri)
         tlv[3] = (uint8_t)(ndef_len & 0xFF);
         memcpy(tlv + 4, ndef_msg, ndef_len);
         tlv[4 + ndef_len] = 0xFE;
-        tlv_len           = 5 + ndef_len;
+        tlv_len = 5 + ndef_len;
     }
 
     esp_err_t ret = nfc_write_user_data(0, tlv, tlv_len);

@@ -31,7 +31,6 @@
 extern "C" {
 #endif
 
-
 /* ------------------------------------------------------------------ */
 /* Callback                                                            */
 /* ------------------------------------------------------------------ */
@@ -61,10 +60,10 @@ bool weather_api_fetch(void);
 /** Alias kept for the original C++ API name. */
 bool weather_api_fetch_now(void);
 
-void        weather_api_set_location(const char *location);
-void        weather_api_set_key(const char *api_key);
+void weather_api_set_location(const char *location);
+void weather_api_set_key(const char *api_key);
 const char *weather_api_get_location(void);
-bool        weather_api_is_ready(void);
+bool weather_api_is_ready(void);
 
 /**
  * @brief Auto-detect geographic location via IP geolocation.

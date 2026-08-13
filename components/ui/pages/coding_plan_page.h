@@ -29,27 +29,27 @@ extern "C" {
  * (hourly_count is the real length); the bar chart aggregates these.
  */
 typedef struct {
-    char                      five_hour_reset_time[CODING_PLAN_RESET_TIME_LEN];
-    char                      week_reset_time[CODING_PLAN_RESET_TIME_LEN];
-    uint64_t                  week_tokens;
-    uint64_t                  five_hour_tokens;
-    int                       five_hour_pct;  /* 0-100 from quota/limit API */
-    int                       week_pct;       /* 0-100 from quota/limit API */
+    char five_hour_reset_time[CODING_PLAN_RESET_TIME_LEN];
+    char week_reset_time[CODING_PLAN_RESET_TIME_LEN];
+    uint64_t week_tokens;
+    uint64_t five_hour_tokens;
+    int five_hour_pct; /* 0-100 from quota/limit API */
+    int week_pct; /* 0-100 from quota/limit API */
     coding_plan_model_usage_t per_model[CODING_PLAN_MAX_MODELS];
-    int                       per_model_count;
-    uint64_t                  hourly_tokens[CODING_PLAN_HOURS_7D];
-    int                       hourly_count;
+    int per_model_count;
+    uint64_t hourly_tokens[CODING_PLAN_HOURS_7D];
+    int hourly_count;
 } coding_plan_data_t;
 
 typedef struct {
     page_renderer_t base;
 
     coding_plan_data_t data;
-    bool               has_data;
+    bool has_data;
 
     const lv_font_t *font;
     const lv_font_t *title_font;
-    int                view_mode; /* 0 = 7-day total, 1 = per-model breakdown */
+    int view_mode; /* 0 = 7-day total, 1 = per-model breakdown */
 } coding_plan_page_t;
 
 /* PageRenderer vtable entry points. */

@@ -29,7 +29,7 @@
 #define CODING_PLAN_5H_QUOTA_TOKENS 2000000ULL /* 2M tokens / 5h window */
 #define CODING_PLAN_WEEK_QUOTA_TOKENS 10000000ULL /* 10M tokens / week     */
 
-static const lv_font_t *const kCodingPlanFont      = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const kCodingPlanFont = &SourceHanSansSC_Regular_slim;
 static const lv_font_t *const kCodingPlanTitleFont = &SourceHanSansSC_Medium_slim;
 
 /* ------------------------------------------------------------------ */
@@ -59,10 +59,10 @@ static void format_tokens(uint64_t tokens, char *out, int out_size)
  * 24-hour bar per day and shorter series still spread evenly. */
 static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width, int height, int panel_y, int panel_h)
 {
-    coding_plan_page_t   *r         = (coding_plan_page_t *)self;
-    const rawdraw_color_t border    = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    coding_plan_page_t *r = (coding_plan_page_t *)self;
+    const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t accent    = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
+    const rawdraw_color_t accent = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
 
     const int chart_x = 16;
     const int chart_w = width - 32; /* 368 */
@@ -80,8 +80,9 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
 
     if (r->view_mode == 0) {
         if (hours <= 0) {
-            const char *cap = "\xe6\x9a\x82\xe6\x97\xa0\xe7\x94\xa8\xe9\x87\x8f\xe8\xb6\x8b\xe5\x8a\xbf"; /* 暂无用量趋势 */
-            const int   cap_w = rawdraw_measure_text_width(cap, r->font);
+            const char *cap =
+                "\xe6\x9a\x82\xe6\x97\xa0\xe7\x94\xa8\xe9\x87\x8f\xe8\xb6\x8b\xe5\x8a\xbf"; /* 暂无用量趋势 */
+            const int cap_w = rawdraw_measure_text_width(cap, r->font);
             rawdraw_draw_text(fb, width, height, chart_x + (chart_w - cap_w) / 2,
                               rawdraw_layout_ink_centered_text_top_y_in_box(r->font, cap, chart_y, chart_h, 0), cap,
                               r->font, secondary);
@@ -91,8 +92,10 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
         const int limit = hours < CODING_PLAN_HOURS_7D ? hours : CODING_PLAN_HOURS_7D;
         for (int i = 0; i < limit; ++i) {
             int d = (i * kBARS) / limit;
-            if (d < 0) d = 0;
-            if (d >= kBARS) d = kBARS - 1;
+            if (d < 0)
+                d = 0;
+            if (d >= kBARS)
+                d = kBARS - 1;
             bar_values[d] += r->data.hourly_tokens[i];
         }
     } else {
@@ -101,8 +104,9 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
             bars_num = 16;
         }
         if (bars_num <= 0) {
-            const char *cap = "\xe6\x9a\x82\xe6\x97\xa0\xe6\xa8\xa1\xe5\x9e\x8b\xe7\x94\xa8\xe9\x87\x8f"; /* 暂无模型用量 */
-            const int   cap_w = rawdraw_measure_text_width(cap, r->font);
+            const char *cap =
+                "\xe6\x9a\x82\xe6\x97\xa0\xe6\xa8\xa1\xe5\x9e\x8b\xe7\x94\xa8\xe9\x87\x8f"; /* 暂无模型用量 */
+            const int cap_w = rawdraw_measure_text_width(cap, r->font);
             rawdraw_draw_text(fb, width, height, chart_x + (chart_w - cap_w) / 2,
                               rawdraw_layout_ink_centered_text_top_y_in_box(r->font, cap, chart_y, chart_h, 0), cap,
                               r->font, secondary);
@@ -121,10 +125,10 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
     if (max_tokens == 0)
         max_tokens = 1;
 
-    const int inset    = 6;
+    const int inset = 6;
     const int usable_w = chart_w - 2 * inset;
-    int bar_gap  = 12;
-    int bar_w    = 40;
+    int bar_gap = 12;
+    int bar_w = 40;
     if (bars_num > 1) {
         bar_w = (usable_w - bar_gap * (bars_num - 1)) / bars_num;
         if (bar_w > 40) {
@@ -132,8 +136,8 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
         }
     }
 
-    const int base_y   = chart_y + chart_h - 4;
-    const int max_h    = chart_h - 18;
+    const int base_y = chart_y + chart_h - 4;
+    const int max_h = chart_h - 18;
 
     for (int d = 0; d < bars_num; ++d) {
         int bh = (int)((double)bar_values[d] * (double)max_h / (double)max_tokens);
@@ -147,8 +151,8 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
             /* Render token value above or inside the bar */
             char val_buf[24];
             format_tokens(bar_values[d], val_buf, sizeof(val_buf));
-            const int val_w  = rawdraw_measure_text_width(val_buf, r->font);
-            const int val_x  = bx + (bar_w - val_w) / 2;
+            const int val_w = rawdraw_measure_text_width(val_buf, r->font);
+            const int val_x = bx + (bar_w - val_w) / 2;
             const int text_h = r->font->line_height;
 
             /* Check space above bar */
@@ -175,13 +179,13 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
 
 void coding_plan_page_init(page_renderer_t *self, int width, int height)
 {
-    coding_plan_page_t *r           = (coding_plan_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    coding_plan_page_t *r = (coding_plan_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font                         = kCodingPlanFont;
-    r->title_font                   = kCodingPlanTitleFont;
-    r->view_mode                    = 0;
+    r->font = kCodingPlanFont;
+    r->title_font = kCodingPlanTitleFont;
+    r->view_mode = 0;
     if (!r->has_data) {
         memset(&r->data, 0, sizeof(r->data));
     }
@@ -193,12 +197,12 @@ void coding_plan_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
     if (!fb)
         return;
 
-    const rawdraw_paint_style_t bg_style    = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    const rawdraw_paint_style_t card_style  = rawdraw_theme_component(ROLE_CARD_DEFAULT);
-    const rawdraw_color_t       text        = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    const rawdraw_color_t       secondary   = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    const rawdraw_color_t       accent      = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
-    const rawdraw_color_t       track_color = RAWDRAW_COLOR_WHITE;
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const rawdraw_paint_style_t card_style = rawdraw_theme_component(ROLE_CARD_DEFAULT);
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    const rawdraw_color_t accent = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
+    const rawdraw_color_t track_color = RAWDRAW_COLOR_WHITE;
 
     const int content_top = STYLE_STATUS_BAR_HEIGHT + 2;
     rawdraw_draw_styled_rect(fb, width, height,
@@ -207,7 +211,7 @@ void coding_plan_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
 
     if (!r->has_data) {
         const char *empty_text = "暂无用量数据";
-        const int   ew         = rawdraw_measure_text_width(empty_text, r->font);
+        const int ew = rawdraw_measure_text_width(empty_text, r->font);
         rawdraw_draw_text(fb, width, height, (width - ew) / 2,
                           rawdraw_layout_ink_centered_text_top_y(r->font, empty_text, content_top + 90, 0), empty_text,
                           r->font, secondary);
@@ -239,8 +243,8 @@ void coding_plan_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
             widget_progress_bar_set_fg_color(&bar1, accent);
             widget_progress_bar_render(&bar1, fb, width, height);
 
-            char        reset_buf[64];
-            const char *rt       = r->data.five_hour_reset_time[0] ? r->data.five_hour_reset_time : "--:--";
+            char reset_buf[64];
+            const char *rt = r->data.five_hour_reset_time[0] ? r->data.five_hour_reset_time : "--:--";
             const char *rt_short = rt;
             if (strlen(rt) >= 11 && rt[5] == ' ') {
                 rt_short = &rt[6];
@@ -271,17 +275,17 @@ void coding_plan_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
             widget_progress_bar_set_fg_color(&bar2, accent);
             widget_progress_bar_render(&bar2, fb, width, height);
 
-            char        reset_buf[64];
+            char reset_buf[64];
             const char *rt = r->data.week_reset_time[0] ? r->data.week_reset_time : "--:--";
             snprintf(reset_buf, sizeof(reset_buf), "重置：%s", rt);
             rawdraw_draw_text(fb, width, height, bx + 12, card_y + 58, reset_buf, r->font, secondary);
         }
 
         /* Bottom panel: combined per-model breakdown and bar chart */
-        const int             panel_y          = card_y + card_h + 8;
-        const int             panel_h          = height - panel_y - 8;
+        const int panel_y = card_y + card_h + 8;
+        const int panel_h = height - panel_y - 8;
         rawdraw_paint_style_t white_card_style = card_style;
-        white_card_style.bg                    = RAWDRAW_COLOR_WHITE;
+        white_card_style.bg = RAWDRAW_COLOR_WHITE;
         rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){16, panel_y, width - 32, panel_h},
                                        STYLE_BORDER_RADIUS_MD, &white_card_style);
 
@@ -290,8 +294,8 @@ void coding_plan_page_render(page_renderer_t *self, uint8_t *fb, int width, int 
         /* Draw model list on top of chart space */
         {
             const int model_row_y = panel_y + 12;
-            const int max_rows    = 2;
-            const int model_rows  = r->data.per_model_count > max_rows ? max_rows : r->data.per_model_count;
+            const int max_rows = 2;
+            const int model_rows = r->data.per_model_count > max_rows ? max_rows : r->data.per_model_count;
             for (int i = 0; i < model_rows; ++i) {
                 char model_buf[64];
                 char tok_buf[24];
@@ -350,7 +354,7 @@ void coding_plan_page_update(page_renderer_t *self, const coding_plan_data_t *da
     if (r->data.hourly_count > CODING_PLAN_HOURS_7D) {
         r->data.hourly_count = CODING_PLAN_HOURS_7D;
     }
-    r->has_data                     = true;
+    r->has_data = true;
     r->base.needs_full_refresh_flag = true;
 }
 
@@ -361,16 +365,16 @@ void coding_plan_page_update(page_renderer_t *self, const coding_plan_data_t *da
 EXT_RAM_BSS_ATTR coding_plan_page_t s_coding_plan_instance;
 
 const page_renderer_ops_t coding_plan_page_ops = {
-    .init                    = coding_plan_page_init,
-    .render                  = coding_plan_page_render,
-    .handle_input            = coding_plan_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = coding_plan_page_init,
+    .render = coding_plan_page_render,
+    .handle_input = coding_plan_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
 PAGE_REGISTER(UI_PAGE_CODING_PLAN, "用量统计", NULL, true, 40, &coding_plan_page_ops, &s_coding_plan_instance.base);

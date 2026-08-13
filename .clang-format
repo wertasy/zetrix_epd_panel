@@ -49,8 +49,8 @@ BraceWrapping:
 # ===========================
 AlignAfterOpenBracket: Align
 AlignOperands: true
-AlignConsecutiveDeclarations: true
-AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments: false
 AlignTrailingComments: false
 
 # ===========================

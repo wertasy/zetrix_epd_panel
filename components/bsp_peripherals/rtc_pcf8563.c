@@ -43,10 +43,10 @@ void pcf8563_init(gpio_num_t int_gpio)
     if (int_gpio != GPIO_NUM_NC) {
         gpio_config_t cfg = {
             .pin_bit_mask = 1ULL << int_gpio,
-            .mode         = GPIO_MODE_INPUT,
-            .pull_up_en   = GPIO_PULLUP_ENABLE,
+            .mode = GPIO_MODE_INPUT,
+            .pull_up_en = GPIO_PULLUP_ENABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
-            .intr_type    = GPIO_INTR_DISABLE,
+            .intr_type = GPIO_INTR_DISABLE,
         };
         gpio_config(&cfg);
     }
@@ -82,12 +82,12 @@ bool pcf8563_get_time(struct tm *out_local_tm)
     if (board_i2c_read_regs(g_board.rtc_device, REG_SECONDS, buf, sizeof(buf)) != ESP_OK) {
         return false;
     }
-    out_local_tm->tm_sec  = from_bcd(buf[0] & 0x7F);
-    out_local_tm->tm_min  = from_bcd(buf[1] & 0x7F);
+    out_local_tm->tm_sec = from_bcd(buf[0] & 0x7F);
+    out_local_tm->tm_min = from_bcd(buf[1] & 0x7F);
     out_local_tm->tm_hour = from_bcd(buf[2] & 0x3F);
     out_local_tm->tm_mday = from_bcd(buf[3] & 0x3F);
     out_local_tm->tm_wday = from_bcd(buf[4] & 0x07);
-    out_local_tm->tm_mon  = from_bcd(buf[5] & 0x1F) - 1;
+    out_local_tm->tm_mon = from_bcd(buf[5] & 0x1F) - 1;
     out_local_tm->tm_year = from_bcd(buf[6]) + 100;
     return true;
 }
@@ -187,8 +187,8 @@ bool pcf8563_stop_countdown_timer(void)
 {
     if (!g_board.rtc_device)
         return false;
-    esp_err_t err   = board_i2c_write_reg(g_board.rtc_device, REG_TIMER_CONTROL, 0x00);
-    uint8_t   ctrl2 = 0;
+    esp_err_t err = board_i2c_write_reg(g_board.rtc_device, REG_TIMER_CONTROL, 0x00);
+    uint8_t ctrl2 = 0;
     if (board_i2c_read_regs(g_board.rtc_device, REG_CTRL2, &ctrl2, 1) != ESP_OK) {
         return false;
     }

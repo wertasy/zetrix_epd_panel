@@ -29,7 +29,7 @@ rawdraw_color_t photo_read_pixel(const uint8_t *data, uint32_t size, int bpr, bo
         const int offset = y * bpr + (x >> 2);
         if (offset < 0 || offset >= (int)size)
             return RAWDRAW_COLOR_BLACK;
-        const int     shift = 6 - ((x & 0x03) * 2);
+        const int shift = 6 - ((x & 0x03) * 2);
         const uint8_t color = (data[offset] >> shift) & 0x03;
         return (rawdraw_color_t)color;
     }

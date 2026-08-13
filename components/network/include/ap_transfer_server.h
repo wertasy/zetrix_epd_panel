@@ -51,36 +51,36 @@ typedef void (*ap_server_photos_changed_cb_t)(void *ctx);
 typedef bool (*ap_server_show_photo_cb_t)(const char *photo_id, void *ctx);
 
 typedef struct ap_transfer_server {
-    httpd_handle_t   server;
-    esp_netif_t     *ap_netif;
-    volatile bool    running;
-    volatile bool    starting;
-    TaskHandle_t     start_task;
-    char             ap_ip[32];
+    httpd_handle_t server;
+    esp_netif_t *ap_netif;
+    volatile bool running;
+    volatile bool starting;
+    TaskHandle_t start_task;
+    char ap_ip[32];
     ap_server_mode_t mode;
 
-    ap_server_state_cb_t            state_cb;
-    void                           *state_cb_ctx;
-    ap_server_image_received_cb_t   image_received_cb;
-    void                           *image_received_cb_ctx;
+    ap_server_state_cb_t state_cb;
+    void *state_cb_ctx;
+    ap_server_image_received_cb_t image_received_cb;
+    void *image_received_cb_ctx;
     ap_server_settings_changed_cb_t settings_changed_cb;
-    void                           *settings_changed_cb_ctx;
-    ap_server_photos_changed_cb_t   photos_changed_cb;
-    void                           *photos_changed_cb_ctx;
-    ap_server_show_photo_cb_t       show_photo_cb;
-    void                           *show_photo_cb_ctx;
+    void *settings_changed_cb_ctx;
+    ap_server_photos_changed_cb_t photos_changed_cb;
+    void *photos_changed_cb_ctx;
+    ap_server_show_photo_cb_t show_photo_cb;
+    void *show_photo_cb_ctx;
 } ap_transfer_server_t;
 
 /* Lifecycle. */
-void             ap_transfer_server_init(ap_transfer_server_t *server);
-void             ap_transfer_server_start(ap_transfer_server_t *server);
-bool             ap_transfer_server_start_lan(ap_transfer_server_t *server, const char *ip_address);
-void             ap_transfer_server_stop(ap_transfer_server_t *server);
-bool             ap_transfer_server_is_running(const ap_transfer_server_t *server);
-bool             ap_transfer_server_is_ap_mode(const ap_transfer_server_t *server);
-bool             ap_transfer_server_is_lan_mode(const ap_transfer_server_t *server);
+void ap_transfer_server_init(ap_transfer_server_t *server);
+void ap_transfer_server_start(ap_transfer_server_t *server);
+bool ap_transfer_server_start_lan(ap_transfer_server_t *server, const char *ip_address);
+void ap_transfer_server_stop(ap_transfer_server_t *server);
+bool ap_transfer_server_is_running(const ap_transfer_server_t *server);
+bool ap_transfer_server_is_ap_mode(const ap_transfer_server_t *server);
+bool ap_transfer_server_is_lan_mode(const ap_transfer_server_t *server);
 ap_server_mode_t ap_transfer_server_get_mode(const ap_transfer_server_t *server);
-const char      *ap_transfer_server_get_ap_ip(const ap_transfer_server_t *server);
+const char *ap_transfer_server_get_ap_ip(const ap_transfer_server_t *server);
 
 /* Callbacks. Passing NULL for cb is allowed (callback cleared). */
 void ap_transfer_server_set_state_callback(ap_transfer_server_t *server, ap_server_state_cb_t cb, void *ctx);

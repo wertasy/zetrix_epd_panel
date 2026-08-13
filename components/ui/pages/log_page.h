@@ -25,23 +25,23 @@ extern "C" {
 
 typedef struct {
     time_t time;
-    char   tag[LOG_PAGE_TAG_LEN];
-    char   message[LOG_PAGE_MSG_LEN];
+    char tag[LOG_PAGE_TAG_LEN];
+    char message[LOG_PAGE_MSG_LEN];
 } log_page_entry_t;
 
 typedef struct {
     page_renderer_t base;
 
-    int              selected_index;
-    int              scroll_offset;
+    int selected_index;
+    int scroll_offset;
     const lv_font_t *font;
     const lv_font_t *title_font;
     const lv_font_t *icon_font;
 
     /* Ring buffer of log entries (displayed oldest-first). */
     log_page_entry_t entries[LOG_PAGE_MAX_ENTRIES];
-    int              count;
-    int              head; /* next write position */
+    int count;
+    int head; /* next write position */
 } log_page_t;
 
 /* PageRenderer vtable entry points. */

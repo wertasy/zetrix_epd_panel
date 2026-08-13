@@ -31,12 +31,12 @@ typedef struct {
     page_renderer_t base;
 
     news_item_t items[NEWS_MAX_ITEMS];
-    int         count;
-    int         selected_index;
-    int         scroll_offset;
-    bool        preview_open;
-    int         footer_focus; /* 0=close, 1=read aloud */
-    int         preview_scroll; /* scroll line offset in preview modal */
+    int count;
+    int selected_index;
+    int scroll_offset;
+    bool preview_open;
+    int footer_focus; /* 0=close, 1=read aloud */
+    int preview_scroll; /* scroll line offset in preview modal */
 
     const lv_font_t *font;
     const lv_font_t *title_font;

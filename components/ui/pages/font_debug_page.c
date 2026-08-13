@@ -54,12 +54,12 @@ static void draw_diagnostic_row(uint8_t *fb, int width, int height, int x, int y
 
 void font_debug_page_init(page_renderer_t *self, int width, int height)
 {
-    font_debug_page_t *r            = (font_debug_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    font_debug_page_t *r = (font_debug_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font                         = &SourceHanSansSC_Regular_slim;
-    r->title_font                   = &SourceHanSansSC_Medium_slim;
+    r->font = &SourceHanSansSC_Regular_slim;
+    r->title_font = &SourceHanSansSC_Medium_slim;
 }
 
 void font_debug_page_render(page_renderer_t *self, uint8_t *fb, int width, int height)
@@ -74,7 +74,7 @@ void font_debug_page_render(page_renderer_t *self, uint8_t *fb, int width, int h
 
     const int x = 10;
     const int w = STYLE_SCREEN_WIDTH - 20;
-    int       y = STYLE_STATUS_BAR_HEIGHT + 10;
+    int y = STYLE_STATUS_BAR_HEIGHT + 10;
 
     const char *hint = "虚线=框中心 黑短线=真实字形上下界";
     rawdraw_draw_text(fb, width, height, x, y, hint, r->font, RAWDRAW_COLOR_BLACK);
@@ -89,7 +89,7 @@ void font_debug_page_render(page_renderer_t *self, uint8_t *fb, int width, int h
     draw_diagnostic_row(fb, width, height, x, y, w, 48, "inkM", "Macintosh 关于", r->title_font, true);
 
     const rawdraw_text_ink_bounds_t regular = rawdraw_layout_measure_text_ink_bounds(r->font, "识别中...");
-    char                            footer[96];
+    char footer[96];
     snprintf(footer, sizeof(footer), "Regular lh=%d bl=%d ink=%d..%d h=%d", (int)r->font->line_height,
              (int)r->font->base_line, regular.top, regular.bottom, regular.height);
     rawdraw_draw_text(fb, width, height, x, STYLE_SCREEN_HEIGHT - 20, footer, r->font, RAWDRAW_COLOR_BLACK);
@@ -118,17 +118,16 @@ bool font_debug_page_handle_input(page_renderer_t *self, const ui_button_event_t
 EXT_RAM_BSS_ATTR font_debug_page_t s_font_debug_instance;
 
 const page_renderer_ops_t font_debug_page_ops = {
-    .init                    = font_debug_page_init,
-    .render                  = font_debug_page_render,
-    .handle_input            = font_debug_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = font_debug_page_init,
+    .render = font_debug_page_render,
+    .handle_input = font_debug_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_FONT_DEBUG, "对齐测试", NULL, true, 140, &font_debug_page_ops,
-              &s_font_debug_instance.base);
+PAGE_REGISTER(UI_PAGE_FONT_DEBUG, "对齐测试", NULL, true, 140, &font_debug_page_ops, &s_font_debug_instance.base);

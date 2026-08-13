@@ -34,11 +34,11 @@ typedef enum {
 
 typedef struct {
     widget_voice_state_t state;
-    region_refresh_t     refresh;
-    const lv_font_t     *font;
-    char                 overlay_text[64];
-    int64_t              state_start_us;
-    bool                 visible;
+    region_refresh_t refresh;
+    const lv_font_t *font;
+    char overlay_text[64];
+    int64_t state_start_us;
+    bool visible;
 } widget_voice_wakeup_state_t;
 
 /* ---- lifecycle ---- */
@@ -52,8 +52,8 @@ void widget_voice_wakeup_done(widget_voice_wakeup_state_t *state);
 void widget_voice_wakeup_reset(widget_voice_wakeup_state_t *state);
 
 /* ---- state ---- */
-bool        widget_voice_wakeup_is_visible(const widget_voice_wakeup_state_t *state);
-void        widget_voice_wakeup_tick(widget_voice_wakeup_state_t *state, int64_t now_us);
+bool widget_voice_wakeup_is_visible(const widget_voice_wakeup_state_t *state);
+void widget_voice_wakeup_tick(widget_voice_wakeup_state_t *state, int64_t now_us);
 const char *widget_voice_wakeup_state_to_string(widget_voice_state_t state);
 
 /* ---- geometry ---- */

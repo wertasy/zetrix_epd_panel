@@ -42,9 +42,9 @@ static const battery_point_t battery_lut[] = {
 };
 #define BATTERY_LUT_LEN (sizeof(battery_lut) / sizeof(battery_lut[0]))
 
-static bool                      s_batt_initialized = false;
-static adc_oneshot_unit_handle_t s_batt_adc_handle  = NULL;
-static adc_cali_handle_t         s_batt_cali_handle = NULL;
+static bool s_batt_initialized = false;
+static adc_oneshot_unit_handle_t s_batt_adc_handle = NULL;
+static adc_cali_handle_t s_batt_cali_handle = NULL;
 
 static bool battery_adc_init(void)
 {
@@ -52,7 +52,7 @@ static bool battery_adc_init(void)
         return true;
 
     adc_oneshot_unit_init_cfg_t init_cfg = {
-        .unit_id  = BATTERY_ADC_UNIT,
+        .unit_id = BATTERY_ADC_UNIT,
         .ulp_mode = ADC_ULP_MODE_DISABLE,
     };
     if (adc_oneshot_new_unit(&init_cfg, &s_batt_adc_handle) != ESP_OK) {
@@ -61,7 +61,7 @@ static bool battery_adc_init(void)
     }
 
     adc_oneshot_chan_cfg_t chan_cfg = {
-        .atten    = BATTERY_ADC_ATTEN,
+        .atten = BATTERY_ADC_ATTEN,
         .bitwidth = BATTERY_ADC_BITWIDTH,
     };
     if (adc_oneshot_config_channel(s_batt_adc_handle, BATTERY_ADC_CHANNEL, &chan_cfg) != ESP_OK) {
@@ -72,9 +72,9 @@ static bool battery_adc_init(void)
     }
 
     adc_cali_curve_fitting_config_t cali_cfg = {
-        .unit_id  = BATTERY_ADC_UNIT,
-        .chan     = BATTERY_ADC_CHANNEL,
-        .atten    = BATTERY_ADC_ATTEN,
+        .unit_id = BATTERY_ADC_UNIT,
+        .chan = BATTERY_ADC_CHANNEL,
+        .atten = BATTERY_ADC_ATTEN,
         .bitwidth = BATTERY_ADC_BITWIDTH,
     };
     if (adc_cali_create_scheme_curve_fitting(&cali_cfg, &s_batt_cali_handle) != ESP_OK) {
@@ -97,8 +97,8 @@ static int battery_voltage_to_percent(int voltage_mv)
 
     for (size_t i = 0; i < BATTERY_LUT_LEN - 1; i++) {
         if (voltage_mv <= battery_lut[i].mv && voltage_mv >= battery_lut[i + 1].mv) {
-            const int dv   = battery_lut[i].mv - battery_lut[i + 1].mv;
-            const int dp   = battery_lut[i].pct - battery_lut[i + 1].pct;
+            const int dv = battery_lut[i].mv - battery_lut[i + 1].mv;
+            const int dp = battery_lut[i].pct - battery_lut[i + 1].pct;
             const int frac = voltage_mv - battery_lut[i + 1].mv;
             return battery_lut[i + 1].pct + (frac * dp) / dv;
         }
@@ -115,19 +115,19 @@ static uint32_t pack_snapshot(charge_state_t state, bool power_present, bool cha
 static charge_snapshot_t unpack_snapshot(uint32_t v)
 {
     charge_snapshot_t s = {0};
-    s.state             = (charge_state_t)(v & 0xFF);
-    s.power_present     = (v >> 8) & 0x1;
-    s.charging          = (v >> 9) & 0x1;
-    s.full              = (v >> 10) & 0x1;
-    s.no_battery        = (v >> 11) & 0x1;
+    s.state = (charge_state_t)(v & 0xFF);
+    s.power_present = (v >> 8) & 0x1;
+    s.charging = (v >> 9) & 0x1;
+    s.full = (v >> 10) & 0x1;
+    s.no_battery = (v >> 11) & 0x1;
     return s;
 }
 
 static void update_snapshot(charge_status_t *self, charge_state_t state, bool power_present, bool full, bool no_battery)
 {
-    bool     charging = (state == CHARGE_STATE_CHARGING || state == CHARGE_STATE_NO_BATTERY);
-    uint32_t packed   = pack_snapshot(state, power_present, charging, full, no_battery);
-    uint32_t old      = atomic_exchange(&self->snapshot, packed);
+    bool charging = (state == CHARGE_STATE_CHARGING || state == CHARGE_STATE_NO_BATTERY);
+    uint32_t packed = pack_snapshot(state, power_present, charging, full, no_battery);
+    uint32_t old = atomic_exchange(&self->snapshot, packed);
     if (old != packed && self->on_state_changed) {
         charge_snapshot_t snap = unpack_snapshot(packed);
         self->on_state_changed(&snap, self->callback_user_data);
@@ -136,21 +136,21 @@ static void update_snapshot(charge_status_t *self, charge_state_t state, bool po
 
 void charge_status_init(charge_status_t *self, gpio_num_t detect, gpio_num_t full, int64_t now_ms)
 {
-    self->detect_gpio           = detect;
-    self->full_gpio             = full;
-    self->detect_high_start_ms  = -1;
-    self->full_high_start_ms    = -1;
-    self->last_detect_seen_ms   = -1;
-    self->last_full_seen_ms     = -1;
+    self->detect_gpio = detect;
+    self->full_gpio = full;
+    self->detect_high_start_ms = -1;
+    self->full_high_start_ms = -1;
+    self->last_detect_seen_ms = -1;
+    self->last_full_seen_ms = -1;
     self->last_power_present_ms = -1;
-    self->on_state_changed      = NULL;
-    self->callback_user_data    = NULL;
+    self->on_state_changed = NULL;
+    self->callback_user_data = NULL;
 
     gpio_config_t cfg = {
-        .intr_type    = GPIO_INTR_DISABLE,
-        .mode         = GPIO_MODE_INPUT,
+        .intr_type = GPIO_INTR_DISABLE,
+        .mode = GPIO_MODE_INPUT,
         .pin_bit_mask = (1ULL << self->detect_gpio) | (1ULL << self->full_gpio),
-        .pull_up_en   = GPIO_PULLUP_DISABLE,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
     };
     ESP_ERROR_CHECK_WITHOUT_ABORT(gpio_config(&cfg));
@@ -161,18 +161,18 @@ void charge_status_init(charge_status_t *self, gpio_num_t detect, gpio_num_t ful
 
 void charge_status_on_state_changed(charge_status_t *self, charge_state_changed_cb_t cb, void *user_data)
 {
-    self->on_state_changed   = cb;
+    self->on_state_changed = cb;
     self->callback_user_data = user_data;
 }
 
 void charge_status_tick(charge_status_t *self, int64_t now_ms)
 {
     const bool detect_high = gpio_get_level(self->detect_gpio) == CHARGE_DETECT_CHARGING_LEVEL;
-    const bool full_high   = gpio_get_level(self->full_gpio) == 1;
+    const bool full_high = gpio_get_level(self->full_gpio) == 1;
 
     if (detect_high) {
         self->last_power_present_ms = now_ms;
-        self->last_detect_seen_ms   = now_ms;
+        self->last_detect_seen_ms = now_ms;
         if (self->detect_high_start_ms < 0) {
             self->detect_high_start_ms = now_ms;
         }
@@ -182,7 +182,7 @@ void charge_status_tick(charge_status_t *self, int64_t now_ms)
 
     if (full_high) {
         self->last_power_present_ms = now_ms;
-        self->last_full_seen_ms     = now_ms;
+        self->last_full_seen_ms = now_ms;
         if (self->full_high_start_ms < 0) {
             self->full_high_start_ms = now_ms;
         }
@@ -229,10 +229,10 @@ int charge_status_get_battery_percent(void)
         return -1;
 
     int sum_mv = 0;
-    int valid  = 0;
+    int valid = 0;
     for (int i = 0; i < BATTERY_SAMPLE_COUNT; i++) {
         int raw = 0;
-        int mv  = 0;
+        int mv = 0;
         if (adc_oneshot_read(s_batt_adc_handle, BATTERY_ADC_CHANNEL, &raw) != ESP_OK)
             continue;
         if (s_batt_cali_handle) {
@@ -250,7 +250,7 @@ int charge_status_get_battery_percent(void)
         return -1;
     }
 
-    const int avg_mv  = sum_mv / valid;
+    const int avg_mv = sum_mv / valid;
     const int percent = battery_voltage_to_percent(avg_mv);
     ESP_LOGD(BATT_TAG, "battery: %d mV → %d%% (samples=%d)", avg_mv, percent, valid);
     return percent;

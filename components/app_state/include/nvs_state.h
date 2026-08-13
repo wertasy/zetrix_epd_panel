@@ -51,15 +51,15 @@ extern "C" {
 typedef struct {
     char city[NVS_CITY_MAX_LEN]; /**< preferred city (e.g. "西安")      */
     bool auto_update; /**< auto-refresh weather (default on) */
-    int  update_interval; /**< hours between auto-updates (def 1)*/
+    int update_interval; /**< hours between auto-updates (def 1)*/
 } nvs_weather_prefs_t;
 
 /** @brief Persistent calendar display preferences */
 typedef struct {
     bool show_lunar; /**< show lunar dates (default on)     */
-    int  selected_year; /**< last viewed year                  */
-    int  selected_month; /**< last viewed month                 */
-    int  selected_day; /**< last selected day (0 = none)      */
+    int selected_year; /**< last viewed year                  */
+    int selected_month; /**< last viewed month                 */
+    int selected_day; /**< last selected day (0 = none)      */
 } nvs_calendar_prefs_t;
 
 /** @brief Persistent EPD refresh counters */
@@ -85,12 +85,12 @@ typedef struct {
  * @brief Aggregate of all persisted app preferences — the write-through cache.
  */
 typedef struct {
-    nvs_weather_prefs_t     weather;
-    nvs_calendar_prefs_t    calendar;
+    nvs_weather_prefs_t weather;
+    nvs_calendar_prefs_t calendar;
     nvs_epd_refresh_state_t epd;
-    nvs_ui_nav_state_t      ui;
-    nvs_ble_state_t         ble;
-    bool                    ap_transfer_boot; /**< boot into AP transfer mode */
+    nvs_ui_nav_state_t ui;
+    nvs_ble_state_t ble;
+    bool ap_transfer_boot; /**< boot into AP transfer mode */
 } system_settings_t;
 
 /* ------------------------------------------------------------------ */

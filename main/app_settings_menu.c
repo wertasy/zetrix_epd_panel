@@ -90,13 +90,13 @@ void app_settings_menu_cb(void *ctx)
     const intptr_t action = (intptr_t)ctx;
     switch (action) {
     case 1: { /* Slideshow interval cycle. */
-        settings_handle_t nvs     = settings_open(APP_GALLERY_NS, true);
-        int               current = 5;
+        settings_handle_t nvs = settings_open(APP_GALLERY_NS, true);
+        int current = 5;
         if (nvs) {
             current = (int)settings_get_int(nvs, APP_SLIDESHOW_KEY, 5);
         }
         static const int kOptions[] = {0, 5, 10, 30};
-        int              next       = 5;
+        int next = 5;
         for (unsigned i = 0; i < sizeof(kOptions) / sizeof(kOptions[0]); ++i) {
             if (kOptions[i] == current) {
                 next = kOptions[(i + 1) % (sizeof(kOptions) / sizeof(kOptions[0]))];
@@ -193,8 +193,8 @@ void app_settings_menu_cb(void *ctx)
 
 void app_settings_menu_build(void)
 {
-    settings_handle_t gallery_nvs        = settings_open(APP_GALLERY_NS, false);
-    int               slideshow_interval = 5;
+    settings_handle_t gallery_nvs = settings_open(APP_GALLERY_NS, false);
+    int slideshow_interval = 5;
     if (gallery_nvs) {
         slideshow_interval = (int)settings_get_int(gallery_nvs, APP_SLIDESHOW_KEY, 5);
         settings_close(gallery_nvs);
@@ -208,7 +208,7 @@ void app_settings_menu_build(void)
 
     /* Declarative settings menu (C port of the C++ items vector). */
     settings_page_item_t items[12];
-    int                  n = 0;
+    int n = 0;
     memset(items, 0, sizeof(items));
 
     /* Section: 系统 */
@@ -219,8 +219,8 @@ void app_settings_menu_build(void)
     /* 重启 (action) */
     strcpy(items[n].label, "重启");
     strcpy(items[n].value, "执行");
-    items[n].type         = SETTINGS_ITEM_ACTION;
-    items[n].on_click     = app_settings_menu_cb;
+    items[n].type = SETTINGS_ITEM_ACTION;
+    items[n].on_click = app_settings_menu_cb;
     items[n].on_click_ctx = (void *)(intptr_t)5;
     ++n;
 
@@ -232,8 +232,8 @@ void app_settings_menu_build(void)
     /* 轮播间隔 (action) */
     strcpy(items[n].label, "轮播间隔");
     format_minutes_label(slideshow_interval, items[n].value, sizeof(items[n].value));
-    items[n].type         = SETTINGS_ITEM_ACTION;
-    items[n].on_click     = app_settings_menu_cb;
+    items[n].type = SETTINGS_ITEM_ACTION;
+    items[n].on_click = app_settings_menu_cb;
     items[n].on_click_ctx = (void *)(intptr_t)1;
     ++n;
 
@@ -245,16 +245,16 @@ void app_settings_menu_build(void)
     /* Wi-Fi (checkbox) */
     strcpy(items[n].label, "Wi-Fi");
     strcpy(items[n].value, "未连接");
-    items[n].type         = SETTINGS_ITEM_CHECKBOX;
-    items[n].on_click     = app_settings_menu_cb;
+    items[n].type = SETTINGS_ITEM_CHECKBOX;
+    items[n].on_click = app_settings_menu_cb;
     items[n].on_click_ctx = (void *)(intptr_t)2;
     ++n;
 
     /* 局域网服务 (checkbox) */
     strcpy(items[n].label, "局域网服务");
     strcpy(items[n].value, "已关闭");
-    items[n].type         = SETTINGS_ITEM_CHECKBOX;
-    items[n].on_click     = app_settings_menu_cb;
+    items[n].type = SETTINGS_ITEM_CHECKBOX;
+    items[n].on_click = app_settings_menu_cb;
     items[n].on_click_ctx = (void *)(intptr_t)3;
     ++n;
 
@@ -267,8 +267,8 @@ void app_settings_menu_build(void)
     /* 省电模式 (action) */
     strcpy(items[n].label, "省电模式");
     strcpy(items[n].value, "手动进入");
-    items[n].type         = SETTINGS_ITEM_ACTION;
-    items[n].on_click     = app_settings_menu_cb;
+    items[n].type = SETTINGS_ITEM_ACTION;
+    items[n].on_click = app_settings_menu_cb;
     items[n].on_click_ctx = (void *)(intptr_t)4;
     ++n;
 

@@ -55,7 +55,7 @@ typedef struct {
     bool wifi_connected;
     bool server_connected;
     bool bluetooth_enabled;
-    int  battery_level; /* -1 = unknown */
+    int battery_level; /* -1 = unknown */
     bool battery_charging;
     bool battery_vertical;
     char date_format[8]; /* "" = M月D日, "iso", "hidden" */
@@ -82,7 +82,7 @@ typedef struct ui_manager ui_manager_t;
  *        to release.
  */
 ui_manager_t *ui_manager_create(void);
-void          ui_manager_delete(ui_manager_t *mgr);
+void ui_manager_delete(ui_manager_t *mgr);
 
 /**
  * @brief Initialize the UI manager.
@@ -96,14 +96,14 @@ void ui_manager_set_refresh_callback(ui_manager_t *mgr, ui_manager_refresh_cb_t 
 void ui_manager_set_page_switch_callback(ui_manager_t *mgr, ui_manager_page_switch_cb_t cb, void *user_data);
 
 /* Page switching. */
-void             ui_manager_switch_page(ui_manager_t *mgr, ui_page_id_t page);
-void             ui_manager_set_current_page_without_render(ui_manager_t *mgr, ui_page_id_t page);
-ui_page_id_t     ui_manager_get_current_page(const ui_manager_t *mgr);
-ui_page_id_t     ui_manager_get_rtc_saved_page(void);
+void ui_manager_switch_page(ui_manager_t *mgr, ui_page_id_t page);
+void ui_manager_set_current_page_without_render(ui_manager_t *mgr, ui_page_id_t page);
+ui_page_id_t ui_manager_get_current_page(const ui_manager_t *mgr);
+ui_page_id_t ui_manager_get_rtc_saved_page(void);
 page_renderer_t *ui_manager_get_active_renderer(const ui_manager_t *mgr);
 page_renderer_t *ui_manager_get_renderer(const ui_manager_t *mgr, ui_page_id_t page);
-bool             ui_manager_is_display_refresh_pending(const ui_manager_t *mgr);
-const char      *ui_manager_get_page_title(ui_page_id_t page);
+bool ui_manager_is_display_refresh_pending(const ui_manager_t *mgr);
+const char *ui_manager_get_page_title(ui_page_id_t page);
 
 bool ui_manager_handle_input(ui_manager_t *mgr, const ui_button_event_t *event);
 bool ui_manager_is_quick_switch_open(const ui_manager_t *mgr);
@@ -134,7 +134,7 @@ void ui_manager_update_settings_checked(ui_manager_t *mgr, int index, bool check
 
 /* Theme. */
 void ui_manager_set_rawdraw_theme(ui_manager_t *mgr, int theme_id);
-int  ui_manager_get_rawdraw_theme(const ui_manager_t *mgr);
+int ui_manager_get_rawdraw_theme(const ui_manager_t *mgr);
 
 /* WiFi status. */
 void ui_manager_update_wifi_status(ui_manager_t *mgr, const void *status);
@@ -146,7 +146,7 @@ bool ui_manager_is_lifebar_visible(const ui_manager_t *mgr);
 
 /* Gallery slideshow. */
 void ui_manager_set_gallery_slideshow_interval_minutes(ui_manager_t *mgr, int minutes);
-int  ui_manager_get_gallery_slideshow_interval_minutes(const ui_manager_t *mgr);
+int ui_manager_get_gallery_slideshow_interval_minutes(const ui_manager_t *mgr);
 bool ui_manager_show_photo_by_id(ui_manager_t *mgr, const char *photo_id);
 
 /* Refresh control. */

@@ -28,12 +28,12 @@ static void draw_metric_line(uint8_t *fb, int width, int height, int x, int *y, 
 
 void font_metrics_page_init(page_renderer_t *self, int width, int height)
 {
-    font_metrics_page_t *r          = (font_metrics_page_t *)self;
-    r->base.width                   = width;
-    r->base.height                  = height;
+    font_metrics_page_t *r = (font_metrics_page_t *)self;
+    r->base.width = width;
+    r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font                         = &SourceHanSansSC_Regular_slim;
-    r->title_font                   = &SourceHanSansSC_Medium_slim;
+    r->font = &SourceHanSansSC_Regular_slim;
+    r->title_font = &SourceHanSansSC_Medium_slim;
 }
 
 void font_metrics_page_render(page_renderer_t *self, uint8_t *fb, int width, int height)
@@ -47,8 +47,8 @@ void font_metrics_page_render(page_renderer_t *self, uint8_t *fb, int width, int
                       RAWDRAW_COLOR_WHITE);
 
     const int x = 10;
-    int       y = STYLE_STATUS_BAR_HEIGHT + 10;
-    char      buf[96];
+    int y = STYLE_STATUS_BAR_HEIGHT + 10;
+    char buf[96];
 
     draw_metric_line(fb, width, height, x, &y, "字体指标页：看公式，不看美观", r->font);
 
@@ -69,11 +69,11 @@ void font_metrics_page_render(page_renderer_t *self, uint8_t *fb, int width, int
     rawdraw_draw_hline(fb, width, height, y, x, STYLE_SCREEN_WIDTH - x, RAWDRAW_COLOR_BLACK);
     y += 10;
 
-    const int box_y    = y;
-    const int box_h    = 42;
+    const int box_y = y;
+    const int box_h = 42;
     const int center_y = box_y + box_h / 2;
-    const int line_y   = rawdraw_layout_center_text_top_y(r->font, box_y, box_h, 0);
-    const int ink_y    = rawdraw_layout_ink_centered_text_top_y_in_box(r->font, "识别中...", box_y, box_h, 0);
+    const int line_y = rawdraw_layout_center_text_top_y(r->font, box_y, box_h, 0);
+    const int ink_y = rawdraw_layout_ink_centered_text_top_y_in_box(r->font, "识别中...", box_y, box_h, 0);
     snprintf(buf, sizeof(buf), "42px框: lineTop=%d inkTop=%d delta=%d", line_y, ink_y, ink_y - line_y);
     draw_metric_line(fb, width, height, x, &y, buf, r->font);
 
@@ -114,17 +114,16 @@ bool font_metrics_page_handle_input(page_renderer_t *self, const ui_button_event
 EXT_RAM_BSS_ATTR font_metrics_page_t s_font_metrics_instance;
 
 const page_renderer_ops_t font_metrics_page_ops = {
-    .init                    = font_metrics_page_init,
-    .render                  = font_metrics_page_render,
-    .handle_input            = font_metrics_page_handle_input,
-    .get_dirty_rect          = NULL,
-    .needs_full_refresh      = NULL,
-    .mark_full_refresh       = NULL,
+    .init = font_metrics_page_init,
+    .render = font_metrics_page_render,
+    .handle_input = font_metrics_page_handle_input,
+    .get_dirty_rect = NULL,
+    .needs_full_refresh = NULL,
+    .mark_full_refresh = NULL,
     .clear_full_refresh_flag = NULL,
-    .append_text             = NULL,
-    .begin_stream            = NULL,
-    .end_stream              = NULL,
+    .append_text = NULL,
+    .begin_stream = NULL,
+    .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_FONT_METRICS, "字体指标", NULL, true, 150, &font_metrics_page_ops,
-              &s_font_metrics_instance.base);
+PAGE_REGISTER(UI_PAGE_FONT_METRICS, "字体指标", NULL, true, 150, &font_metrics_page_ops, &s_font_metrics_instance.base);

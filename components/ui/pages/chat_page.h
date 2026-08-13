@@ -24,26 +24,26 @@ typedef enum {
 } chat_role_t;
 
 typedef struct {
-    char        text[CHAT_MSG_TEXT_LEN];
+    char text[CHAT_MSG_TEXT_LEN];
     chat_role_t role;
-    int         y_pos; /* computed layout position */
-    int         block_h; /* computed block height incl. gap */
+    int y_pos; /* computed layout position */
+    int block_h; /* computed block height incl. gap */
 } chat_message_t;
 
 typedef struct {
     page_renderer_t base;
 
     chat_message_t messages[CHAT_MAX_MESSAGES];
-    int            message_count;
-    bool           is_streaming;
-    bool           is_listening;
-    bool           follow_latest;
-    int            scroll_offset;
-    int            max_scroll_offset;
-    char           bottom_status_text[64];
-    int            stream_frame;
-    bool           showing_volume_dialog;
-    int            volume_dialog_value;
+    int message_count;
+    bool is_streaming;
+    bool is_listening;
+    bool follow_latest;
+    int scroll_offset;
+    int max_scroll_offset;
+    char bottom_status_text[64];
+    int stream_frame;
+    bool showing_volume_dialog;
+    int volume_dialog_value;
     void (*volume_dialog_handler)(int value, bool commit, void *ctx);
     void *volume_dialog_ctx;
 
@@ -66,7 +66,7 @@ void chat_page_show_status(page_renderer_t *self, const char *status, chat_role_
 void chat_page_hide_status(page_renderer_t *self);
 void chat_page_set_listening(page_renderer_t *self, bool listening);
 void chat_page_set_bottom_status(page_renderer_t *self, const char *status);
-int  chat_page_get_message_count(const page_renderer_t *self);
+int chat_page_get_message_count(const page_renderer_t *self);
 void chat_page_show_volume_dialog(page_renderer_t *self, int volume);
 void chat_page_set_volume_dialog_handler(page_renderer_t *self, void (*handler)(int, bool, void *), void *ctx);
 bool chat_page_is_volume_dialog_showing(const page_renderer_t *self);

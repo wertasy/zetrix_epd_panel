@@ -29,9 +29,9 @@ struct page_renderer_ops {
  * to enable zero-cost safe upcast. */
 struct page_renderer {
     const struct page_renderer_ops *ops;
-    int                             width;
-    int                             height;
-    bool                            needs_full_refresh_flag;
+    int width;
+    int height;
+    bool needs_full_refresh_flag;
 };
 
 typedef struct page_renderer_ops page_renderer_ops_t;

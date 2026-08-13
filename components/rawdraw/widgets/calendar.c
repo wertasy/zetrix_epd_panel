@@ -14,8 +14,8 @@
  * ============================================================ */
 
 typedef struct {
-    int         month;
-    int         day;
+    int month;
+    int day;
     const char *name;
 } solar_term_entry_t;
 
@@ -39,12 +39,12 @@ static const char *kLunarDays[] = {"初一", "初二", "初三", "初四", "初�
 
 /* Weekday header characters */
 static const char *kWeekdayChars[] = {"日", "一", "二", "三", "四", "五", "六"};
-static const char *kWeekdayFull[]  = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+static const char *kWeekdayFull[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
 
 /* Holidays (fixed-date solar holidays in Gregorian calendar) */
 typedef struct {
-    int         month;
-    int         day;
+    int month;
+    int day;
     const char *name;
 } calendar_holiday_entry_t;
 
@@ -92,7 +92,7 @@ static const uint32_t kLunarInfo[] = {
     0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45, /* 2035-2039 */
     0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, /* 2040-2044 */
     0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0, /* 2045-2049 */
-    0x05520,                                     /* 2050 */
+    0x05520, /* 2050 */
 };
 
 static int lunar_month_days(int year, int month)
@@ -113,7 +113,7 @@ static int lunar_leap_days(int year)
 
 /* Tian Gan (天干) and Di Zhi (地支) for year names */
 static const char *kTianGan[] = {"甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"};
-static const char *kDiZhi[]   = {"子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"};
+static const char *kDiZhi[] = {"子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"};
 
 static bool is_leap_year(int year)
 {
@@ -133,7 +133,7 @@ static int days_in_month(int year, int month)
 static int weekday_of_date(int year, int month, int day)
 {
     static const int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-    int              y   = year;
+    int y = year;
     if (month < 3)
         y--;
     return (y + y / 4 - y / 100 + y / 400 + t[month - 1] + day) % 7;
@@ -163,12 +163,12 @@ widget_calendar_lunar_date_t widget_calendar_to_lunar_date(int year, int month, 
     if (year < kLunarMinYear || year > kLunarMaxYear)
         return fail;
 
-    int      idx   = year - kLunarMinYear;
-    uint16_t cny   = kSpringInfo[idx];
-    int      cny_m = (cny >> 8) & 0xff;
-    int      cny_d = cny & 0xff;
+    int idx = year - kLunarMinYear;
+    uint16_t cny = kSpringInfo[idx];
+    int cny_m = (cny >> 8) & 0xff;
+    int cny_d = cny & 0xff;
 
-    int doy     = day_of_year(year, month, day);
+    int doy = day_of_year(year, month, day);
     int cny_doy = day_of_year(year, cny_m, cny_d);
 
     int lunar_year = year;
@@ -177,19 +177,19 @@ widget_calendar_lunar_date_t widget_calendar_to_lunar_date(int year, int month, 
     if (doy < cny_doy) {
         if (year <= kLunarMinYear)
             return fail;
-        lunar_year              = year - 1;
-        uint16_t prev_cny       = kSpringInfo[idx - 1];
-        int      prev_cny_m     = (prev_cny >> 8) & 0xff;
-        int      prev_cny_d     = prev_cny & 0xff;
-        int      prev_cny_doy   = day_of_year(year - 1, prev_cny_m, prev_cny_d);
-        int      prev_year_days = days_in_year(year - 1);
-        days_since_cny          = (prev_year_days - prev_cny_doy) + doy;
+        lunar_year = year - 1;
+        uint16_t prev_cny = kSpringInfo[idx - 1];
+        int prev_cny_m = (prev_cny >> 8) & 0xff;
+        int prev_cny_d = prev_cny & 0xff;
+        int prev_cny_doy = day_of_year(year - 1, prev_cny_m, prev_cny_d);
+        int prev_year_days = days_in_year(year - 1);
+        days_since_cny = (prev_year_days - prev_cny_doy) + doy;
     } else {
         days_since_cny = doy - cny_doy;
     }
 
     int lunar_month = 1;
-    int leap_month  = lunar_leap_month(lunar_year);
+    int leap_month = lunar_leap_month(lunar_year);
 
     while (lunar_month <= 12) {
         int dim = lunar_month_days(lunar_year, lunar_month);
@@ -260,43 +260,43 @@ void widget_calendar_init(widget_calendar_t *c, int x, int y, int w, int h)
     if (!c)
         return;
     memset(c, 0, sizeof(*c));
-    c->x                  = x;
-    c->y                  = y;
-    c->w                  = w;
-    c->h                  = h;
-    c->year               = 2026;
-    c->month              = 1;
-    c->title_font         = NULL;
-    c->body_font          = NULL;
-    c->small_font         = NULL;
-    c->show_lunar         = false;
-    c->show_overflow      = false;
-    c->show_header        = true;
+    c->x = x;
+    c->y = y;
+    c->w = w;
+    c->h = h;
+    c->year = 2026;
+    c->month = 1;
+    c->title_font = NULL;
+    c->body_font = NULL;
+    c->small_font = NULL;
+    c->show_lunar = false;
+    c->show_overflow = false;
+    c->show_header = true;
     c->needs_full_refresh = true;
-    c->hol_provider       = NULL;
-    c->selection_mode     = false;
-    c->sel_row            = -1;
-    c->sel_col            = -1;
-    c->selected_day       = 0;
+    c->hol_provider = NULL;
+    c->selection_mode = false;
+    c->sel_row = -1;
+    c->sel_col = -1;
+    c->selected_day = 0;
 
-    time_t    now = time(NULL);
+    time_t now = time(NULL);
     struct tm tm_buf;
     localtime_r(&now, &tm_buf);
-    c->today_year  = tm_buf.tm_year + 1900;
+    c->today_year = tm_buf.tm_year + 1900;
     c->today_month = tm_buf.tm_mon + 1;
-    c->today_day   = tm_buf.tm_mday;
-    c->year        = c->today_year;
-    c->month       = c->today_month;
+    c->today_day = tm_buf.tm_mday;
+    c->year = c->today_year;
+    c->month = c->today_month;
 }
 
 void widget_calendar_set_bounds(widget_calendar_t *c, int x, int y, int w, int h)
 {
     if (!c)
         return;
-    c->x                  = x;
-    c->y                  = y;
-    c->w                  = w;
-    c->h                  = h;
+    c->x = x;
+    c->y = y;
+    c->w = w;
+    c->h = h;
     c->needs_full_refresh = true;
 }
 
@@ -311,8 +311,8 @@ void widget_calendar_set_date(widget_calendar_t *c, int year, int month)
         month = 1;
         year++;
     }
-    c->year               = year;
-    c->month              = month;
+    c->year = year;
+    c->month = month;
     c->needs_full_refresh = true;
 }
 
@@ -332,7 +332,7 @@ void widget_calendar_set_show_header(widget_calendar_t *c, bool show)
 {
     if (!c)
         return;
-    c->show_header        = show;
+    c->show_header = show;
     c->needs_full_refresh = true;
 }
 
@@ -341,9 +341,9 @@ void widget_calendar_set_fonts(widget_calendar_t *c, const lv_font_t *title_font
 {
     if (!c)
         return;
-    c->title_font         = title_font;
-    c->body_font          = body_font;
-    c->small_font         = small_font;
+    c->title_font = title_font;
+    c->body_font = body_font;
+    c->small_font = small_font;
     c->needs_full_refresh = true;
 }
 
@@ -410,7 +410,7 @@ bool widget_calendar_jump_to_today(widget_calendar_t *c)
         exit_sel = true;
     }
     int old_year = c->year, old_month = c->month;
-    c->year  = c->today_year;
+    c->year = c->today_year;
     c->month = c->today_month;
     if (c->year != old_year || c->month != old_month || exit_sel) {
         c->needs_full_refresh = true;
@@ -431,15 +431,15 @@ void widget_calendar_enter_selection_mode(widget_calendar_t *c)
 {
     if (!c)
         return;
-    c->selection_mode     = true;
-    c->selected_day       = 0;
+    c->selection_mode = true;
+    c->selected_day = 0;
     c->needs_full_refresh = true;
 
     int first_dow = get_first_day_of_month(c);
     if (c->year == c->today_year && c->month == c->today_month) {
         int today_cell = first_dow + c->today_day - 1;
-        c->sel_row     = today_cell / CALENDAR_COLS;
-        c->sel_col     = today_cell % CALENDAR_COLS;
+        c->sel_row = today_cell / CALENDAR_COLS;
+        c->sel_col = today_cell % CALENDAR_COLS;
     } else {
         c->sel_row = first_dow / CALENDAR_COLS;
         c->sel_col = first_dow % CALENDAR_COLS;
@@ -450,9 +450,9 @@ void widget_calendar_exit_selection_mode(widget_calendar_t *c)
 {
     if (!c)
         return;
-    c->selection_mode     = false;
-    c->sel_row            = -1;
-    c->sel_col            = -1;
+    c->selection_mode = false;
+    c->sel_row = -1;
+    c->sel_col = -1;
     c->needs_full_refresh = true;
 }
 
@@ -467,8 +467,8 @@ void widget_calendar_navigate_selection(widget_calendar_t *c, int direction)
         return;
 
     int first_dow = get_first_day_of_month(c);
-    int dim       = days_in_month(c->year, c->month);
-    int prev_dim  = days_in_month(c->month == 1 ? c->year - 1 : c->year, c->month == 1 ? 12 : c->month - 1);
+    int dim = days_in_month(c->year, c->month);
+    int prev_dim = days_in_month(c->month == 1 ? c->year - 1 : c->year, c->month == 1 ? 12 : c->month - 1);
 
     int new_row = c->sel_row + direction;
     if (new_row < 0)
@@ -476,8 +476,8 @@ void widget_calendar_navigate_selection(widget_calendar_t *c, int direction)
     if (new_row >= CALENDAR_ROWS)
         new_row = CALENDAR_ROWS - 1;
 
-    int  cell  = new_row * CALENDAR_COLS + c->sel_col;
-    int  day   = 0;
+    int cell = new_row * CALENDAR_COLS + c->sel_col;
+    int day = 0;
     bool valid = false;
 
     if (cell < first_dow) {
@@ -489,19 +489,19 @@ void widget_calendar_navigate_selection(widget_calendar_t *c, int direction)
         if (c->show_overflow)
             valid = true;
     } else {
-        day   = cell - first_dow + 1;
+        day = cell - first_dow + 1;
         valid = true;
     }
 
     if (valid && day > 0) {
         if (c->sel_row != new_row) {
-            c->sel_row            = new_row;
+            c->sel_row = new_row;
             c->needs_full_refresh = true;
         }
     } else {
         for (int try_row = new_row; try_row >= 0 && try_row < CALENDAR_ROWS; try_row += direction) {
-            int  try_cell  = try_row * CALENDAR_COLS + c->sel_col;
-            int  try_day   = 0;
+            int try_cell = try_row * CALENDAR_COLS + c->sel_col;
+            int try_day = 0;
             bool try_valid = false;
             if (try_cell < first_dow) {
                 try_day = prev_dim - first_dow + try_cell + 1;
@@ -512,12 +512,12 @@ void widget_calendar_navigate_selection(widget_calendar_t *c, int direction)
                 if (c->show_overflow)
                     try_valid = true;
             } else {
-                try_day   = try_cell - first_dow + 1;
+                try_day = try_cell - first_dow + 1;
                 try_valid = true;
             }
             if (try_valid && try_day > 0) {
                 if (c->sel_row != try_row) {
-                    c->sel_row            = try_row;
+                    c->sel_row = try_row;
                     c->needs_full_refresh = true;
                 }
                 return;
@@ -532,13 +532,13 @@ bool widget_calendar_confirm_selection(widget_calendar_t *c)
         return false;
 
     int first_dow = get_first_day_of_month(c);
-    int dim       = days_in_month(c->year, c->month);
-    int cell      = c->sel_row * CALENDAR_COLS + c->sel_col;
-    int day       = 0;
+    int dim = days_in_month(c->year, c->month);
+    int cell = c->sel_row * CALENDAR_COLS + c->sel_col;
+    int day = 0;
 
     if (cell < first_dow) {
         int prev_dim = days_in_month(c->month == 1 ? c->year - 1 : c->year, c->month == 1 ? 12 : c->month - 1);
-        day          = prev_dim - first_dow + cell + 1;
+        day = prev_dim - first_dow + cell + 1;
         c->month--;
         if (c->month < 1) {
             c->month = 12;
@@ -584,10 +584,10 @@ int widget_calendar_get_cursor_col(const widget_calendar_t *c)
 
 static void draw_header(const widget_calendar_t *c, uint8_t *fb, int width, int height)
 {
-    int                   title_bar_h  = STYLE_PANEL_TITLE_HEIGHT;
-    rawdraw_paint_style_t bg           = rawdraw_theme_component(ROLE_PANEL);
-    rawdraw_color_t       text_color   = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    rawdraw_color_t       border_color = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    int title_bar_h = STYLE_PANEL_TITLE_HEIGHT;
+    rawdraw_paint_style_t bg = rawdraw_theme_component(ROLE_PANEL);
+    rawdraw_color_t text_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    rawdraw_color_t border_color = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
 
     rawdraw_rect_t rect = {c->x, c->y, c->w, title_bar_h};
     rawdraw_draw_styled_rect(fb, width, height, rect, &bg);
@@ -598,39 +598,39 @@ static void draw_header(const widget_calendar_t *c, uint8_t *fb, int width, int 
 
     char title[32];
     snprintf(title, sizeof(title), "%d年 %d月", c->year, c->month);
-    int title_w      = rawdraw_measure_text_width(title, c->title_font);
-    int title_x      = c->x + (c->w - title_w) / 2;
+    int title_w = rawdraw_measure_text_width(title, c->title_font);
+    int title_x = c->x + (c->w - title_w) / 2;
     int title_text_y = c->y + (title_bar_h - (int)c->title_font->line_height) / 2;
-    title_x          = (title_x + 7) & ~7;
+    title_x = (title_x + 7) & ~7;
     rawdraw_draw_text(fb, width, height, title_x, title_text_y, title, c->title_font, text_color);
 
     const char *left_arrow = "<";
-    int         left_x     = c->x + STYLE_SPACING_LG;
-    left_x                 = (left_x + 7) & ~7;
+    int left_x = c->x + STYLE_SPACING_LG;
+    left_x = (left_x + 7) & ~7;
     rawdraw_draw_text(fb, width, height, left_x, title_text_y, left_arrow, c->title_font, text_color);
 
     const char *right_arrow = ">";
-    int         right_w     = rawdraw_measure_text_width(right_arrow, c->title_font);
-    int         right_x     = c->x + c->w - STYLE_SPACING_LG - right_w;
-    right_x                 = (right_x + 7) & ~7;
+    int right_w = rawdraw_measure_text_width(right_arrow, c->title_font);
+    int right_x = c->x + c->w - STYLE_SPACING_LG - right_w;
+    right_x = (right_x + 7) & ~7;
     rawdraw_draw_text(fb, width, height, right_x, title_text_y, right_arrow, c->title_font, text_color);
 }
 
 static void draw_weekday_row(const widget_calendar_t *c, uint8_t *fb, int width, int height, int y)
 {
-    rawdraw_paint_style_t bg           = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
-    rawdraw_color_t       text_color   = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
-    rawdraw_color_t       border_color = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
+    rawdraw_paint_style_t bg = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
+    rawdraw_color_t text_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+    rawdraw_color_t border_color = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
 
-    int            bg_h = 22;
+    int bg_h = 22;
     rawdraw_rect_t rect = {c->x, y, c->w, bg_h};
     rawdraw_draw_styled_rect(fb, width, height, rect, &bg);
 
     for (int i = 0; i < CALENDAR_COLS; i++) {
-        const char *ch     = kWeekdayChars[i];
-        int         ch_w   = rawdraw_measure_text_width(ch, c->body_font);
-        int         cx     = c->x + i * c->cell_w;
-        int         text_x = cx + (c->cell_w - ch_w) / 2;
+        const char *ch = kWeekdayChars[i];
+        int ch_w = rawdraw_measure_text_width(ch, c->body_font);
+        int cx = c->x + i * c->cell_w;
+        int text_x = cx + (c->cell_w - ch_w) / 2;
 
         rawdraw_draw_text(fb, width, height, text_x,
                           rawdraw_layout_ink_centered_text_top_y_in_box(c->body_font, ch, y, bg_h, 0), ch, c->body_font,
@@ -645,32 +645,32 @@ static void draw_weekday_row(const widget_calendar_t *c, uint8_t *fb, int width,
 static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int height, int y)
 {
     rawdraw_paint_style_t today_style = rawdraw_theme_style(THEME_TOKEN_SELECTED);
-    rawdraw_color_t       text_color  = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
-    rawdraw_color_t       dim_text    = rawdraw_theme_color_for(THEME_TOKEN_DISABLED);
-    rawdraw_color_t       accent     = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
+    rawdraw_color_t text_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    rawdraw_color_t dim_text = rawdraw_theme_color_for(THEME_TOKEN_DISABLED);
+    rawdraw_color_t accent = rawdraw_theme_style(THEME_TOKEN_ACCENT).bg;
 
     int first_dow = get_first_day_of_month(c);
-    int dim       = days_in_month(c->year, c->month);
-    int prev_dim  = days_in_month(c->month == 1 ? c->year - 1 : c->year, c->month == 1 ? 12 : c->month - 1);
+    int dim = days_in_month(c->year, c->month);
+    int prev_dim = days_in_month(c->month == 1 ? c->year - 1 : c->year, c->month == 1 ? 12 : c->month - 1);
 
-    int total_cells  = CALENDAR_ROWS * CALENDAR_COLS;
+    int total_cells = CALENDAR_ROWS * CALENDAR_COLS;
     int start_offset = first_dow;
 
     for (int cell = 0; cell < total_cells; cell++) {
         int row = cell / CALENDAR_COLS;
         int col = cell % CALENDAR_COLS;
-        int cx  = c->x + col * c->cell_w;
-        int cy  = y + row * c->cell_h;
+        int cx = c->x + col * c->cell_w;
+        int cy = y + row * c->cell_h;
 
-        int  display_day      = 0;
-        bool is_today         = false;
+        int display_day = 0;
+        bool is_today = false;
         bool is_current_month = true;
 
         if (cell < start_offset) {
-            display_day      = prev_dim - start_offset + cell + 1;
+            display_day = prev_dim - start_offset + cell + 1;
             is_current_month = false;
         } else if (cell >= start_offset + dim) {
-            display_day      = cell - start_offset - dim + 1;
+            display_day = cell - start_offset - dim + 1;
             is_current_month = false;
         } else {
             display_day = cell - start_offset + 1;
@@ -682,10 +682,10 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
         if (!is_current_month && !c->show_overflow)
             continue;
 
-        const char *solar_term   = NULL;
-        const char *holiday      = NULL;
+        const char *solar_term = NULL;
+        const char *holiday = NULL;
         const char *makeup_label = NULL;
-        bool        is_holiday   = false;
+        bool is_holiday = false;
 
         if (is_current_month) {
             solar_term = widget_calendar_get_solar_term(c->month, display_day);
@@ -700,7 +700,7 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
             if (c->hol_provider) {
                 if (c->hol_provider->is_holiday(q_year, q_month, q_day)) {
                     is_holiday = true;
-                    holiday    = c->hol_provider->get_holiday_name(q_year, q_month, q_day);
+                    holiday = c->hol_provider->get_holiday_name(q_year, q_month, q_day);
                     if (!holiday)
                         holiday = "休";
                 } else if (c->hol_provider->is_makeup_workday(q_year, q_month, q_day)) {
@@ -711,14 +711,14 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
 
         char buf[16];
         snprintf(buf, sizeof(buf), "%d", display_day);
-        int num_w         = rawdraw_measure_text_width(buf, c->body_font);
-        int kDateBoxH     = 18;
-        int kDateTopPad   = 2;
+        int num_w = rawdraw_measure_text_width(buf, c->body_font);
+        int kDateBoxH = 18;
+        int kDateTopPad = 2;
         int kDateLunarGap = 2;
-        int kLunarBoxH    = 16;
-        int num_x         = cx + (c->cell_w - num_w) / 2;
-        int num_box_y     = cy + kDateTopPad;
-        int num_y         = rawdraw_layout_ink_centered_text_top_y_in_box(c->body_font, buf, num_box_y, kDateBoxH, 0);
+        int kLunarBoxH = 16;
+        int num_x = cx + (c->cell_w - num_w) / 2;
+        int num_box_y = cy + kDateTopPad;
+        int num_y = rawdraw_layout_ink_centered_text_top_y_in_box(c->body_font, buf, num_box_y, kDateBoxH, 0);
 
         if (num_x + num_w > c->x + c->w)
             continue;
@@ -737,17 +737,17 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
             rawdraw_draw_text(fb, width, height, num_x, num_y, buf, c->body_font, dim_text);
         } else if (is_holiday) {
             /* Holiday: red circle background + white date number. */
-            int circle_cx  = cx + c->cell_w / 2;
-            int circle_cy  = num_box_y + kDateBoxH / 2;
-            int circle_r   = kDateBoxH / 2 + 1;
+            int circle_cx = cx + c->cell_w / 2;
+            int circle_cy = num_box_y + kDateBoxH / 2;
+            int circle_r = kDateBoxH / 2 + 1;
             rawdraw_draw_circle(fb, width, height, (rawdraw_point_t){circle_cx, circle_cy}, circle_r,
                                 RAWDRAW_COLOR_RED);
             rawdraw_draw_text(fb, width, height, num_x, num_y, buf, c->body_font, RAWDRAW_COLOR_WHITE);
         } else if (makeup_label) {
             /* Makeup workday (补班): yellow circle background + white date number. */
-            int circle_cx  = cx + c->cell_w / 2;
-            int circle_cy  = num_box_y + kDateBoxH / 2;
-            int circle_r   = kDateBoxH / 2 + 1;
+            int circle_cx = cx + c->cell_w / 2;
+            int circle_cy = num_box_y + kDateBoxH / 2;
+            int circle_r = kDateBoxH / 2 + 1;
             rawdraw_draw_circle(fb, width, height, (rawdraw_point_t){circle_cx, circle_cy}, circle_r,
                                 RAWDRAW_COLOR_YELLOW);
             rawdraw_draw_text(fb, width, height, num_x, num_y, buf, c->body_font, RAWDRAW_COLOR_BLACK);
@@ -756,11 +756,11 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
         }
 
         if (c->show_lunar || solar_term || holiday || makeup_label) {
-            const char *label         = NULL;
-            bool        is_solar_term = false;
+            const char *label = NULL;
+            bool is_solar_term = false;
 
             if (solar_term) {
-                label         = solar_term;
+                label = solar_term;
                 is_solar_term = true;
             } else if (holiday) {
                 label = holiday;
@@ -776,8 +776,8 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
             }
 
             if (label && *label) {
-                int label_w     = rawdraw_measure_text_width(label, c->small_font);
-                int label_x     = cx + (c->cell_w - label_w) / 2;
+                int label_w = rawdraw_measure_text_width(label, c->small_font);
+                int label_x = cx + (c->cell_w - label_w) / 2;
                 int label_box_y = num_box_y + kDateBoxH + kDateLunarGap;
                 int label_y =
                     rawdraw_layout_ink_centered_text_top_y_in_box(c->small_font, label, label_box_y, kLunarBoxH, 0);
@@ -804,7 +804,7 @@ static void draw_bottom_info(const widget_calendar_t *c, uint8_t *fb, int width,
         snprintf(buf, sizeof(buf), "今天 %d月%d日 %s", c->today_month, c->today_day, kWeekdayFull[weekday_idx]);
 
         widget_calendar_lunar_date_t ld = widget_calendar_to_lunar_date(c->today_year, c->today_month, c->today_day);
-        char                         year_name[16];
+        char year_name[16];
         widget_calendar_get_lunar_year_name(ld.lunar_year, year_name, sizeof(year_name));
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), " %s年%s%s", year_name,
                  widget_calendar_get_lunar_month_name(ld.lunar_month),
@@ -816,7 +816,7 @@ static void draw_bottom_info(const widget_calendar_t *c, uint8_t *fb, int width,
 
     int text_w = rawdraw_measure_text_width(buf, c->small_font);
     int text_x = c->x + (c->w - text_w) / 2;
-    text_x     = (text_x + 7) & ~7;
+    text_x = (text_x + 7) & ~7;
     rawdraw_draw_text(fb, width, height, text_x, y, buf, c->small_font,
                       rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY));
 }
@@ -829,8 +829,8 @@ static void draw_selection_cursor(const widget_calendar_t *c, uint8_t *fb, int w
     int cx = c->x + c->sel_col * c->cell_w;
     int cy = grid_y + c->sel_row * c->cell_h;
 
-    rawdraw_color_t focus    = rawdraw_theme_color_for(THEME_TOKEN_FOCUS);
-    int             border_w = 3;
+    rawdraw_color_t focus = rawdraw_theme_color_for(THEME_TOKEN_FOCUS);
+    int border_w = 3;
 
     rawdraw_rect_t cursor_r = {cx, cy, c->cell_w, c->cell_h};
     rawdraw_draw_rect_border(fb, width, height, cursor_r, border_w, focus);
@@ -839,7 +839,7 @@ static void draw_selection_cursor(const widget_calendar_t *c, uint8_t *fb, int w
     if (c->small_font) {
         int mark_x = cx + STYLE_SPACING_XS;
         int mark_y = cy + 1;
-        mark_x     = (mark_x + 7) & ~7;
+        mark_x = (mark_x + 7) & ~7;
         rawdraw_draw_text(fb, width, height, mark_x, mark_y, cursor_mark, c->small_font, focus);
     }
 }
@@ -859,14 +859,14 @@ void widget_calendar_render(widget_calendar_t *c, uint8_t *fb, int fb_width, int
 
     /* Temporarily set resolution-fallback fonts if missing */
     c->title_font = tfont;
-    c->body_font  = bfont;
+    c->body_font = bfont;
     c->small_font = sfont;
 
-    int  title_bar_h      = c->show_header ? STYLE_PANEL_TITLE_HEIGHT : 0;
-    int  weekday_h        = 22;
+    int title_bar_h = c->show_header ? STYLE_PANEL_TITLE_HEIGHT : 0;
+    int weekday_h = 22;
     bool show_bottom_info = c->show_header;
-    int  bottom_reserve   = show_bottom_info ? 26 : 0;
-    int  grid_total_h     = c->h - title_bar_h - weekday_h - bottom_reserve;
+    int bottom_reserve = show_bottom_info ? 26 : 0;
+    int grid_total_h = c->h - title_bar_h - weekday_h - bottom_reserve;
 
     c->cell_h = grid_total_h / CALENDAR_ROWS;
     if (c->cell_h < 34)

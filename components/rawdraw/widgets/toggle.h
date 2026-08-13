@@ -34,14 +34,14 @@ typedef void (*widget_toggle_callback_t)(bool on, void *user_data);
 #define WIDGET_TOGGLE_LABEL_LEN 32
 
 typedef struct {
-    int  x, y, w, h;
+    int x, y, w, h;
     bool state;
 
-    char             label[WIDGET_TOGGLE_LABEL_LEN]; /* "" = no label */
+    char label[WIDGET_TOGGLE_LABEL_LEN]; /* "" = no label */
     const lv_font_t *font;
 
     widget_toggle_callback_t callback;
-    void                    *callback_user_data;
+    void *callback_user_data;
 
     rawdraw_color_t track_on_color;
     rawdraw_color_t track_off_color;
@@ -69,8 +69,8 @@ void widget_toggle_handle_tap(widget_toggle_t *t);
 bool widget_toggle_handle_input(widget_toggle_t *t, const ui_button_event_t *event);
 
 /* ---- geometry ---- */
-rawdraw_rect_t  widget_toggle_get_track_bounds(const widget_toggle_t *t);
-rawdraw_rect_t  widget_toggle_get_bounds(const widget_toggle_t *t, int screen_width);
+rawdraw_rect_t widget_toggle_get_track_bounds(const widget_toggle_t *t);
+rawdraw_rect_t widget_toggle_get_bounds(const widget_toggle_t *t, int screen_width);
 rawdraw_point_t widget_toggle_get_thumb_center(const widget_toggle_t *t);
 
 /* ---- rendering ---- */

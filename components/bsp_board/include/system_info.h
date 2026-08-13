@@ -42,8 +42,8 @@ uint32_t system_info_get_free_heap(void);
  * @brief Minimum-ever free heap size since boot in bytes.
  */
 uint32_t system_info_get_min_free_heap(void);
-void     system_info_get_device_id(char *out, size_t len);
-void     system_info_get_user_agent(char *out, size_t len);
+void system_info_get_device_id(char *out, size_t len);
+void system_info_get_user_agent(char *out, size_t len);
 
 #ifdef __cplusplus
 }

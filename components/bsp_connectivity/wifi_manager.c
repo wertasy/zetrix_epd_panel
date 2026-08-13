@@ -11,12 +11,12 @@
 
 static const char *TAG = "wifi_mgr";
 
-static wifi_event_callback_t s_callback           = NULL;
-static void                 *s_callback_user_data = NULL;
-static bool                  s_connected          = false;
-static char                  s_ip_address[32]     = "0.0.0.0";
-static char                  s_ssid[32]           = {0};
-static int                   s_retry_count        = 0;
+static wifi_event_callback_t s_callback = NULL;
+static void *s_callback_user_data = NULL;
+static bool s_connected = false;
+static char s_ip_address[32] = "0.0.0.0";
+static char s_ssid[32] = {0};
+static int s_retry_count = 0;
 
 static SemaphoreHandle_t s_wifi_mutex = NULL;
 
@@ -49,10 +49,10 @@ static void schedule_reconnect(void)
 {
     if (!s_reconnect_timer) {
         const esp_timer_create_args_t timer_args = {
-            .callback              = reconnect_timer_callback,
-            .arg                   = NULL,
-            .dispatch_method       = ESP_TIMER_TASK,
-            .name                  = "wifi_reconn",
+            .callback = reconnect_timer_callback,
+            .arg = NULL,
+            .dispatch_method = ESP_TIMER_TASK,
+            .name = "wifi_reconn",
             .skip_unhandled_events = true,
         };
         if (esp_timer_create(&timer_args, &s_reconnect_timer) != ESP_OK) {
@@ -76,7 +76,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
             s_callback(WIFI_EVENT_CONNECTING, s_callback_user_data);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         wifi_event_sta_disconnected_t *disconnected_data = (wifi_event_sta_disconnected_t *)event_data;
-        uint8_t                        reason            = disconnected_data ? disconnected_data->reason : 0;
+        uint8_t reason = disconnected_data ? disconnected_data->reason : 0;
         ESP_LOGW(TAG, "Disconnected from AP, reason code: %d", reason);
         lock_wifi();
         s_connected = false;
@@ -100,12 +100,12 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
         }
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        esp_ip4_addr_t     ip    = event->ip_info.ip;
+        esp_ip4_addr_t ip = event->ip_info.ip;
         char ip_str[32];
         lock_wifi();
         snprintf(s_ip_address, sizeof(s_ip_address), IPSTR, IP2STR(&ip));
         strcpy(ip_str, s_ip_address);
-        s_connected   = true;
+        s_connected = true;
         s_retry_count = 0;
         unlock_wifi();
         ESP_LOGI(TAG, "got ip: %s", ip_str);
@@ -219,6 +219,6 @@ void wifi_manager_get_ssid(char *out_ssid, size_t max_len)
 
 void wifi_manager_register_callback(wifi_event_callback_t cb, void *user_data)
 {
-    s_callback           = cb;
+    s_callback = cb;
     s_callback_user_data = user_data;
 }

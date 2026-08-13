@@ -26,10 +26,10 @@ typedef enum {
 } device_state_t;
 
 /* Singleton accessor. */
-void           application_init(void);
-void           application_run(void);
+void application_init(void);
+void application_run(void);
 device_state_t application_get_device_state(void);
-bool           application_set_device_state(device_state_t state);
+bool application_set_device_state(device_state_t state);
 
 /* Button event routing (called from iot_button callbacks). */
 void application_on_up_click(void);

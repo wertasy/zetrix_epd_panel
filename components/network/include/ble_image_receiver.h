@@ -28,10 +28,10 @@ extern "C" {
 
 /** Transfer status (mirrors ble_gatt_service transfer status). */
 typedef enum {
-    BLE_IMAGE_STATUS_IDLE      = 0x00, /**< no transfer in progress            */
+    BLE_IMAGE_STATUS_IDLE = 0x00, /**< no transfer in progress            */
     BLE_IMAGE_STATUS_RECEIVING = 0x01, /**< chunks arriving                    */
-    BLE_IMAGE_STATUS_COMPLETE  = 0x02, /**< all expected bytes received        */
-    BLE_IMAGE_STATUS_ERROR     = 0xFF, /**< overflow / not initialised         */
+    BLE_IMAGE_STATUS_COMPLETE = 0x02, /**< all expected bytes received        */
+    BLE_IMAGE_STATUS_ERROR = 0xFF, /**< overflow / not initialised         */
 } ble_image_status_t;
 
 /**

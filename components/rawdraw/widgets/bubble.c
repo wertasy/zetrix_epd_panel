@@ -12,22 +12,22 @@ static void apply_default_style(widget_bubble_t *bubble)
 
     switch (bubble->align) {
     case WIDGET_BUBBLE_ALIGN_LEFT: {
-        bubble->fill_color   = rawdraw_theme_color_for(THEME_TOKEN_BACKGROUND_PRIMARY);
-        bubble->text_color   = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+        bubble->fill_color = rawdraw_theme_color_for(THEME_TOKEN_BACKGROUND_PRIMARY);
+        bubble->text_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
         bubble->border_color = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
         bubble->border_width = rawdraw_theme_component(ROLE_CARD_DEFAULT).border_width;
         break;
     }
     case WIDGET_BUBBLE_ALIGN_RIGHT: {
-        bubble->fill_color   = rawdraw_theme_color_for(THEME_TOKEN_SELECTED);
-        bubble->text_color   = rawdraw_theme_component(ROLE_BUTTON_SELECTED).fg;
+        bubble->fill_color = rawdraw_theme_color_for(THEME_TOKEN_SELECTED);
+        bubble->text_color = rawdraw_theme_component(ROLE_BUTTON_SELECTED).fg;
         bubble->border_color = rawdraw_theme_component(ROLE_BUTTON_SELECTED).border;
         bubble->border_width = 0;
         break;
     }
     case WIDGET_BUBBLE_ALIGN_CENTER: {
-        bubble->fill_color   = rawdraw_theme_color_for(THEME_TOKEN_BACKGROUND_PRIMARY);
-        bubble->text_color   = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
+        bubble->fill_color = rawdraw_theme_color_for(THEME_TOKEN_BACKGROUND_PRIMARY);
+        bubble->text_color = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
         bubble->border_color = bubble->fill_color;
         bubble->border_width = 0;
         break;
@@ -39,19 +39,19 @@ void widget_bubble_init(widget_bubble_t *bubble, widget_bubble_align_t align, in
 {
     if (!bubble)
         return;
-    bubble->align         = align;
-    bubble->margin        = margin;
-    bubble->max_width     = max_width;
-    bubble->radius        = radius;
-    bubble->font          = NULL;
-    bubble->line_spacing  = 0;
-    bubble->padding       = 4;
-    bubble->text[0]       = '\0';
-    bubble->y             = 0;
-    bubble->fill_color    = RAWDRAW_COLOR_WHITE;
-    bubble->text_color    = RAWDRAW_COLOR_BLACK;
-    bubble->border_color  = RAWDRAW_COLOR_BLACK;
-    bubble->border_width  = 1;
+    bubble->align = align;
+    bubble->margin = margin;
+    bubble->max_width = max_width;
+    bubble->radius = radius;
+    bubble->font = NULL;
+    bubble->line_spacing = 0;
+    bubble->padding = 4;
+    bubble->text[0] = '\0';
+    bubble->y = 0;
+    bubble->fill_color = RAWDRAW_COLOR_WHITE;
+    bubble->text_color = RAWDRAW_COLOR_BLACK;
+    bubble->border_color = RAWDRAW_COLOR_BLACK;
+    bubble->border_width = 1;
     bubble->custom_colors = false;
     apply_default_style(bubble);
 }
@@ -111,10 +111,10 @@ void widget_bubble_set_colors(widget_bubble_t *bubble, rawdraw_color_t fill, raw
 {
     if (!bubble)
         return;
-    bubble->fill_color    = fill;
-    bubble->text_color    = text;
-    bubble->border_color  = border;
-    bubble->border_width  = border_width;
+    bubble->fill_color = fill;
+    bubble->text_color = text;
+    bubble->border_color = border;
+    bubble->border_width = border_width;
     bubble->custom_colors = true;
 }
 
@@ -180,7 +180,7 @@ int widget_bubble_calculate_height(const widget_bubble_t *bubble)
     if (!bubble)
         return 0;
     rawdraw_rect_t text_bounds = calculate_text_bounds(bubble);
-    int            line_count  = 1;
+    int line_count = 1;
     if (bubble->text[0] == '\0') {
         line_count = 0;
     } else {
@@ -197,7 +197,7 @@ int widget_bubble_calculate_height(const widget_bubble_t *bubble)
     }
 
     int line_height = bubble->font ? bubble->font->line_height : 16;
-    int line_step   = line_height + bubble->line_spacing;
+    int line_step = line_height + bubble->line_spacing;
     if (line_step < 24)
         line_step = 24;
 
@@ -216,7 +216,7 @@ int widget_bubble_calculate_width(const widget_bubble_t *bubble)
     if (!bubble)
         return 0;
     rawdraw_rect_t text_bounds = calculate_text_bounds(bubble);
-    int            width       = text_bounds.w + 2 * bubble->padding;
+    int width = text_bounds.w + 2 * bubble->padding;
 
     int min_width = 2 * bubble->padding + 20;
     if (width < min_width) {
@@ -284,7 +284,7 @@ void widget_bubble_render(widget_bubble_t *bubble, uint8_t *fb, int width, int h
     }
 
     rawdraw_rect_t bounds = widget_bubble_get_bounds(bubble, width);
-    bounds                = rawdraw_clamp_rect(bounds, width, height);
+    bounds = rawdraw_clamp_rect(bounds, width, height);
     if (rawdraw_rect_area(bounds) <= 0)
         return;
 
@@ -316,20 +316,20 @@ void widget_bubble_render(widget_bubble_t *bubble, uint8_t *fb, int width, int h
             line_step = 24;
 
         rawdraw_color_t draw_color = bubble->text_color;
-        const char     *p          = bubble->text;
-        int             current_y  = text_y;
+        const char *p = bubble->text;
+        int current_y = text_y;
 
         const int letter_spacing = (bubble->font->line_height + 8) / 16;
-        const int space_width    = bubble->font->line_height / 4;
+        const int space_width = bubble->font->line_height / 4;
 
         char line_buf[256];
-        int  line_idx       = 0;
-        int  current_line_w = 0;
-        int  max_text_w     = bubble->max_width - 2 * bubble->padding;
+        int line_idx = 0;
+        int current_line_w = 0;
+        int max_text_w = bubble->max_width - 2 * bubble->padding;
 
         while (*p && current_y < bounds.y + bounds.h) {
             const char *prev_p = p;
-            uint32_t    ch     = utf8_next(&p);
+            uint32_t ch = utf8_next(&p);
             if (ch == 0)
                 break;
 
@@ -339,7 +339,7 @@ void widget_bubble_render(widget_bubble_t *bubble, uint8_t *fb, int width, int h
                     rawdraw_draw_text(fb, width, height, text_x, current_y, line_buf, bubble->font, (int)draw_color);
                 }
                 current_y += line_step;
-                line_idx       = 0;
+                line_idx = 0;
                 current_line_w = 0;
                 continue;
             }
@@ -349,7 +349,7 @@ void widget_bubble_render(widget_bubble_t *bubble, uint8_t *fb, int width, int h
                 char_w = space_width;
             } else {
                 lv_font_glyph_dsc_t g = {0};
-                g.resolved_font       = bubble->font;
+                g.resolved_font = bubble->font;
                 if (lv_font_get_glyph_dsc(bubble->font, &g, ch, 0)) {
                     if (ch >= 0x20 && ch <= 0x7E) {
                         char_w = (int)g.box_w + (int)g.ofs_x + letter_spacing;
@@ -372,7 +372,7 @@ void widget_bubble_render(widget_bubble_t *bubble, uint8_t *fb, int width, int h
                 current_y += line_step;
 
                 // Start new line with current character
-                line_idx  = 0;
+                line_idx = 0;
                 int bytes = p - prev_p;
                 for (int b = 0; b < bytes && line_idx < 255; b++) {
                     line_buf[line_idx++] = prev_p[b];

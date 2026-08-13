@@ -11,9 +11,9 @@
 
 typedef struct {
     bool valid;
-    int  top;
-    int  bottom;
-    int  height;
+    int top;
+    int bottom;
+    int height;
 } rawdraw_text_ink_bounds_t;
 
 /**

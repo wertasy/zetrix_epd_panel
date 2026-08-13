@@ -39,10 +39,10 @@ extern "C" {
 #define WIDGET_STATUS_BAR_TEXT_LEN 64
 
 typedef struct {
-    bool             visible;
-    char             text[WIDGET_STATUS_BAR_TEXT_LEN];
-    int64_t          show_time_us; /* Timestamp when shown (caller-supplied, microseconds) */
-    int64_t          auto_hide_ms; /* Auto-hide delay in ms (0 = never) */
+    bool visible;
+    char text[WIDGET_STATUS_BAR_TEXT_LEN];
+    int64_t show_time_us; /* Timestamp when shown (caller-supplied, microseconds) */
+    int64_t auto_hide_ms; /* Auto-hide delay in ms (0 = never) */
     const lv_font_t *font;
 } widget_status_bar_t;
 

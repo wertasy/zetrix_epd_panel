@@ -33,16 +33,16 @@ void stream_pipeline_init(stream_pipeline_t *sp, protocol_t *proto, text_chunk_c
     if (!sp)
         return;
     memset(sp, 0, sizeof(*sp));
-    sp->proto   = proto;
-    sp->cb      = cb;
-    sp->cb_ctx  = cb_ctx;
-    sp->mutex   = xSemaphoreCreateMutex();
+    sp->proto = proto;
+    sp->cb = cb;
+    sp->cb_ctx = cb_ctx;
+    sp->mutex = xSemaphoreCreateMutex();
 
     text_chunker_init(&sp->chunker, on_chunk_cb, sp);
 
     if (sp->proto) {
         sp->proto->on_incoming_text = stream_pipeline_on_text;
-        sp->proto->text_ctx         = sp;
+        sp->proto->text_ctx = sp;
     }
 }
 

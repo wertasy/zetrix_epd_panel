@@ -28,23 +28,23 @@ void widget_card_init(widget_card_t *card, int x, int y, int w, int h, int radiu
     if (!card)
         return;
     memset(card, 0, sizeof(*card));
-    card->bounds.x         = x;
-    card->bounds.y         = y;
-    card->bounds.w         = w;
-    card->bounds.h         = h;
-    card->radius           = radius;
-    card->border_width     = STYLE_CARD_BORDER_WIDTH;
-    card->padding          = STYLE_CARD_PADDING;
-    card->title_height     = 0;
-    card->title_enabled    = true;
-    card->shadow_enabled   = false;
-    card->shadow_offset    = STYLE_CARD_SHADOW_OFFSET;
-    card->bg_color         = RAWDRAW_COLOR_WHITE;
-    card->border_color     = RAWDRAW_COLOR_BLACK;
-    card->title_bg_color   = RAWDRAW_COLOR_WHITE;
+    card->bounds.x = x;
+    card->bounds.y = y;
+    card->bounds.w = w;
+    card->bounds.h = h;
+    card->radius = radius;
+    card->border_width = STYLE_CARD_BORDER_WIDTH;
+    card->padding = STYLE_CARD_PADDING;
+    card->title_height = 0;
+    card->title_enabled = true;
+    card->shadow_enabled = false;
+    card->shadow_offset = STYLE_CARD_SHADOW_OFFSET;
+    card->bg_color = RAWDRAW_COLOR_WHITE;
+    card->border_color = RAWDRAW_COLOR_BLACK;
+    card->title_bg_color = RAWDRAW_COLOR_WHITE;
     card->title_text_color = RAWDRAW_COLOR_BLACK;
-    card->shadow_color     = RAWDRAW_COLOR_BLACK;
-    card->custom_colors    = false;
+    card->shadow_color = RAWDRAW_COLOR_BLACK;
+    card->custom_colors = false;
 }
 
 /* ============================================================
@@ -128,8 +128,8 @@ void widget_card_set_colors(widget_card_t *card, rawdraw_color_t bg, rawdraw_col
 {
     if (!card)
         return;
-    card->bg_color      = bg;
-    card->border_color  = border;
+    card->bg_color = bg;
+    card->border_color = border;
     card->custom_colors = true;
 }
 
@@ -137,7 +137,7 @@ void widget_card_set_title_colors(widget_card_t *card, rawdraw_color_t bg, rawdr
 {
     if (!card)
         return;
-    card->title_bg_color   = bg;
+    card->title_bg_color = bg;
     card->title_text_color = text;
 }
 
@@ -179,10 +179,10 @@ rawdraw_rect_t widget_card_get_title_bounds(const widget_card_t *card)
     if (!card)
         return r;
     int th = widget_card_calculate_title_height(card);
-    r.x    = card->bounds.x;
-    r.y    = card->bounds.y;
-    r.w    = card->bounds.w;
-    r.h    = th;
+    r.x = card->bounds.x;
+    r.y = card->bounds.y;
+    r.w = card->bounds.w;
+    r.h = th;
     return r;
 }
 
@@ -192,11 +192,11 @@ rawdraw_rect_t widget_card_get_content_bounds(const widget_card_t *card)
     if (!card)
         return r;
     int th = widget_card_calculate_title_height(card);
-    int p  = card->padding;
-    r.x    = card->bounds.x + p;
-    r.y    = card->bounds.y + th + p;
-    r.w    = RD_MAX(0, card->bounds.w - 2 * p);
-    r.h    = RD_MAX(0, card->bounds.h - th - 2 * p);
+    int p = card->padding;
+    r.x = card->bounds.x + p;
+    r.y = card->bounds.y + th + p;
+    r.w = RD_MAX(0, card->bounds.w - 2 * p);
+    r.h = RD_MAX(0, card->bounds.h - th - 2 * p);
     return r;
 }
 
@@ -215,24 +215,24 @@ void widget_card_render(const widget_card_t *card, uint8_t *fb, int fb_width, in
 
     /* Clamp radius to valid range (card-specific, vs. button/panel). */
     int half = RD_MIN(bounds.w, bounds.h) / 2;
-    int r    = RD_MIN(card->radius, half);
+    int r = RD_MIN(card->radius, half);
     if (r < 0)
         r = 0;
 
     rawdraw_paint_style_t card_style = rawdraw_theme_component(ROLE_CARD_DEFAULT);
     if (card->custom_colors) {
-        card_style.bg     = card->bg_color;
+        card_style.bg = card->bg_color;
         card_style.border = card->border_color;
     }
 
     rawdraw_paint_style_t shadow_style = rawdraw_theme_style(THEME_TOKEN_SHADOW);
-    shadow_style.bg                    = card->shadow_color;
+    shadow_style.bg = card->shadow_color;
 
     /* 1. Shadow (offset filled rect behind the card) */
     if (card->shadow_enabled && card->shadow_offset > 0) {
         rawdraw_rect_t shadow_rect = {bounds.x + card->shadow_offset, bounds.y + card->shadow_offset, bounds.w,
                                       bounds.h};
-        shadow_rect                = rawdraw_clamp_rect(shadow_rect, fb_width, fb_height);
+        shadow_rect = rawdraw_clamp_rect(shadow_rect, fb_width, fb_height);
         if (rawdraw_rect_area(shadow_rect) > 0) {
             rawdraw_draw_styled_rect(fb, fb_width, fb_height, shadow_rect, &shadow_style);
         }
@@ -247,11 +247,11 @@ void widget_card_render(const widget_card_t *card, uint8_t *fb, int fb_width, in
         int th = widget_card_calculate_title_height(card);
         if (th > 0) {
             rawdraw_rect_t title_bg = {bounds.x, bounds.y, bounds.w, th};
-            title_bg                = rawdraw_clamp_rect(title_bg, fb_width, fb_height);
+            title_bg = rawdraw_clamp_rect(title_bg, fb_width, fb_height);
 
             rawdraw_paint_style_t title_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_SECONDARY);
-            title_style.bg                    = card->title_bg_color;
-            title_style.fg                    = card->title_text_color;
+            title_style.bg = card->title_bg_color;
+            title_style.fg = card->title_text_color;
             rawdraw_draw_styled_rect(fb, fb_width, fb_height, title_bg, &title_style);
 
             if (card->title_font) {

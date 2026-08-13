@@ -23,16 +23,16 @@ extern "C" {
 
 /** Photo metadata. */
 typedef struct {
-    char     id[16]; /**< unique ID (from server)    */
-    char     title[PHOTO_TITLE_LEN]; /**< short headline             */
-    char     date[PHOTO_DATE_LEN]; /**< ISO / display date         */
-    char     location[PHOTO_LOCATION_LEN]; /**< photo location             */
-    char     body[PHOTO_BODY_LEN]; /**< narrative body text        */
+    char id[16]; /**< unique ID (from server)    */
+    char title[PHOTO_TITLE_LEN]; /**< short headline             */
+    char date[PHOTO_DATE_LEN]; /**< ISO / display date         */
+    char location[PHOTO_LOCATION_LEN]; /**< photo location             */
+    char body[PHOTO_BODY_LEN]; /**< narrative body text        */
     uint16_t width; /**< image width in pixels      */
     uint16_t height; /**< image height in pixels     */
     uint32_t file_size; /**< 1bpp data size in bytes    */
     uint32_t timestamp; /**< upload epoch seconds       */
-    char     path[PHOTO_MAX_PATH]; /**< LittleFS path to .bin file */
+    char path[PHOTO_MAX_PATH]; /**< LittleFS path to .bin file */
 } photo_info_t;
 
 #ifdef __cplusplus

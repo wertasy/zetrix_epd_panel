@@ -19,12 +19,12 @@ extern "C" {
 #define WIDGET_MODAL_FOOTER_LEN 64
 
 typedef struct {
-    rawdraw_rect_t   bounds;
-    char             title[WIDGET_MODAL_TITLE_LEN];
-    char             footer[WIDGET_MODAL_FOOTER_LEN];
+    rawdraw_rect_t bounds;
+    char title[WIDGET_MODAL_TITLE_LEN];
+    char footer[WIDGET_MODAL_FOOTER_LEN];
     const lv_font_t *title_font;
-    int              radius;
-    int              border_width;
+    int radius;
+    int border_width;
 } widget_modal_t;
 
 /* ---- lifecycle ---- */

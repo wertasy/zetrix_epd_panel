@@ -32,16 +32,16 @@ typedef enum {
 } widget_weather_icon_t;
 
 typedef struct {
-    char    city[32];
-    char    temp[16];
-    char    feels_like[16];
-    char    weather_icon[16];
-    char    weather_text[32];
-    char    wind_dir[32];
-    char    wind_scale[16];
-    char    humidity[16];
-    char    update_time[32];
-    char    air_quality[16];
+    char city[32];
+    char temp[16];
+    char feels_like[16];
+    char weather_icon[16];
+    char weather_text[32];
+    char wind_dir[32];
+    char wind_scale[16];
+    char humidity[16];
+    char update_time[32];
+    char air_quality[16];
     int32_t air_aqi;
     int32_t temp_int;
 } widget_weather_data_t;
@@ -52,8 +52,8 @@ typedef struct {
     int w;
 
     widget_weather_data_t data;
-    char                  city_name[32];
-    bool                  has_data;
+    char city_name[32];
+    bool has_data;
 
     region_refresh_t refresh;
 
@@ -72,7 +72,7 @@ void widget_weather_card_set_data(widget_weather_card_t *card, const widget_weat
 void widget_weather_card_set_city_name(widget_weather_card_t *card, const char *name);
 
 /* ---- geometry / state ---- */
-rawdraw_rect_t    widget_weather_card_get_bounds(const widget_weather_card_t *card);
+rawdraw_rect_t widget_weather_card_get_bounds(const widget_weather_card_t *card);
 region_refresh_t *widget_weather_card_get_refresh_tracker(widget_weather_card_t *card);
 
 /* ---- rendering ---- */
