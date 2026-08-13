@@ -40,7 +40,7 @@ zetrix_epd_panel/
 │   ├── rawdraw.h / .c          # 2bpp 位图打包、基本几何图形和文本绘制原语
 │   └── main.c                  # 主程序入口，按键配置（UP/DOWN/BOOT）与 3 页演示循环
 ├── components/
-│   └── 78__xiaozhi-fonts       # 外部预编译字体组件链接（SourceHanSans、天气、图标）
+│   ├── zetrix_fonts               # 项目自有字体组件（SourceHanSans、天气、图标）
 └── tests/
     └── test_host.c             # 主机端单元测试源码
 ```

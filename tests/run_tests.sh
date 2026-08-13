@@ -14,7 +14,7 @@ INCS="-Icomponents/ui/include -Icomponents/ui/pages \
       -Icomponents/bsp_board/include \
       -Icomponents/app_state/include \
       -Icomponents/data_types/include \
-      -Icomponents/78__xiaozhi-fonts/include \
+      -Icomponents/zetrix_fonts/include \
       -Imanaged_components/lvgl__lvgl/src \
       -Imanaged_components/espressif__cjson/cJSON"
 

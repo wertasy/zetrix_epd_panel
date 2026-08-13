@@ -50,4 +50,4 @@ endif()
 idf_component_register(WHOLE_ARCHIVE
                        INCLUDE_DIRS "include" "pages" "src"
                        SRCS ${UI_SRCS}
-                       REQUIRES rawdraw bsp_display bsp_storage app_state data_types network 78__xiaozhi-fonts espressif__qrcode)
+                       REQUIRES rawdraw bsp_display bsp_storage app_state data_types network zetrix_fonts espressif__qrcode)

@@ -1,0 +1,4 @@
+version: "1.0.0"
+description: ZecTrix project fonts (SourceHanSansSC slim + custom icon fonts)
+dependencies:
+  idf: ">=5.3"
