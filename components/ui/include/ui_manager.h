@@ -99,6 +99,7 @@ void ui_manager_set_page_switch_callback(ui_manager_t *mgr, ui_manager_page_swit
 void             ui_manager_switch_page(ui_manager_t *mgr, ui_page_id_t page);
 void             ui_manager_set_current_page_without_render(ui_manager_t *mgr, ui_page_id_t page);
 ui_page_id_t     ui_manager_get_current_page(const ui_manager_t *mgr);
+ui_page_id_t     ui_manager_get_rtc_saved_page(void);
 page_renderer_t *ui_manager_get_active_renderer(const ui_manager_t *mgr);
 page_renderer_t *ui_manager_get_renderer(const ui_manager_t *mgr, ui_page_id_t page);
 bool             ui_manager_is_display_refresh_pending(const ui_manager_t *mgr);
@@ -107,16 +108,8 @@ const char      *ui_manager_get_page_title(ui_page_id_t page);
 bool ui_manager_handle_input(ui_manager_t *mgr, const ui_button_event_t *event);
 bool ui_manager_is_quick_switch_open(const ui_manager_t *mgr);
 
-/* AP transfer mode. */
-bool ui_manager_is_ap_transfer_running(const ui_manager_t *mgr);
-bool ui_manager_is_ap_transfer_mode_running(const ui_manager_t *mgr);
-bool ui_manager_is_lan_http_server_running(const ui_manager_t *mgr);
-bool ui_manager_is_http_server_running(const ui_manager_t *mgr);
-void ui_manager_start_ap_transfer_mode(ui_manager_t *mgr);
-void ui_manager_stop_ap_transfer_mode(ui_manager_t *mgr);
+/* WiFi config page. */
 void ui_manager_show_wifi_config_page(ui_manager_t *mgr, const char *ssid, const char *password, const char *url);
-bool ui_manager_start_lan_http_server(ui_manager_t *mgr, const char *ip_address);
-void ui_manager_stop_lan_http_server(ui_manager_t *mgr);
 
 /* Rendering. */
 void ui_manager_render_all(ui_manager_t *mgr, uint8_t *fb, int width, int height);
@@ -155,18 +148,14 @@ bool ui_manager_is_lifebar_visible(const ui_manager_t *mgr);
 void ui_manager_set_gallery_slideshow_interval_minutes(ui_manager_t *mgr, int minutes);
 int  ui_manager_get_gallery_slideshow_interval_minutes(const ui_manager_t *mgr);
 bool ui_manager_show_photo_by_id(ui_manager_t *mgr, const char *photo_id);
-void ui_manager_set_app_callbacks(ui_manager_t *mgr,
-                                  void (*image_received)(const char *, void *),
-                                  void (*settings_changed)(int, void *),
-                                  void (*photos_changed)(void *),
-                                  bool (*show_photo)(const char *, void *),
-                                  void *ctx);
 
 /* Refresh control. */
 void ui_manager_request_full_refresh(ui_manager_t *mgr);
 void ui_manager_request_active_page_refresh(ui_manager_t *mgr);
 void ui_manager_trigger_refresh(ui_manager_t *mgr, bool urgent);
 void ui_manager_pump_clock_refresh(ui_manager_t *mgr);
+void ui_manager_set_data_refresh_cb(ui_manager_t *mgr, void (*cb)(ui_page_id_t page, void *ctx), void *ctx);
+void ui_manager_request_data_refresh(ui_manager_t *mgr, ui_page_id_t page);
 
 /* Voice wakeup. */
 void ui_manager_voice_wakeup_tick(ui_manager_t *mgr);

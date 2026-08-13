@@ -16,6 +16,7 @@
 #include "layout.h"
 #include "footer_bar.h"
 #include "nvs_state.h"
+#include "holiday_fetcher.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,14 @@ static const lv_font_t *const kCalendarBodyFont  = &SourceHanSansSC_Regular_slim
 
 /* Weekday full names */
 static const char *const kWeekdayFull[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+
+/* Holiday data source injected into the calendar widget (decouples rawdraw from network). */
+static const holiday_provider_t s_holiday_provider = {
+    .is_holiday         = holiday_fetcher_is_holiday,
+    .is_makeup_workday  = holiday_fetcher_is_makeup_workday,
+    .get_holiday_name   = holiday_fetcher_get_holiday_name,
+    .get_makeup_label   = holiday_fetcher_get_makeup_label,
+};
 
 /* Simplified yiji tables (copied from almanac_page.c) */
 static const char *const kYiTable[][4] = {
@@ -205,6 +214,7 @@ void calendar_page_init(page_renderer_t *self, int width, int height)
 
     const int content_top = STYLE_STATUS_BAR_HEIGHT;
     widget_calendar_init(&r->cal, 0, content_top, width, height - content_top);
+    widget_calendar_set_holiday_provider(&r->cal, &s_holiday_provider);
 
     r->title_font = kCalendarTitleFont;
     r->body_font  = kCalendarBodyFont;

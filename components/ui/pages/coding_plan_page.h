@@ -12,7 +12,7 @@
 #define COMPONENTS_UI_PAGES_CODING_PLAN_PAGE_H_
 
 #include "page_renderer.h"
-#include "coding_plan_api.h" /* shared quota types + hourly series */
+#include "coding_plan_dto.h" /* shared quota types + hourly series */
 #include <stdint.h>
 
 #ifdef __cplusplus

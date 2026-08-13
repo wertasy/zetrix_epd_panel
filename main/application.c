@@ -6,8 +6,14 @@
  * manages WiFi / sync-sleep state, and updates the status bar. Audio
  * service is omitted (Phase 4 audio pipeline parked); sound feedback
  * uses the existing audio_player module.
+ *
+ * Phase 2.1: sync orchestration, sleep management, SNTP, and settings
+ * menu construction have been extracted into app_sync.c, app_sleep.c,
+ * app_sntp.c, and app_settings_menu.c respectively. The shared singleton
+ * state and cross-module declarations live in application_internal.h.
  */
 #include "application.h"
+#include "application_internal.h"
 
 #include <string.h>
 #include <time.h>
@@ -16,6 +22,7 @@
 #include <esp_log.h>
 #include <esp_mac.h>
 #include <esp_sleep.h>
+#include <esp_bit_defs.h>
 #include <esp_sntp.h>
 #include <esp_system.h>
 #include <esp_timer.h>
@@ -29,7 +36,7 @@
 #include "board.h"
 #include "sleep_manager.h"
 #include "rtc_pcf8563.h"
-#include "custom_lcd_display.h"
+#include "epd_driver.h"
 #include "config.h"
 #include "settings.h"
 #include "ui_manager.h"
@@ -48,27 +55,11 @@
 #include "holiday_fetcher.h"
 #include "page_registry.h"
 #include "photo_gallery_page.h"
-
-#ifndef PROJECT_VER
-#    define PROJECT_VER "3.8.0"
-#endif
+#include "ap_transfer_server.h"
+#include "ap_transfer_page.h"
+#include "data_refresh.h"
 
 #define TAG "Application"
-
-/* NVS keys (match C++). */
-#define APP_SYNC_NS "sync"
-#define APP_SYNC_INTERVAL_KEY "sync_interval"
-#define APP_GALLERY_NS "gallery"
-#define APP_SLIDESHOW_KEY "slide_min"
-
-/* Settings item indices (match C++ Application). */
-#define APP_SETTINGS_SLIDESHOW_INDEX 3
-#define APP_SETTINGS_WIFI_INDEX 5
-#define APP_SETTINGS_HTTP_SERVER_INDEX 6
-#define APP_SETTINGS_LAN_IP_INDEX 7
-
-/* Default sync-sleep interval (minutes). */
-#define APP_DEFAULT_SYNC_INTERVAL_MIN 30
 
 #ifdef ESP_PLATFORM
 #    include "esp_attr.h"
@@ -79,463 +70,80 @@
 #endif
 
 /* ------------------------------------------------------------------ */
-/* Singleton state                                                     */
+/* Singleton state (extern in application_internal.h)                  */
 /* ------------------------------------------------------------------ */
 
-typedef enum {
-    APP_EVENT_UP_CLICK,
-    APP_EVENT_DOWN_CLICK,
-    APP_EVENT_UP_LONG_PRESS,
-    APP_EVENT_DOWN_LONG_PRESS,
-    APP_EVENT_UP_DOUBLE_CLICK,
-    APP_EVENT_BOOT_DOUBLE_CLICK,
-    APP_EVENT_DOWN_DOUBLE_CLICK,
-    APP_EVENT_WIFI_CONFIG_COMBO_LONG_PRESS,
-    APP_EVENT_BOOT_CLICK,
-    APP_EVENT_BOOT_LONG_PRESS,
-    APP_EVENT_WIFI,
-    APP_EVENT_TIME_SYNC,
-    APP_EVENT_UI_IMAGE_RECEIVED,
-    APP_EVENT_UI_SETTINGS_CHANGED,
-    APP_EVENT_UI_PHOTOS_CHANGED,
-    APP_EVENT_UI_SHOW_PHOTO,
-} app_event_type_t;
+EXT_RAM_BSS_ATTR application_t s_app;
 
-typedef struct {
-    const char *photo_id;
-    bool *out_success;
-    SemaphoreHandle_t done_sem;
-} show_photo_event_data_t;
+/* AP/HTTP transfer server — owned by application (moved from ui_manager). */
+ap_transfer_server_t s_transfer_server;
 
-typedef struct {
-    app_event_type_t type;
-    union {
-        wifi_manager_event_t wifi_event;
-        struct {
-            char photo_id[16];
-        } image_received;
-        struct {
-            int slideshow_interval_minutes;
-        } settings_changed;
-        struct {
-            void *show_photo_data;
-        } show_photo;
-    };
-} app_event_t;
-
-typedef struct {
-    device_state_t     state;
-    bool               wifi_connected;
-    bool               need_weather_fetch;
-    bool               need_coding_plan_refresh;
-    bool               need_holiday_fetch;
-    ui_manager_t      *ui_mgr;
-    esp_timer_handle_t sleep_timer;
-    protocol_t         protocol;
-    stream_pipeline_t  pipeline;
-    QueueHandle_t      event_queue;
-    bool               rtc_wakeup;
-} application_t;
-
-static EXT_RAM_BSS_ATTR application_t s_app;
-/* ------------------------------------------------------------------ */
-/* Forward declarations                                                */
-/* ------------------------------------------------------------------ */
-
-static void enter_scheduled_sleep(void);
-static void arm_sync_sleep_timer(void);
-static void on_sync_sleep_timer(void *arg);
-static void update_wifi_settings_item(bool connected, const char *value);
-static void update_http_server_settings_item(bool running, const char *ip);
-static void update_lan_ip_settings_item(const char *ip);
-static void start_sntp_clock_sync_once(void);
-static void ensure_coding_plan_initialised(void);
-static void refresh_coding_plan(void);
-static void on_coding_plan_update(const coding_plan_api_data_t *data, void *user_data);
-static void on_weather_update(const weather_data_t *data, void *user_data);
-static void on_sntp_sync(struct timeval *tv);
-static void handle_image_received_async(const char *photo_id, void *ctx);
-static void handle_settings_changed_async(int minutes, void *ctx);
-static void handle_photos_changed_async(void *ctx);
-static bool handle_show_photo_sync(const char *photo_id, void *ctx);
-
+/* Last battery % pushed to the status bar, so the periodic loop only
+ * re-refreshes when it actually changes. battery_level is only written by
+ * application_update_status_bar(); with no independent refresh trigger the
+ * icon would freeze at its boot value (often -1 while the ADC initialises)
+ * and never appear unless a wifi/settings event happens to update it. */
+static int s_last_battery_pct = -999;
 /* ------------------------------------------------------------------ */
 /* Static helpers                                                      */
 /* ------------------------------------------------------------------ */
 
-static void format_minutes_label(int minutes, char *out, size_t len)
+/* Adapts ui_manager_append_chat_text(const ui_manager_t*, const char*) to text_chunk_cb_t void(const char*, void*) */
+static void stream_text_chunk_cb(const char *chunk, void *ctx)
 {
-    if (minutes <= 0) {
-        snprintf(out, len, "%s", "关闭");
-    } else {
-        snprintf(out, len, "%dmin", minutes);
-    }
+    ui_manager_append_chat_text((ui_manager_t *)ctx, chunk);
 }
 
-static const char *format_minutes_log_label(int minutes)
+bool app_is_lan_http_running(void)
 {
-    return minutes <= 0 ? "关闭" : "开启";
+    return ap_transfer_server_is_running(&s_transfer_server) &&
+           ap_transfer_server_is_lan_mode(&s_transfer_server);
 }
 
-static bool is_local_http_service_running(void)
+static bool is_ap_transfer_mode_running(void)
 {
-    return ui_manager_is_http_server_running(s_app.ui_mgr);
+    return ap_transfer_server_is_running(&s_transfer_server) &&
+           ap_transfer_server_is_ap_mode(&s_transfer_server);
 }
 
-/* ------------------------------------------------------------------ */
-/* Coding Plan usage refresh                                           */
-/* ------------------------------------------------------------------ */
-
-/* 30-minute refresh cadence (application_run ticks once per second). */
-#define APP_CODING_PLAN_REFRESH_SECONDS (30 * 60)
-
-static void ensure_coding_plan_initialised(void)
+/* AP transfer server state callback — updates the AP transfer page UI. */
+static void ap_server_state_cb(int state, const char *message, void *ctx)
 {
-    static bool s_cp_inited = false;
-    if (s_cp_inited)
-        return;
-    coding_plan_api_init(CONFIG_CODING_PLAN_API_TOKEN, CONFIG_CODING_PLAN_API_ORG, CONFIG_CODING_PLAN_API_PROJECT);
-    coding_plan_api_set_callback(on_coding_plan_update, NULL);
-    s_cp_inited = true;
-
-    /* If NVS cache exists, immediately render it so the page shows data
-     * before the network fetch completes. */
-    if (coding_plan_api_has_cached_data()) {
-        on_coding_plan_update(coding_plan_api_get_cached_data(), NULL);
-    }
-}
-
-static void on_coding_plan_update(const coding_plan_api_data_t *data, void *user_data)
-{
-    (void)user_data;
-    if (!data)
-        return;
-
-    page_renderer_t *page = ui_manager_get_renderer(s_app.ui_mgr, UI_PAGE_CODING_PLAN);
-    if (!page)
-        return;
-
-    coding_plan_data_t *page_data = (coding_plan_data_t *)malloc(sizeof(coding_plan_data_t));
-    if (!page_data)
-        return;
-    memset(page_data, 0, sizeof(*page_data));
-    snprintf(page_data->five_hour_reset_time, sizeof(page_data->five_hour_reset_time), "%s", data->five_hour_reset_time);
-    snprintf(page_data->week_reset_time, sizeof(page_data->week_reset_time), "%s", data->week_reset_time);
-    page_data->five_hour_tokens = data->five_hour_tokens;
-    page_data->week_tokens      = data->week_tokens;
-    page_data->five_hour_pct    = data->five_hour_pct;
-    page_data->week_pct         = data->week_pct;
-    page_data->per_model_count  = data->per_model_count;
-    for (int i = 0; i < data->per_model_count && i < CODING_PLAN_MAX_MODELS; i++) {
-        page_data->per_model[i] = data->per_model[i];
-    }
-    page_data->hourly_count = data->hourly_count;
-    memcpy(page_data->hourly_tokens, data->hourly_tokens, sizeof(page_data->hourly_tokens));
-
-    coding_plan_page_update(page, page_data);
-    free(page_data);
-    ui_manager_request_active_page_refresh(s_app.ui_mgr);
-}
-
-static void refresh_coding_plan(void)
-{
-    ensure_coding_plan_initialised();
-    coding_plan_api_fetch_async();
-}
-
-/* ------------------------------------------------------------------ */
-/* SNTP clock sync                                                     */
-/* ------------------------------------------------------------------ */
-
-static void on_sntp_sync(struct timeval *tv)
-{
-    (void)tv;
-    ESP_LOGI(TAG, "SNTP time sync complete; writing RTC and refreshing calendar");
-
-    /* Write the corrected time back to the PCF8563 RTC so cold boots start
-     * with the right date without needing WiFi. */
-    time_t    now = time(NULL);
-    struct tm tm_buf;
-    localtime_r(&now, &tm_buf);
-    pcf8563_set_time(&tm_buf);
-
-    /* Notify the main loop so it can refresh date-dependent pages. */
-    app_event_t ev = { .type = APP_EVENT_TIME_SYNC };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-static void start_sntp_clock_sync_once(void)
-{
-    static bool s_started = false;
-    if (s_started)
-        return;
-
-    setenv("TZ", "CST-8", 1);
-    tzset();
-    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "ntp.aliyun.com");
-    esp_sntp_setservername(1, "cn.pool.ntp.org");
-    esp_sntp_set_time_sync_notification_cb(on_sntp_sync);
-    esp_sntp_init();
-    s_started = true;
-    ESP_LOGI(TAG, "SNTP started: tz=Asia/Shanghai "
-                  "servers=ntp.aliyun.com,cn.pool.ntp.org,pool.ntp.org");
-}
-
-/* ------------------------------------------------------------------ */
-/* Settings item updates                                               */
-/* ------------------------------------------------------------------ */
-
-static void update_wifi_settings_item(bool connected, const char *value)
-{
-    ui_manager_update_settings_checked(s_app.ui_mgr, APP_SETTINGS_WIFI_INDEX, connected);
-    if (value) {
-        ui_manager_update_settings_item(s_app.ui_mgr, APP_SETTINGS_WIFI_INDEX, value);
-    } else {
-        ui_manager_update_settings_item(s_app.ui_mgr, APP_SETTINGS_WIFI_INDEX, connected ? "已连接" : "未连接");
-    }
-}
-
-static void update_http_server_settings_item(bool running, const char *ip)
-{
-    char value[64];
-    if (running && ip && ip[0] != '\0') {
-        snprintf(value, sizeof(value), "http://%s", ip);
-    } else if (ip && ip[0] != '\0') {
-        snprintf(value, sizeof(value), "%s", ip);
-    } else {
-        snprintf(value, sizeof(value), "%s", running ? "已开启" : "已关闭");
-    }
-    ui_manager_update_settings_checked(s_app.ui_mgr, APP_SETTINGS_HTTP_SERVER_INDEX, running);
-    ui_manager_update_settings_item(s_app.ui_mgr, APP_SETTINGS_HTTP_SERVER_INDEX, value);
-}
-
-static void update_lan_ip_settings_item(const char *ip)
-{
-    ui_manager_update_settings_item(s_app.ui_mgr, APP_SETTINGS_LAN_IP_INDEX, (ip && ip[0] != '\0') ? ip : "未获取");
-}
-
-/* ------------------------------------------------------------------ */
-/* Settings menu callback dispatcher                                   */
-/*                                                                     */
-/* The on_click ctx value carries an action tag:                       */
-/*   1 = slideshow interval cycle, 2 = wifi toggle,                    */
-/*   3 = LAN HTTP server toggle, 4 = manual sleep, 5 = reboot          */
-/* ------------------------------------------------------------------ */
-
-static void settings_menu_cb(void *ctx)
-{
-    const intptr_t action = (intptr_t)ctx;
-    switch (action) {
-    case 1: { /* Slideshow interval cycle. */
-        settings_handle_t nvs     = settings_open(APP_GALLERY_NS, true);
-        int               current = 5;
-        if (nvs) {
-            current = (int)settings_get_int(nvs, APP_SLIDESHOW_KEY, 5);
-        }
-        static const int kOptions[] = {0, 5, 10, 30};
-        int              next       = 5;
-        for (unsigned i = 0; i < sizeof(kOptions) / sizeof(kOptions[0]); ++i) {
-            if (kOptions[i] == current) {
-                next = kOptions[(i + 1) % (sizeof(kOptions) / sizeof(kOptions[0]))];
-                break;
-            }
-        }
-        if (nvs) {
-            settings_set_int(nvs, APP_SLIDESHOW_KEY, next);
-            settings_close(nvs);
-        }
-        ui_manager_set_gallery_slideshow_interval_minutes(s_app.ui_mgr, next);
-        char label[16];
-        format_minutes_label(next, label, sizeof(label));
-        ui_manager_update_settings_item(s_app.ui_mgr, APP_SETTINGS_SLIDESHOW_INDEX, label);
-        if (next > 0 && s_app.sleep_timer != NULL) {
-            esp_timer_stop(s_app.sleep_timer);
-            ESP_LOGI(TAG, "Sync sleep timer paused while gallery slideshow is enabled");
-        } else if (next <= 0 && (s_app.wifi_connected || wifi_manager_is_connected())) {
-            arm_sync_sleep_timer();
-        }
+    (void)ctx;
+    bool should_refresh = false;
+    switch (state) {
+    case 1: /* kApStarted */
+        ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                   AP_TRANSFER_STATE_WAITING_CONNECTION, message);
+        should_refresh = true;
         break;
-    }
-    case 2: { /* WiFi toggle. */
-        if (s_app.wifi_connected || wifi_manager_is_connected()) {
-            ESP_LOGI(TAG, "Wi-Fi setting toggled OFF");
-            if (ui_manager_is_lan_http_server_running(s_app.ui_mgr)) {
-                ui_manager_stop_lan_http_server(s_app.ui_mgr);
-                update_http_server_settings_item(false, NULL);
-            }
-            wifi_manager_disconnect();
-            s_app.wifi_connected = false;
-            update_wifi_settings_item(false, NULL);
-            update_lan_ip_settings_item("");
-        } else {
-            ESP_LOGI(TAG, "Wi-Fi setting toggled ON");
-            update_wifi_settings_item(false, "连接中");
-            wifi_manager_connect("", "");
-        }
-        application_update_status_bar();
+    case 2: /* kClientConnected */
+        ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                   AP_TRANSFER_STATE_CLIENT_CONNECTED, message);
         break;
-    }
-    case 3: { /* LAN HTTP server toggle. */
-        if (ui_manager_is_lan_http_server_running(s_app.ui_mgr)) {
-            ESP_LOGI(TAG, "LAN HTTP server toggled OFF");
-            ui_manager_stop_lan_http_server(s_app.ui_mgr);
-            update_http_server_settings_item(false, NULL);
-            application_update_status_bar();
-            if (s_app.wifi_connected || wifi_manager_is_connected()) {
-                arm_sync_sleep_timer();
-            }
-            return;
-        }
-        if (!s_app.wifi_connected && !wifi_manager_is_connected()) {
-            ESP_LOGW(TAG, "LAN HTTP server requires WiFi connection");
-            update_http_server_settings_item(false, "需先连接WiFi");
-            application_update_status_bar();
-            return;
-        }
-        char ip[32] = {0};
-        wifi_manager_get_ip(ip, sizeof(ip));
-        if (ip[0] == '\0') {
-            ESP_LOGW(TAG, "LAN HTTP server requires station IP");
-            update_http_server_settings_item(false, "等待IP");
-            application_update_status_bar();
-            return;
-        }
-        const bool started = ui_manager_start_lan_http_server(s_app.ui_mgr, ip);
-        ESP_LOGI(TAG, "LAN HTTP server toggled ON: started=%d url=http://%s/", started ? 1 : 0, ip);
-        if (started && s_app.sleep_timer != NULL) {
-            esp_timer_stop(s_app.sleep_timer);
-            ESP_LOGI(TAG, "Sync sleep timer paused while LAN HTTP server is running");
-        }
-        update_http_server_settings_item(started, started ? ip : "");
-        update_lan_ip_settings_item(started ? ip : "");
-        application_update_status_bar();
+    case 5: /* kImageSaved */
+        ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                   AP_TRANSFER_STATE_COMPLETE, message);
+        should_refresh = true;
         break;
-    }
-    case 4: { /* Manual sleep. */
-        ESP_LOGI(TAG, "Manual sleep requested from settings");
-        application_enter_manual_sleep();
+    case 6: /* kError */
+        ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                   AP_TRANSFER_STATE_ERROR, message);
+        should_refresh = true;
         break;
-    }
-    case 5: /* Reboot. */
+    case 0: /* kStopped */
     default:
-        ESP_LOGI(TAG, "Restart requested from settings");
-        esp_restart();
+        ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                   AP_TRANSFER_STATE_WAITING_CONNECTION, message);
+        should_refresh = true;
         break;
     }
+    if (should_refresh && ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_AP_TRANSFER) {
+        ui_manager_request_active_page_refresh(s_app.ui_mgr);
+    }
 }
 
-/* ------------------------------------------------------------------ */
-/* Settings menu construction                                          */
-/* ------------------------------------------------------------------ */
 
-static void build_settings_items(void)
-{
-    settings_handle_t gallery_nvs        = settings_open(APP_GALLERY_NS, false);
-    int               slideshow_interval = 5;
-    if (gallery_nvs) {
-        slideshow_interval = (int)settings_get_int(gallery_nvs, APP_SLIDESHOW_KEY, 5);
-        settings_close(gallery_nvs);
-    }
-    if (slideshow_interval != 0 && slideshow_interval != 5 && slideshow_interval != 10 && slideshow_interval != 30) {
-        slideshow_interval = 5;
-    }
-    ESP_LOGI(TAG, "Startup gallery fullscreen slideshow: %s, interval=%s", format_minutes_log_label(slideshow_interval),
-             slideshow_interval > 0 ? "开启" : "关闭");
-    ui_manager_set_gallery_slideshow_interval_minutes(s_app.ui_mgr, slideshow_interval);
-
-    /* Declarative settings menu (C port of the C++ items vector). */
-    settings_page_item_t items[12];
-    int                  n = 0;
-    memset(items, 0, sizeof(items));
-
-    /* Section: 系统 */
-    strcpy(items[n].label, "系统");
-    items[n].type = SETTINGS_ITEM_SECTION;
-    ++n;
-
-    /* 重启 (action) */
-    strcpy(items[n].label, "重启");
-    strcpy(items[n].value, "执行");
-    items[n].type         = SETTINGS_ITEM_ACTION;
-    items[n].on_click     = settings_menu_cb;
-    items[n].on_click_ctx = (void *)(intptr_t)5;
-    ++n;
-
-    /* Section: 相册 */
-    strcpy(items[n].label, "相册");
-    items[n].type = SETTINGS_ITEM_SECTION;
-    ++n;
-
-    /* 轮播间隔 (action) */
-    strcpy(items[n].label, "轮播间隔");
-    format_minutes_label(slideshow_interval, items[n].value, sizeof(items[n].value));
-    items[n].type         = SETTINGS_ITEM_ACTION;
-    items[n].on_click     = settings_menu_cb;
-    items[n].on_click_ctx = (void *)(intptr_t)1;
-    ++n;
-
-    /* Section: 网络 */
-    strcpy(items[n].label, "网络");
-    items[n].type = SETTINGS_ITEM_SECTION;
-    ++n;
-
-    /* Wi-Fi (checkbox) */
-    strcpy(items[n].label, "Wi-Fi");
-    strcpy(items[n].value, "未连接");
-    items[n].type         = SETTINGS_ITEM_CHECKBOX;
-    items[n].on_click     = settings_menu_cb;
-    items[n].on_click_ctx = (void *)(intptr_t)2;
-    ++n;
-
-    /* 局域网服务 (checkbox) */
-    strcpy(items[n].label, "局域网服务");
-    strcpy(items[n].value, "已关闭");
-    items[n].type         = SETTINGS_ITEM_CHECKBOX;
-    items[n].on_click     = settings_menu_cb;
-    items[n].on_click_ctx = (void *)(intptr_t)3;
-    ++n;
-
-    /* 局域网IP (normal) */
-    strcpy(items[n].label, "局域网IP");
-    strcpy(items[n].value, "未获取");
-    items[n].type = SETTINGS_ITEM_NORMAL;
-    ++n;
-
-    /* 省电模式 (action) */
-    strcpy(items[n].label, "省电模式");
-    strcpy(items[n].value, "手动进入");
-    items[n].type         = SETTINGS_ITEM_ACTION;
-    items[n].on_click     = settings_menu_cb;
-    items[n].on_click_ctx = (void *)(intptr_t)4;
-    ++n;
-
-    /* Section: 关于 */
-    strcpy(items[n].label, "关于");
-    items[n].type = SETTINGS_ITEM_SECTION;
-    ++n;
-
-    /* 固件 (normal) */
-    strcpy(items[n].label, "固件");
-    strcpy(items[n].value, PROJECT_VER);
-    items[n].type = SETTINGS_ITEM_NORMAL;
-    ++n;
-
-    ui_manager_set_settings_items(s_app.ui_mgr, items, n);
-
-    /* Device info. */
-    uint8_t mac_bytes[6] = {0};
-    esp_read_mac(mac_bytes, ESP_MAC_WIFI_STA);
-    char mac_str[18];
-    snprintf(mac_str, sizeof(mac_str), "%02X:%02X:%02X:%02X:%02X:%02X", mac_bytes[0], mac_bytes[1], mac_bytes[2],
-             mac_bytes[3], mac_bytes[4], mac_bytes[5]);
-    settings_page_set_device_info((page_renderer_t *)ui_manager_get_renderer(s_app.ui_mgr, UI_PAGE_SETTINGS), mac_str,
-                                  "ESP32-S3");
-    settings_page_set_firmware_version((page_renderer_t *)ui_manager_get_renderer(s_app.ui_mgr, UI_PAGE_SETTINGS),
-                                       "v" PROJECT_VER);
-}
 
 /* ------------------------------------------------------------------ */
 /* WiFi event callback                                                 */
@@ -550,28 +158,15 @@ static void process_wifi_event(wifi_manager_event_t event)
         sm_set_busy(SLEEP_BUSY_SRC_NET, false);
         protocol_start(&s_app.protocol);
         protocol_open_audio_channel(&s_app.protocol);
-        start_sntp_clock_sync_once();
-        if (!ui_manager_is_lan_http_server_running(s_app.ui_mgr)) {
-            char ip[32] = {0};
-            wifi_manager_get_ip(ip, sizeof(ip));
-            if (ip[0] != '\0') {
-                const bool started = ui_manager_start_lan_http_server(s_app.ui_mgr, ip);
-                ESP_LOGI(TAG,
-                         "LAN HTTP server auto-start after WiFi: started=%d "
-                         "url=http://%s/",
-                         started ? 1 : 0, ip);
-                update_http_server_settings_item(started, started ? ip : "");
-                update_lan_ip_settings_item(ip);
-            }
-        }
+        app_sntp_start_once();
         if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_AP_TRANSFER &&
-            !ui_manager_is_ap_transfer_mode_running(s_app.ui_mgr)) {
+            !is_ap_transfer_mode_running()) {
             ESP_LOGI(TAG, "WiFi connected while config page is visible, "
                           "returning to gallery");
             ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_GALLERY);
         }
         application_update_status_bar();
-        arm_sync_sleep_timer();
+        app_sleep_arm_sync_timer();
         s_app.need_coding_plan_refresh = true;
         s_app.need_weather_fetch       = true;
         s_app.need_holiday_fetch       = true;
@@ -583,8 +178,8 @@ static void process_wifi_event(wifi_manager_event_t event)
         ESP_LOGI(TAG, "WiFi disconnected");
         s_app.wifi_connected = false;
         sm_set_busy(SLEEP_BUSY_SRC_NET, false);
-        if (ui_manager_is_lan_http_server_running(s_app.ui_mgr)) {
-            ui_manager_stop_lan_http_server(s_app.ui_mgr);
+        if (app_is_lan_http_running()) {
+            ap_transfer_server_stop(&s_transfer_server);
         }
         application_update_status_bar();
         break;
@@ -610,236 +205,7 @@ static void on_wifi_event(wifi_manager_event_t event, void *user_data)
 }
 
 /* ------------------------------------------------------------------ */
-/* Sleep management                                                    */
-/* ------------------------------------------------------------------ */
-
-static void on_sync_sleep_timer(void *arg)
-{
-    (void)arg;
-    enter_scheduled_sleep();
-}
-
-static void power_down_peripherals_for_sleep(void)
-{
-    board_power_epd_off();
-    board_power_audio_off();
-    board_power_amp_off();
-}
-
-static void enter_scheduled_sleep(void)
-{
-    if (is_local_http_service_running()) {
-        ESP_LOGI(TAG, "Scheduled sleep skipped: local HTTP transfer service is running");
-        arm_sync_sleep_timer();
-        return;
-    }
-
-    if (!sm_can_sleep_now()) {
-        ESP_LOGI(TAG, "Scheduled sleep postponed: sleep manager is busy (retrying in 5s)");
-        if (s_app.sleep_timer != NULL) {
-            esp_timer_stop(s_app.sleep_timer);
-            esp_timer_delete(s_app.sleep_timer);
-            s_app.sleep_timer = NULL;
-        }
-        esp_timer_create_args_t args = {0};
-        args.callback                = on_sync_sleep_timer;
-        args.arg                     = NULL;
-        args.dispatch_method         = ESP_TIMER_TASK;
-        args.name                    = "app_sync_sleep";
-        if (esp_timer_create(&args, &s_app.sleep_timer) == ESP_OK) {
-            esp_timer_start_once(s_app.sleep_timer, 5ULL * 1000 * 1000); // 5 seconds
-        }
-        return;
-    }
-
-    ESP_LOGI(TAG, "Entering deep sleep; BOOT & RTC wake device");
-    s_app.wifi_connected = false;
-    /* Use wifi_manager_disconnect() — it raises retry_count to MAX_RETRY so
-     * the STA_DISCONNECTED handler does NOT arm the auto-reconnect timer,
-     * which would otherwise race with esp_wifi_stop()/deep sleep. */
-    wifi_manager_disconnect();
-    esp_wifi_stop();
-
-    /* Persist the slideshow position so the next RTC wakeup advances past it
-     * instead of always showing photo 2/3 (deep sleep wipes RAM). */
-    page_renderer_t *gallery = page_registry_get_instance(UI_PAGE_GALLERY);
-    if (gallery) {
-        int idx = photo_gallery_get_selected_index(gallery);
-        settings_handle_t gnvs = settings_open(APP_GALLERY_NS, true);
-        if (gnvs) {
-            settings_set_int(gnvs, "current_idx", idx);
-            settings_close(gnvs);
-        }
-    }
-
-    /* Wake-up period: use the slideshow interval when the gallery slideshow
-     * is enabled (RTC alarm advances the slide), otherwise the sync interval. */
-    int interval_minutes = ui_manager_get_gallery_slideshow_interval_minutes(s_app.ui_mgr);
-    if (interval_minutes <= 0) {
-        settings_handle_t nvs = settings_open(APP_SYNC_NS, false);
-        interval_minutes = APP_DEFAULT_SYNC_INTERVAL_MIN;
-        if (nvs) {
-            interval_minutes = (int)settings_get_int(nvs, APP_SYNC_INTERVAL_KEY, APP_DEFAULT_SYNC_INTERVAL_MIN);
-            settings_close(nvs);
-        }
-    }
-    if (interval_minutes > 0) {
-        struct tm now_tm;
-        memset(&now_tm, 0, sizeof(now_tm));
-        if (pcf8563_get_time(&now_tm)) {
-            ESP_LOGI(TAG, "RTC now=%04d-%02d-%02d %02d:%02d:%02d", now_tm.tm_year + 1900, now_tm.tm_mon + 1,
-                     now_tm.tm_mday, now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
-            /* Round up to the next minute boundary + interval: a stale alarm
-             * whose minute still matches the current time would otherwise
-             * hold RTC_INT (GPIO5) low and wake the chip instantly. */
-            if (now_tm.tm_sec > 0) {
-                now_tm.tm_min += 1;
-            }
-            now_tm.tm_sec = 0;
-            now_tm.tm_min += interval_minutes;
-            time_t t = mktime(&now_tm);
-            if (t != (time_t)-1) {
-                struct tm *target_tm = localtime(&t);
-                if (target_tm && pcf8563_set_alarm(target_tm)) {
-                    ESP_LOGI(TAG, "Alarm armed %02d:%02d:%02d fired=%d int_level=%d", target_tm->tm_hour,
-                             target_tm->tm_min, target_tm->tm_sec, pcf8563_is_alarm_fired() ? 1 : 0,
-                             gpio_get_level(RTC_INT_GPIO));
-                    /* Settle check: watch the alarm for 500ms. If AF or the INT
-                     * line asserts right after arming, the RTC is mis-comparing
-                     * and would instantly wake the chip. */
-                    bool settled_fired = false;
-                    for (int i = 0; i < 10; i++) {
-                        if (pcf8563_is_alarm_fired() || gpio_get_level(RTC_INT_GPIO) == 0) {
-                            settled_fired = true;
-                            break;
-                        }
-                        vTaskDelay(pdMS_TO_TICKS(50));
-                    }
-                    ESP_LOGI(TAG, "Alarm settle: fired=%d int_level=%d", settled_fired ? 1 : 0,
-                             gpio_get_level(RTC_INT_GPIO));
-                    if (settled_fired) {
-                        ESP_LOGW(TAG, "RTC alarm asserted immediately; disabling interrupt");
-                        pcf8563_enable_interrupt(false);
-                        pcf8563_clear_alarm_flag();
-                    }
-                    /* If a stale match re-asserted the flag right after arming,
-                     * clear it so the INT line releases before sleeping. */
-                    if (pcf8563_is_alarm_fired()) {
-                        pcf8563_clear_alarm_flag();
-                    }
-                } else {
-                    /* Alarm not armed: disable the interrupt so a stale alarm
-                     * cannot hold GPIO5 low and cause an instant wake. */
-                    ESP_LOGW(TAG, "Alarm arming failed; disabling RTC interrupt");
-                    pcf8563_enable_interrupt(false);
-                    pcf8563_clear_alarm_flag();
-                }
-            }
-        }
-    }
-    /* Switch the wakeup pins to RTC IO mode and keep their internal pull-ups
-     * during deep sleep. A plain gpio_config() pull-up is NOT preserved in
-     * deep sleep: RTC_INT (GPIO5) is an open-drain output from the PCF8563,
-     * so without a held pull-up the line floats and ANY_LOW fires instantly
-     * (observed: pin_mask=0x20 wake ~0.5s after sleep entry with the alarm
-     * still 5+ minutes away). Same treatment for the BOOT button (GPIO0). */
-    rtc_gpio_init(RTC_INT_GPIO);
-    rtc_gpio_set_direction(RTC_INT_GPIO, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pullup_en(RTC_INT_GPIO);
-    rtc_gpio_pulldown_dis(RTC_INT_GPIO);
-    rtc_gpio_init(BOOT_BUTTON_GPIO);
-    rtc_gpio_set_direction(BOOT_BUTTON_GPIO, RTC_GPIO_MODE_INPUT_ONLY);
-    rtc_gpio_pullup_en(BOOT_BUTTON_GPIO);
-    rtc_gpio_pulldown_dis(BOOT_BUTTON_GPIO);
-    power_down_peripherals_for_sleep();
-    ESP_LOGI(TAG, "After power down: RTC_INT level=%d BOOT level=%d", gpio_get_level(RTC_INT_GPIO),
-             gpio_get_level(BOOT_BUTTON_GPIO));
-    esp_sleep_enable_ext1_wakeup((1ULL << BOOT_BUTTON_GPIO) | (1ULL << RTC_INT_GPIO), ESP_EXT1_WAKEUP_ANY_LOW);
-    esp_deep_sleep_start();
-}
-
-static void arm_sync_sleep_timer(void)
-{
-    if (is_local_http_service_running()) {
-        if (s_app.sleep_timer != NULL) {
-            esp_timer_stop(s_app.sleep_timer);
-        }
-        ESP_LOGI(TAG, "Sync sleep timer skipped while local HTTP transfer "
-                      "service is running");
-        return;
-    }
-    if (ui_manager_get_gallery_slideshow_interval_minutes(s_app.ui_mgr) > 0) {
-        if (s_app.sleep_timer != NULL) {
-            esp_timer_stop(s_app.sleep_timer);
-        }
-        ESP_LOGI(TAG, "Sync sleep timer skipped while gallery slideshow is enabled");
-        return;
-    }
-
-    settings_handle_t nvs              = settings_open(APP_SYNC_NS, false);
-    int               interval_minutes = APP_DEFAULT_SYNC_INTERVAL_MIN;
-    if (nvs) {
-        interval_minutes = (int)settings_get_int(nvs, APP_SYNC_INTERVAL_KEY, APP_DEFAULT_SYNC_INTERVAL_MIN);
-        settings_close(nvs);
-    }
-    if (interval_minutes <= 0) {
-        ESP_LOGI(TAG, "Sync sleep interval: 关闭");
-        return;
-    }
-    /* (Re)create a one-shot timer each arm. */
-    if (s_app.sleep_timer != NULL) {
-        esp_timer_stop(s_app.sleep_timer);
-        esp_timer_delete(s_app.sleep_timer);
-        s_app.sleep_timer = NULL;
-    }
-    esp_timer_create_args_t args = {0};
-    args.callback                = on_sync_sleep_timer;
-    args.arg                     = NULL;
-    args.dispatch_method         = ESP_TIMER_TASK;
-    args.name                    = "app_sync_sleep";
-    esp_err_t ret                = esp_timer_create(&args, &s_app.sleep_timer);
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to create sync sleep timer: %s", esp_err_to_name(ret));
-        return;
-    }
-    const int64_t delay_us = (int64_t)interval_minutes * 60 * 1000 * 1000;
-    ESP_LOGI(TAG, "Sync sleep interval: %d minutes", interval_minutes);
-    ESP_LOGI(TAG, "Scheduling sleep after sync interval: %d minutes", interval_minutes);
-    ESP_ERROR_CHECK(esp_timer_start_once(s_app.sleep_timer, delay_us));
-}
-
-void application_enter_manual_sleep(void)
-{
-    ESP_LOGI(TAG, "Entering manual deep sleep; stopping local services and WiFi");
-    if (s_app.sleep_timer != NULL) {
-        esp_timer_stop(s_app.sleep_timer);
-    }
-    if (ui_manager_is_http_server_running(s_app.ui_mgr)) {
-        ui_manager_stop_ap_transfer_mode(s_app.ui_mgr);
-    }
-    s_app.wifi_connected = false;
-    wifi_manager_disconnect();
-    esp_wifi_stop();
-    application_update_status_bar();
-
-    int wait_cnt = 0;
-    while (!sm_can_sleep_now() && wait_cnt < 70) {
-        vTaskDelay(pdMS_TO_TICKS(500));
-        wait_cnt++;
-    }
-
-    /* Manual sleep: no RTC alarm is armed, so disable the alarm interrupt
-     * and clear any stale flag — otherwise RTC_INT (GPIO5) could stay low
-     * and wake the chip instantly. */
-    pcf8563_enable_interrupt(false);
-    pcf8563_clear_alarm_flag();
-    power_down_peripherals_for_sleep();
-    esp_sleep_enable_ext1_wakeup((1ULL << BOOT_BUTTON_GPIO) | (1ULL << RTC_INT_GPIO), ESP_EXT1_WAKEUP_ANY_LOW);
-    esp_deep_sleep_start();
-}
-
-/* ------------------------------------------------------------------ */
-/* Public API                                                          */
+/* Async event handlers (post to the main event queue)                 */
 /* ------------------------------------------------------------------ */
 
 static void handle_image_received_async(const char *photo_id, void *ctx)
@@ -893,6 +259,10 @@ static bool handle_show_photo_sync(const char *photo_id, void *ctx)
     vSemaphoreDelete(sem);
     return success;
 }
+/* ------------------------------------------------------------------ */
+/* Application init                                                    */
+/* ------------------------------------------------------------------ */
+
 void application_init(void)
 {
     memset(&s_app, 0, sizeof(s_app));
@@ -913,21 +283,25 @@ void application_init(void)
         return;
     }
     ui_manager_init(s_app.ui_mgr, NULL, NULL);
-    ui_manager_set_app_callbacks(s_app.ui_mgr,
-                                 handle_image_received_async,
-                                 handle_settings_changed_async,
-                                 handle_photos_changed_async,
-                                 handle_show_photo_sync,
-                                 NULL);
+    /* AP/HTTP transfer server — lifecycle and callbacks owned by application. */
+    ap_transfer_server_init(&s_transfer_server);
+    ap_transfer_server_set_state_callback(&s_transfer_server, ap_server_state_cb, NULL);
+    ap_transfer_server_set_image_received_callback(&s_transfer_server, handle_image_received_async, NULL);
+    ap_transfer_server_set_settings_changed_callback(&s_transfer_server, handle_settings_changed_async, NULL);
+    ap_transfer_server_set_photos_changed_callback(&s_transfer_server, handle_photos_changed_async, NULL);
+    ap_transfer_server_set_show_photo_callback(&s_transfer_server, handle_show_photo_sync, NULL);
+    /* Data refresh request channel — pages call data_refresh_request() instead
+     * of directly invoking network API fetch functions (Phase 1.4 decoupling). */
+    data_refresh_set_callback(app_sync_on_data_refresh_request, NULL);
     /* The refresh callback is provided by the display driver integration in
      * main.c; ui_manager renders into the framebuffer there. */
 
-    build_settings_items();
+    app_settings_menu_build();
 
     int slideshow_interval = ui_manager_get_gallery_slideshow_interval_minutes(s_app.ui_mgr);
-    esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
+    const uint32_t wakeup_causes = esp_sleep_get_wakeup_causes();
     bool is_rtc_wakeup = false;
-    if (cause == ESP_SLEEP_WAKEUP_EXT1) {
+    if (wakeup_causes & BIT(ESP_SLEEP_WAKEUP_EXT1)) {
         uint64_t pin_mask = esp_sleep_get_ext1_wakeup_status();
         ESP_LOGI(TAG, "Boot wakeup: ext1 pin_mask=0x%llx rtc_int_level=%d", (unsigned long long)pin_mask,
                  gpio_get_level(RTC_INT_GPIO));
@@ -935,13 +309,19 @@ void application_init(void)
             is_rtc_wakeup = true;
         }
     } else {
-        ESP_LOGI(TAG, "Boot wakeup: cause=%d rtc_int_level=%d", (int)cause, gpio_get_level(RTC_INT_GPIO));
+        ESP_LOGI(TAG, "Boot wakeup: causes=0x%lx rtc_int_level=%d", (unsigned long)wakeup_causes,
+                 gpio_get_level(RTC_INT_GPIO));
     }
 
     if (is_rtc_wakeup) {
         s_app.rtc_wakeup = true;
         ESP_LOGI(TAG, "RTC alarm wakeup detected");
-        if (slideshow_interval > 0) {
+        /* Only run the slideshow fast-path when the last-viewed page before
+         * sleep was the gallery with the slideshow enabled. Otherwise keep
+         * the restored page (from RTC memory) and let the normal data sync
+         * refresh it — non-gallery pages need their network data after wake. */
+        const ui_page_id_t saved_page = ui_manager_get_rtc_saved_page();
+        if (slideshow_interval > 0 && saved_page == UI_PAGE_GALLERY) {
             ESP_LOGI(TAG, "Slideshow RTC wakeup: switching to fullscreen gallery and advancing");
             ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_GALLERY);
             page_renderer_t *gallery = page_registry_get_instance(UI_PAGE_GALLERY);
@@ -966,11 +346,9 @@ void application_init(void)
     if (!(is_rtc_wakeup && slideshow_interval > 0)) {
         /* Pre-load coding plan NVS cache so the page renders instantly on
          * first view, even before WiFi connects. */
-        ensure_coding_plan_initialised();
+        app_sync_ensure_coding_plan_initialised();
         if (esp_reset_reason() == ESP_RST_DEEPSLEEP) {
-            ESP_LOGI(TAG, "Wake from deep sleep: flash activity LED and refresh UI");
-            board_flash_activity_led();
-            ui_manager_request_active_page_refresh(s_app.ui_mgr);
+            ESP_LOGI(TAG, "Wake from deep sleep: showing persisted frame until fresh data arrives");
         }
     }
 
@@ -978,10 +356,10 @@ void application_init(void)
     wifi_manager_register_callback(on_wifi_event, NULL);
 
     /* Initialize weather API client. */
-    weather_api_init(CONFIG_WEATHER_API_KEY, NULL, on_weather_update, NULL);
+    weather_api_init(CONFIG_WEATHER_API_KEY, NULL, app_sync_on_weather_update, NULL);
 
     protocol_init(&s_app.protocol);
-    stream_pipeline_init(&s_app.pipeline, &s_app.protocol, s_app.ui_mgr);
+    stream_pipeline_init(&s_app.pipeline, &s_app.protocol, stream_text_chunk_cb, s_app.ui_mgr);
 
     if (is_rtc_wakeup) {
         sm_kick(10000, "boot");
@@ -994,31 +372,24 @@ void application_init(void)
 void application_notify_wifi_if_connected(void)
 {
     /* WiFi may have connected before application_init registered the event
-     * callback; re-sync state and auto-start the LAN HTTP server. */
+     * callback; re-sync state. The LAN HTTP server stays OFF by default —
+     * it is only started by the user (gallery BOOT long-press or settings). */
     if (wifi_manager_is_connected()) {
         s_app.wifi_connected = true;
         protocol_start(&s_app.protocol);
         protocol_open_audio_channel(&s_app.protocol);
-        if (!ui_manager_is_lan_http_server_running(s_app.ui_mgr)) {
-            char ip[32] = {0};
-            wifi_manager_get_ip(ip, sizeof(ip));
-            if (ip[0] != '\0') {
-                const bool started = ui_manager_start_lan_http_server(s_app.ui_mgr, ip);
-                ESP_LOGI(TAG,
-                         "LAN HTTP server auto-start (post-init): started=%d "
-                         "url=http://%s/",
-                         started ? 1 : 0, ip);
-                update_http_server_settings_item(started, started ? ip : "");
-                update_lan_ip_settings_item(ip);
-            }
-        }
-        start_sntp_clock_sync_once();
+        app_sntp_start_once();
         s_app.need_coding_plan_refresh = true;
         s_app.need_weather_fetch       = true;
         s_app.need_holiday_fetch       = true;
-        arm_sync_sleep_timer();
+        app_sleep_arm_sync_timer();
     }
 }
+
+/* ------------------------------------------------------------------ */
+/* Low battery warning                                                 */
+/* ------------------------------------------------------------------ */
+
 static void render_low_battery_warning(void)
 {
     uint8_t *fb = get_framebuffer();
@@ -1049,9 +420,21 @@ static void render_low_battery_warning(void)
     }
 }
 
+/* Forward a simple button event to the UI manager (log + LED + dispatch). */
+static void forward_ui_button(button_event_type_t btn, const char *label)
+{
+    ESP_LOGI(TAG, "Processing %s", label);
+    board_flash_activity_led();
+    ui_button_event_t button_ev = {btn};
+    ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+}
+
+/* ------------------------------------------------------------------ */
+/* Main event loop                                                     */
+/* ------------------------------------------------------------------ */
+
 void application_run(void)
 {
-    static int s_cp_refresh_counter = 0;
     app_event_t ev;
     TickType_t last_periodic = xTaskGetTickCount();
 
@@ -1063,41 +446,21 @@ void application_run(void)
         if (xQueueReceive(s_app.event_queue, &ev, timeout) == pdTRUE) {
             sm_kick(30000, "user_interaction");
             switch (ev.type) {
-            case APP_EVENT_UP_CLICK: {
-                ESP_LOGI(TAG, "Processing UP click");
-                board_flash_activity_led();
-                ui_button_event_t button_ev = {BTN_UP_CLICK};
-                ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+            case APP_EVENT_UP_CLICK:
+                forward_ui_button(BTN_UP_CLICK, "UP click");
                 break;
-            }
-            case APP_EVENT_DOWN_CLICK: {
-                ESP_LOGI(TAG, "Processing DOWN click");
-                board_flash_activity_led();
-                ui_button_event_t button_ev = {BTN_DOWN_CLICK};
-                ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+            case APP_EVENT_DOWN_CLICK:
+                forward_ui_button(BTN_DOWN_CLICK, "DOWN click");
                 break;
-            }
-            case APP_EVENT_UP_DOUBLE_CLICK: {
-                ESP_LOGI(TAG, "Processing UP double click");
-                board_flash_activity_led();
-                ui_button_event_t button_ev = {BTN_UP_DOUBLE_CLICK};
-                ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+            case APP_EVENT_UP_DOUBLE_CLICK:
+                forward_ui_button(BTN_UP_DOUBLE_CLICK, "UP double click");
                 break;
-            }
-            case APP_EVENT_BOOT_DOUBLE_CLICK: {
-                ESP_LOGI(TAG, "Processing BOOT double click");
-                board_flash_activity_led();
-                ui_button_event_t button_ev = {BTN_BOOT_DOUBLE_CLICK};
-                ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+            case APP_EVENT_BOOT_DOUBLE_CLICK:
+                forward_ui_button(BTN_BOOT_DOUBLE_CLICK, "BOOT double click");
                 break;
-            }
-            case APP_EVENT_DOWN_DOUBLE_CLICK: {
-                ESP_LOGI(TAG, "Processing DOWN double click");
-                board_flash_activity_led();
-                ui_button_event_t button_ev = {BTN_DOWN_DOUBLE_CLICK};
-                ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+            case APP_EVENT_DOWN_DOUBLE_CLICK:
+                forward_ui_button(BTN_DOWN_DOUBLE_CLICK, "DOWN double click");
                 break;
-            }
             case APP_EVENT_UP_LONG_PRESS: {
                 ESP_LOGI(TAG, "Processing UP long press");
                 board_flash_activity_led();
@@ -1116,8 +479,8 @@ void application_run(void)
             case APP_EVENT_WIFI_CONFIG_COMBO_LONG_PRESS: {
                 ESP_LOGI(TAG, "Processing UP+DOWN long press (wifi config)");
                 board_flash_activity_led();
-                if (ui_manager_is_lan_http_server_running(s_app.ui_mgr)) {
-                    ui_manager_stop_lan_http_server(s_app.ui_mgr);
+                if (app_is_lan_http_running()) {
+                    ap_transfer_server_stop(&s_transfer_server);
                 }
                 s_app.wifi_connected = false;
                 char ssid[32] = "ZecTrix-AP";
@@ -1128,18 +491,40 @@ void application_run(void)
                 application_update_status_bar();
                 break;
             }
-            case APP_EVENT_BOOT_CLICK: {
-                ESP_LOGI(TAG, "Processing BOOT click");
-                board_flash_activity_led();
-                ui_button_event_t button_ev = {BTN_BOOT_CLICK};
-                ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+            case APP_EVENT_BOOT_CLICK:
+                forward_ui_button(BTN_BOOT_CLICK, "BOOT click");
                 break;
-            }
             case APP_EVENT_BOOT_LONG_PRESS: {
                 ESP_LOGI(TAG, "Processing BOOT long press");
                 board_flash_activity_led();
-                ui_button_event_t button_ev = {BTN_BOOT_LONG_PRESS};
-                ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+                ui_page_id_t boot_page = ui_manager_get_current_page(s_app.ui_mgr);
+                if (boot_page == UI_PAGE_AP_TRANSFER || is_ap_transfer_mode_running()) {
+                    ESP_LOGI(TAG, "BOOT long press - exiting AP transfer mode");
+                    ap_transfer_server_stop(&s_transfer_server);
+                    ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_GALLERY);
+                } else if (boot_page == UI_PAGE_GALLERY) {
+                    if (app_is_lan_http_running()) {
+                        ESP_LOGI(TAG, "Gallery long press BOOT - stopping LAN HTTP server");
+                        ap_transfer_server_stop(&s_transfer_server);
+                    } else if (s_app.wifi_connected) {
+                        ESP_LOGI(TAG, "Gallery long press BOOT - starting LAN HTTP server");
+                        char lan_ip[32] = {0};
+                        wifi_manager_get_ip(lan_ip, sizeof(lan_ip));
+                        ap_transfer_server_start_lan(&s_transfer_server, lan_ip);
+                    } else {
+                        ESP_LOGW(TAG, "Gallery long press BOOT - WiFi not connected, cannot start LAN server");
+                    }
+                    ui_manager_trigger_refresh(s_app.ui_mgr, false);
+                } else if (boot_page == UI_PAGE_WIFI) {
+                    ESP_LOGI(TAG, "WiFi page long press BOOT - entering AP transfer mode");
+                    ap_transfer_page_use_default_instructions(
+                        (page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER));
+                    ap_transfer_server_start(&s_transfer_server);
+                    ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_AP_TRANSFER);
+                } else {
+                    ui_button_event_t button_ev = {BTN_BOOT_LONG_PRESS};
+                    ui_manager_handle_input(s_app.ui_mgr, &button_ev);
+                }
                 break;
             }
             case APP_EVENT_WIFI: {
@@ -1166,7 +551,14 @@ void application_run(void)
                     widget_calendar_set_date(&cal->cal, cal->year, cal->month);
                     cal->base.needs_full_refresh_flag = true;
                 }
-                application_update_status_bar();
+                /* Status-bar date/central text may have changed with SNTP
+                 * calibration. Only request an EPD refresh when the calendar
+                 * page is visible; elsewhere the updated status bar appears
+                 * on the next natural refresh/page switch — avoids a ~15 s
+                 * full refresh of the current page just for the date. */
+                if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_CALENDAR) {
+                    application_update_status_bar();
+                }
                 break;
             }
             case APP_EVENT_UI_IMAGE_RECEIVED: {
@@ -1176,7 +568,11 @@ void application_run(void)
                 if (count > 0 && ev.image_received.photo_id[0] != '\0') {
                     photo_gallery_set_selected_by_id((page_renderer_t *)page_registry_get_instance(UI_PAGE_GALLERY), ev.image_received.photo_id);
                 }
-                ui_manager_request_active_page_refresh(s_app.ui_mgr);
+                /* Photo list data is updated regardless; only flash the EPD
+                 * when the gallery is on screen (photo belongs to gallery). */
+                if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_GALLERY) {
+                    ui_manager_request_active_page_refresh(s_app.ui_mgr);
+                }
                 break;
             }
             case APP_EVENT_UI_SETTINGS_CHANGED: {
@@ -1212,16 +608,20 @@ void application_run(void)
             }
         }
 
-        now = xTaskGetTickCount();
         if ((now - last_periodic) >= pdMS_TO_TICKS(1000)) {
             last_periodic = now;
-
             int pct = charge_status_get_battery_percent();
             if (pct > 0 && pct <= 3 && !charge_status_is_charging()) {
                 ESP_LOGW(TAG, "Battery low (%d%%) and not charging. Shutting down...", pct);
                 render_low_battery_warning();
                 board_power_vbat_off();
                 esp_deep_sleep_start();
+            }
+            /* Battery icon updates independently of wifi events: update the
+             * status bar only when the % actually changes. */
+            if (pct != s_last_battery_pct) {
+                s_last_battery_pct = pct;
+                application_update_status_bar();
             }
             ui_manager_pump_clock_refresh(s_app.ui_mgr);
 
@@ -1232,7 +632,7 @@ void application_run(void)
                 }
                 if (s_app.need_coding_plan_refresh) {
                     s_app.need_coding_plan_refresh = false;
-                    refresh_coding_plan();
+                    app_sync_refresh_coding_plan();
                 }
                 if (s_app.need_holiday_fetch) {
                     s_app.need_holiday_fetch = false;
@@ -1241,13 +641,18 @@ void application_run(void)
                     localtime_r(&t, &tmr);
                     int year = tmr.tm_year + 1900;
                     if (holiday_fetcher_fetch(year)) {
-                        ui_manager_request_active_page_refresh(s_app.ui_mgr);
+                        /* Holiday data feeds the calendar page; only refresh
+                         * the EPD when that page is visible (full refresh is
+                         * ~15 s — don't flash the current page otherwise). */
+                        if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_CALENDAR) {
+                            ui_manager_request_active_page_refresh(s_app.ui_mgr);
+                        }
                     }
                 }
 
                 if (++s_cp_refresh_counter >= APP_CODING_PLAN_REFRESH_SECONDS) {
                     s_cp_refresh_counter = 0;
-                    refresh_coding_plan();
+                    app_sync_refresh_coding_plan();
                 }
             } else {
                 s_cp_refresh_counter           = 0;
@@ -1256,14 +661,17 @@ void application_run(void)
                 s_app.need_holiday_fetch       = false;
             }
 
-            if (sm_can_sleep_now() && !is_local_http_service_running()) {
+            if (sm_can_sleep_now() && !app_sleep_is_local_http_running()) {
                 ESP_LOGI(TAG, "System idle. Sleep manager allows sleep. Entering sleep...");
-                enter_scheduled_sleep();
+                app_sleep_enter_scheduled();
             }
         }
     }
 }
 
+/* ------------------------------------------------------------------ */
+/* Public accessors                                                    */
+/* ------------------------------------------------------------------ */
 
 device_state_t application_get_device_state(void)
 {
@@ -1296,18 +704,17 @@ void application_update_status_bar(void)
             sizeof(data.page_title) - 1);
     data.page_title[sizeof(data.page_title) - 1] = '\0';
     data.wifi_connected                          = s_app.wifi_connected;
-    data.server_connected                        = ui_manager_is_http_server_running(s_app.ui_mgr);
+    data.server_connected                        = ap_transfer_server_is_running(&s_transfer_server);
     data.battery_level                           = battery_level;
-
     ui_manager_update_status_bar(s_app.ui_mgr, &data);
 
-    update_wifi_settings_item(s_app.wifi_connected, NULL);
+    app_settings_update_wifi_item(s_app.wifi_connected, NULL);
     char lan_ip[32] = {0};
     if (s_app.wifi_connected) {
         wifi_manager_get_ip(lan_ip, sizeof(lan_ip));
     }
-    update_lan_ip_settings_item(lan_ip);
-    update_http_server_settings_item(ui_manager_is_lan_http_server_running(s_app.ui_mgr), lan_ip);
+    app_settings_update_lan_ip_item(lan_ip);
+    app_settings_update_http_server_item(app_is_lan_http_running(), lan_ip);
 
     ui_manager_request_active_page_refresh(s_app.ui_mgr);
 }
@@ -1316,97 +723,30 @@ void application_update_status_bar(void)
 /* Button routing                                                      */
 /* ------------------------------------------------------------------ */
 
-void application_on_up_click(void)
+static void post_button_event(app_event_type_t type)
 {
-    app_event_t ev = { .type = APP_EVENT_UP_CLICK };
+    app_event_t ev = { .type = type };
     if (s_app.event_queue) {
         xQueueSend(s_app.event_queue, &ev, 0);
     }
 }
 
-void application_on_down_click(void)
-{
-    app_event_t ev = { .type = APP_EVENT_DOWN_CLICK };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
+void application_on_up_click(void)                         { post_button_event(APP_EVENT_UP_CLICK); }
+void application_on_down_click(void)                       { post_button_event(APP_EVENT_DOWN_CLICK); }
+void application_on_up_double_click(void)                  { post_button_event(APP_EVENT_UP_DOUBLE_CLICK); }
+void application_on_boot_double_click(void)                { post_button_event(APP_EVENT_BOOT_DOUBLE_CLICK); }
+void application_on_down_double_click(void)                { post_button_event(APP_EVENT_DOWN_DOUBLE_CLICK); }
+void application_on_up_long_press(void)                    { post_button_event(APP_EVENT_UP_LONG_PRESS); }
+void application_on_down_long_press(void)                  { post_button_event(APP_EVENT_DOWN_LONG_PRESS); }
+void application_on_wifi_config_combo_long_press(void)     { post_button_event(APP_EVENT_WIFI_CONFIG_COMBO_LONG_PRESS); }
+void application_on_boot_click(void)                       { post_button_event(APP_EVENT_BOOT_CLICK); }
+void application_on_boot_long_press(void)                  { post_button_event(APP_EVENT_BOOT_LONG_PRESS); }
 
-void application_on_up_double_click(void)
-{
-    app_event_t ev = { .type = APP_EVENT_UP_DOUBLE_CLICK };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
+/* ------------------------------------------------------------------ */
+/* Sleep control (thin wrapper — implementation in app_sleep.c)        */
+/* ------------------------------------------------------------------ */
 
-void application_on_boot_double_click(void)
+void application_enter_manual_sleep(void)
 {
-    app_event_t ev = { .type = APP_EVENT_BOOT_DOUBLE_CLICK };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-void application_on_down_double_click(void)
-{
-    app_event_t ev = { .type = APP_EVENT_DOWN_DOUBLE_CLICK };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-void application_on_up_long_press(void)
-{
-    app_event_t ev = { .type = APP_EVENT_UP_LONG_PRESS };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-void application_on_down_long_press(void)
-{
-    app_event_t ev = { .type = APP_EVENT_DOWN_LONG_PRESS };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-void application_on_wifi_config_combo_long_press(void)
-{
-    app_event_t ev = { .type = APP_EVENT_WIFI_CONFIG_COMBO_LONG_PRESS };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-void application_on_boot_click(void)
-{
-    app_event_t ev = { .type = APP_EVENT_BOOT_CLICK };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-void application_on_boot_long_press(void)
-{
-    app_event_t ev = { .type = APP_EVENT_BOOT_LONG_PRESS };
-    if (s_app.event_queue) {
-        xQueueSend(s_app.event_queue, &ev, 0);
-    }
-}
-
-
-static void on_weather_update(const weather_data_t *data, void *user_data)
-{
-    (void)user_data;
-    if (data) {
-        ESP_LOGI(TAG, "Weather callback fired, updating weather page");
-        page_renderer_t *weather_page = (page_renderer_t *)ui_manager_get_renderer(s_app.ui_mgr, UI_PAGE_WEATHER);
-        if (weather_page) {
-            weather_page_update(weather_page, data);
-            weather_page_set_city_name(weather_page, weather_api_get_city_name());
-            ui_manager_request_active_page_refresh(s_app.ui_mgr);
-        }
-    }
+    app_sleep_enter_manual();
 }

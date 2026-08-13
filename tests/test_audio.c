@@ -169,22 +169,16 @@ void system_info_get_device_id(char* out_id, size_t max_len) {
     strncpy(out_id, "mock_device_id", max_len);
 }
 
-// ui_manager
+// ui_manager (mocks — stream_pipeline no longer includes ui_manager.h;
+// these are kept for test_text_chunker_callback_path that wires the cb directly)
+struct ui_manager;
+typedef struct ui_manager ui_manager_t;
 static char g_ui_chat_text[4096] = {0};
-static bool g_ui_chat_stream_begun = false;
-static bool g_ui_chat_stream_ended = false;
 
 bool ui_manager_append_chat_text(ui_manager_t *ui, const char *text) {
+    (void)ui;
     strcat(g_ui_chat_text, text);
     return true;
-}
-
-void ui_manager_begin_chat_stream(ui_manager_t *ui) {
-    g_ui_chat_stream_begun = true;
-}
-
-void ui_manager_end_chat_stream(ui_manager_t *ui) {
-    g_ui_chat_stream_ended = true;
 }
 
 // Chunker Callback
@@ -322,7 +316,7 @@ void test_stream_pipeline_mutex(void) {
     stream_pipeline_t sp;
 
     protocol_init(&p);
-    stream_pipeline_init(&sp, &p, NULL);
+    stream_pipeline_init(&sp, &p, NULL, NULL);
 
     g_mutex_locks = 0;
     g_mutex_unlocks = 0;

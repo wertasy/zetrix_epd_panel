@@ -1,4 +1,5 @@
 #include "epd_refresh.h"
+#include "rawdraw_ext.h"
 #include <string.h>
 
 static void refresh_task_fn(void *arg)

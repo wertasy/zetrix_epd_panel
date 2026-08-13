@@ -40,12 +40,14 @@ int test_xSemaphoreGive(SemaphoreHandle_t mutex);
 
 #include "protocol.h"
 #include "text_chunker.h"
-#include "ui_manager.h"
+
+typedef void (*text_chunk_cb_t)(const char *chunk, void *ctx);
 
 typedef struct {
-    protocol_t    *proto;
-    text_chunker_t chunker;
-    ui_manager_t  *ui;
+    protocol_t      *proto;
+    text_chunker_t   chunker;
+    text_chunk_cb_t  cb;
+    void            *cb_ctx;
 
     bool    is_streaming;
     int64_t last_ui_update_ms;
@@ -53,7 +55,7 @@ typedef struct {
     SemaphoreHandle_t mutex;
 } stream_pipeline_t;
 
-void stream_pipeline_init(stream_pipeline_t *sp, protocol_t *proto, ui_manager_t *ui);
+void stream_pipeline_init(stream_pipeline_t *sp, protocol_t *proto, text_chunk_cb_t cb, void *cb_ctx);
 void stream_pipeline_deinit(stream_pipeline_t *sp);
 void stream_pipeline_begin_stream(stream_pipeline_t *sp);
 void stream_pipeline_feed_llm_text(stream_pipeline_t *sp, const char *chunk);

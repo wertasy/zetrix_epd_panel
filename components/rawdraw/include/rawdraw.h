@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "font_engine.h"
+#include "display_types.h"
 
 typedef enum {
     RAWDRAW_COLOR_BLACK  = 0,
@@ -11,13 +12,6 @@ typedef enum {
     RAWDRAW_COLOR_YELLOW = 2,
     RAWDRAW_COLOR_RED    = 3,
 } rawdraw_color_t;
-
-typedef struct {
-    int x, y, w, h;
-} rawdraw_rect_t;
-typedef struct {
-    int x, y;
-} rawdraw_point_t;
 
 void               rawdraw_set_pixel(uint8_t *fb, int width, int height, int x, int y, int color);
 

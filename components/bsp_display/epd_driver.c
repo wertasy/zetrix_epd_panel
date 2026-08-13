@@ -1,4 +1,4 @@
-#include "custom_lcd_display.h"
+#include "epd_driver.h"
 #include <string.h>
 #include <assert.h>
 #include <esp_heap_caps.h>
@@ -14,9 +14,9 @@
 #define EPD_CMD_DATA_START         0x10
 #define EPD_CMD_DISPLAY_REFRESH    0x12
 #define EPD_CMD_LVD_VOLT_SELECT    0xE9
-static const char *TAG = "custom_lcd";
+static const char *TAG = "epd_driver";
 
-custom_lcd_display_t g_display           = {0};
+epd_driver_t g_display           = {0};
 static bool          g_refresh_busy_seen = false;
 
 /* EPD BUSY wait via binary semaphore + GPIO ISR.
@@ -64,8 +64,8 @@ static void spi_gpio_init(void)
     gpio_config_t gpio_conf = {
         .intr_type    = GPIO_INTR_DISABLE,
         .mode         = GPIO_MODE_OUTPUT,
-        .pin_bit_mask = (1ULL << g_display.lcd_spi_data.rst) | (1ULL << g_display.lcd_spi_data.dc) |
-                        (1ULL << g_display.lcd_spi_data.cs),
+        .pin_bit_mask = (1ULL << g_display.spi_data.rst) | (1ULL << g_display.spi_data.dc) |
+                        (1ULL << g_display.spi_data.cs),
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .pull_up_en   = GPIO_PULLUP_ENABLE,
     };
@@ -81,7 +81,7 @@ static void spi_gpio_init(void)
     gpio_config_t busy_conf = {
         .intr_type    = GPIO_INTR_POSEDGE,
         .mode         = GPIO_MODE_INPUT,
-        .pin_bit_mask = (1ULL << g_display.lcd_spi_data.busy),
+        .pin_bit_mask = (1ULL << g_display.spi_data.busy),
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .pull_up_en   = GPIO_PULLUP_ENABLE,
     };
@@ -93,7 +93,7 @@ static void spi_gpio_init(void)
     if (isr_ret != ESP_OK && isr_ret != ESP_ERR_INVALID_STATE) {
         ESP_LOGE(TAG, "gpio_install_isr_service failed: %s", esp_err_to_name(isr_ret));
     }
-    esp_err_t add_ret = gpio_isr_handler_add((gpio_num_t)g_display.lcd_spi_data.busy, busy_isr_handler, NULL);
+    esp_err_t add_ret = gpio_isr_handler_add((gpio_num_t)g_display.spi_data.busy, busy_isr_handler, NULL);
     if (add_ret != ESP_OK) {
         ESP_LOGE(TAG, "gpio_isr_handler_add failed: %s", esp_err_to_name(add_ret));
         s_busy_irq_ok = false;
@@ -107,17 +107,17 @@ static void spi_port_init(void)
         g_display.spi = NULL;
     }
     if (g_display.spi_bus_inited) {
-        spi_bus_free((spi_host_device_t)g_display.lcd_spi_data.spi_host);
+        spi_bus_free((spi_host_device_t)g_display.spi_data.spi_host);
         g_display.spi_bus_inited = false;
     }
 
     spi_bus_config_t buscfg = {
         .miso_io_num     = -1,
-        .mosi_io_num     = g_display.lcd_spi_data.mosi,
-        .sclk_io_num     = g_display.lcd_spi_data.scl,
+        .mosi_io_num     = g_display.spi_data.mosi,
+        .sclk_io_num     = g_display.spi_data.scl,
         .quadwp_io_num   = -1,
         .quadhd_io_num   = -1,
-        .max_transfer_sz = g_display.lcd_spi_data.buffer_len,
+        .max_transfer_sz = g_display.spi_data.buffer_len,
     };
 
     spi_device_interface_config_t devcfg = {
@@ -127,8 +127,8 @@ static void spi_port_init(void)
         .queue_size     = 7,
     };
 
-    ESP_ERROR_CHECK(spi_bus_initialize((spi_host_device_t)g_display.lcd_spi_data.spi_host, &buscfg, SPI_DMA_CH_AUTO));
-    ESP_ERROR_CHECK(spi_bus_add_device((spi_host_device_t)g_display.lcd_spi_data.spi_host, &devcfg, &g_display.spi));
+    ESP_ERROR_CHECK(spi_bus_initialize((spi_host_device_t)g_display.spi_data.spi_host, &buscfg, SPI_DMA_CH_AUTO));
+    ESP_ERROR_CHECK(spi_bus_add_device((spi_host_device_t)g_display.spi_data.spi_host, &devcfg, &g_display.spi));
     g_display.spi_bus_inited = true;
 }
 
@@ -144,49 +144,49 @@ static void spi_send_byte(uint8_t data)
 
 static void write_bytes(const uint8_t *buf, int len)
 {
-    gpio_set_level(g_display.lcd_spi_data.dc, 1);
-    gpio_set_level(g_display.lcd_spi_data.cs, 0);
+    gpio_set_level(g_display.spi_data.dc, 1);
+    gpio_set_level(g_display.spi_data.cs, 0);
     spi_transaction_t t = {
         .length    = 8 * len,
         .tx_buffer = buf,
     };
     esp_err_t ret = spi_device_polling_transmit(g_display.spi, &t);
     assert(ret == ESP_OK);
-    gpio_set_level(g_display.lcd_spi_data.cs, 1);
+    gpio_set_level(g_display.spi_data.cs, 1);
 }
 
 static void epd_send_command(uint8_t command)
 {
-    gpio_set_level(g_display.lcd_spi_data.dc, 0);
-    gpio_set_level(g_display.lcd_spi_data.cs, 0);
+    gpio_set_level(g_display.spi_data.dc, 0);
+    gpio_set_level(g_display.spi_data.cs, 0);
     spi_send_byte(command);
-    gpio_set_level(g_display.lcd_spi_data.cs, 1);
+    gpio_set_level(g_display.spi_data.cs, 1);
 }
 
 static void epd_send_data(uint8_t data)
 {
-    gpio_set_level(g_display.lcd_spi_data.dc, 1);
-    gpio_set_level(g_display.lcd_spi_data.cs, 0);
+    gpio_set_level(g_display.spi_data.dc, 1);
+    gpio_set_level(g_display.spi_data.cs, 0);
     spi_send_byte(data);
-    gpio_set_level(g_display.lcd_spi_data.cs, 1);
+    gpio_set_level(g_display.spi_data.cs, 1);
 }
 
 static void epd_power_on(void)
 {
-    gpio_hold_dis((gpio_num_t)g_display.lcd_spi_data.power);
-    gpio_set_level((gpio_num_t)g_display.lcd_spi_data.power, 1);
-    gpio_hold_en((gpio_num_t)g_display.lcd_spi_data.power);
+    gpio_hold_dis((gpio_num_t)g_display.spi_data.power);
+    gpio_set_level((gpio_num_t)g_display.spi_data.power, 1);
+    gpio_hold_en((gpio_num_t)g_display.spi_data.power);
 }
 
 static void epd_power_off(void)
 {
-    gpio_hold_dis((gpio_num_t)g_display.lcd_spi_data.power);
-    gpio_set_level((gpio_num_t)g_display.lcd_spi_data.power, 0);
-    gpio_hold_en((gpio_num_t)g_display.lcd_spi_data.power);
+    gpio_hold_dis((gpio_num_t)g_display.spi_data.power);
+    gpio_set_level((gpio_num_t)g_display.spi_data.power, 0);
+    gpio_hold_en((gpio_num_t)g_display.spi_data.power);
 }
 static void read_busy(void)
 {
-    int busy = g_display.lcd_spi_data.busy;
+    int busy = g_display.spi_data.busy;
 
     /* Already idle — nothing to wait for. */
     if (gpio_get_level((gpio_num_t)busy) == 1) {
@@ -274,11 +274,11 @@ void epd_init(void)
 {
     epd_power_on();
     vTaskDelay(pdMS_TO_TICKS(10));
-    gpio_set_level(g_display.lcd_spi_data.rst, 1);
+    gpio_set_level(g_display.spi_data.rst, 1);
     vTaskDelay(pdMS_TO_TICKS(10));
-    gpio_set_level(g_display.lcd_spi_data.rst, 0);
+    gpio_set_level(g_display.spi_data.rst, 0);
     vTaskDelay(pdMS_TO_TICKS(20));
-    gpio_set_level(g_display.lcd_spi_data.rst, 1);
+    gpio_set_level(g_display.spi_data.rst, 1);
     vTaskDelay(pdMS_TO_TICKS(10));
 
     read_busy();
@@ -289,7 +289,7 @@ void epd_init(void)
 
 void epd_clear(void)
 {
-    memset(g_display.buffer, 0x55, g_display.lcd_spi_data.buffer_len);
+    memset(g_display.buffer, 0x55, g_display.spi_data.buffer_len);
 }
 
 static inline uint8_t pack_2bpp_row_to_1bpp_byte(const uint8_t *row_2bpp, int pixel_x)
@@ -323,6 +323,7 @@ static inline uint16_t bit_interleave(uint8_t bytes1, uint8_t bytes2)
 
 void epd_display_full(void)
 {
+    ESP_LOGI(TAG, "EPD refresh START: FULL");
     const int bytes_per_row_2bpp = (g_display.width * 2 + 7) >> 3;
     epd_send_command(EPD_CMD_DATA_START);
     read_busy();
@@ -339,6 +340,7 @@ void epd_display_full(void)
 
 void epd_display_partial(void)
 {
+    ESP_LOGI(TAG, "EPD refresh START: PARTIAL");
     const int bytes_per_row_1bpp = (g_display.width + 7) >> 3;
     const int bytes_per_row_2bpp = (g_display.width * 2 + 7) >> 3;
     const int bytes_per_row_out  = bytes_per_row_1bpp * 2;
@@ -445,9 +447,15 @@ static bool check_refresh_idle_locked(void)
 static void refresh_task_loop(void *arg)
 {
     int partial_since_full = 0;
+    /* First physical refresh after boot gets a long merge window: requests
+     * arriving close together (e.g. the initial frame at ~1.1 s and the wifi
+     * status-bar change at ~2 s) are coalesced into ONE refresh that snapshots
+     * the latest framebuffer, instead of flashing the page twice. */
+    static bool s_first_refresh_done = false;
 
     const TickType_t debounce_ticks        = pdMS_TO_TICKS(3000);
     const TickType_t urgent_debounce_ticks = pdMS_TO_TICKS(30);
+    const TickType_t first_merge_ticks     = pdMS_TO_TICKS(g_display.boot_merge_ms);
     const float      force_full_diff_ratio = 0.30f;
 
     while (true) {
@@ -493,6 +501,9 @@ static void refresh_task_loop(void *arg)
         }
 
         TickType_t debounce = (urgent || force_full) ? urgent_debounce_ticks : debounce_ticks;
+        if (!s_first_refresh_done) {
+            debounce = first_merge_ticks;
+        }
         TickType_t t0       = xTaskGetTickCount();
         while (debounce > 0 && (xTaskGetTickCount() - t0) < debounce) {
             ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(5));
@@ -509,7 +520,7 @@ static void refresh_task_loop(void *arg)
         }
 
         xSemaphoreTake(g_display.dirty_mutex, portMAX_DELAY);
-        memcpy(g_display.tx_buf, g_display.buffer, g_display.lcd_spi_data.buffer_len);
+        memcpy(g_display.tx_buf, g_display.buffer, g_display.spi_data.buffer_len);
         xSemaphoreGive(g_display.dirty_mutex);
         g_display.last_sample_tick = xTaskGetTickCount();
 
@@ -544,19 +555,20 @@ static void refresh_task_loop(void *arg)
         if (should_full) {
             epd_init();
             epd_display_full();
-            memcpy(g_display.prev_buffer, g_display.tx_buf, g_display.lcd_spi_data.buffer_len);
+            memcpy(g_display.prev_buffer, g_display.tx_buf, g_display.spi_data.buffer_len);
             g_display.prev_buffer_synced = true;
             partial_since_full           = 0;
         } else {
             epd_init();
             epd_display_partial();
-            memcpy(g_display.prev_buffer, g_display.tx_buf, g_display.lcd_spi_data.buffer_len);
+            memcpy(g_display.prev_buffer, g_display.tx_buf, g_display.spi_data.buffer_len);
             g_display.prev_buffer_synced = true;
             partial_since_full++;
         }
 
         epd_start_refresh();
         epd_complete_refresh();
+        s_first_refresh_done = true;
 
         xSemaphoreTake(g_display.dirty_mutex, portMAX_DELAY);
         g_display.refresh_in_progress = false;
@@ -582,9 +594,9 @@ static uint8_t *alloc_fb_buffer(size_t len)
     return buf;
 }
 
-void custom_lcd_display_init(const custom_lcd_spi_t *spi_data)
+void epd_driver_init(const epd_spi_t *spi_data)
 {
-    g_display.lcd_spi_data              = *spi_data;
+    g_display.spi_data              = *spi_data;
     g_display.width                     = EXAMPLE_LCD_WIDTH;
     g_display.height                    = EXAMPLE_LCD_HEIGHT;
     g_display.panel_type                = spi_data->panel_type;
@@ -597,6 +609,7 @@ void custom_lcd_display_init(const custom_lcd_spi_t *spi_data)
     g_display.last_sample_tick          = 0;
     g_display.sample_interval_ms        = (spi_data->panel_type == EPD_PANEL_4COLOR_SSD2683) ? 800 : 300;
     g_display.next_kick_ms              = 0;
+    g_display.boot_merge_ms              = 2000;
     g_display.on_refresh_idle           = NULL;
     g_display.on_refresh_idle_user_data = NULL;
     g_display.prev_buffer_synced        = false;
@@ -625,7 +638,7 @@ void custom_lcd_display_init(const custom_lcd_spi_t *spi_data)
     xTaskCreatePinnedToCore(refresh_task_loop, "epd_refresh", 4096, NULL, 3, &g_display.refresh_task, 1);
 }
 
-void custom_lcd_display_deinit(void)
+void epd_driver_deinit(void)
 {
     if (g_display.refresh_task) {
         vTaskDelete(g_display.refresh_task);
@@ -634,7 +647,7 @@ void custom_lcd_display_deinit(void)
     /* Stop the BUSY ISR before deleting the semaphore it gives, so a
      * late edge cannot xSemaphoreGiveFromISR a freed handle. */
     if (s_busy_irq_ok) {
-        gpio_isr_handler_remove((gpio_num_t)g_display.lcd_spi_data.busy);
+        gpio_isr_handler_remove((gpio_num_t)g_display.spi_data.busy);
     }
     if (s_busy_semaphore) {
         vSemaphoreDelete(s_busy_semaphore);
@@ -703,6 +716,11 @@ void set_next_kick_ms(uint32_t kick_ms)
     xSemaphoreTake(g_display.dirty_mutex, portMAX_DELAY);
     g_display.next_kick_ms = kick_ms;
     xSemaphoreGive(g_display.dirty_mutex);
+}
+
+void epd_driver_set_boot_merge_ms(uint32_t ms)
+{
+    g_display.boot_merge_ms = ms;
 }
 
 uint8_t *get_framebuffer(void)

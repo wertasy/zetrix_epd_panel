@@ -9,7 +9,7 @@
 #define COMPONENTS_UI_PAGES_WEATHER_DETAIL_PAGE_H_
 
 #include "page_renderer.h"
-#include "weather_api.h"
+#include "weather_dto.h"
 
 #ifdef __cplusplus
 extern "C" {

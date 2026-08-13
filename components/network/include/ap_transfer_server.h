@@ -10,8 +10,8 @@
  *  - Floyd-Steinberg dithering
  *  - Save to LittleFS via photo_storage
  */
-#ifndef COMPONENTS_UI_PAGES_AP_TRANSFER_SERVER_H_
-#define COMPONENTS_UI_PAGES_AP_TRANSFER_SERVER_H_
+#ifndef COMPONENTS_NETWORK_AP_TRANSFER_SERVER_H_
+#define COMPONENTS_NETWORK_AP_TRANSFER_SERVER_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -96,4 +96,4 @@ void ap_transfer_server_set_show_photo_callback(ap_transfer_server_t *server, ap
 }
 #endif
 
-#endif /* COMPONENTS_UI_PAGES_AP_TRANSFER_SERVER_H_ */
+#endif /* COMPONENTS_NETWORK_AP_TRANSFER_SERVER_H_ */

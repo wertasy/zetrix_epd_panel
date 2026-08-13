@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "rawdraw.h"
-#include "rawdraw_ext.h"
+#include "display_types.h"
 
 #ifdef ESP_PLATFORM
 #    include <freertos/FreeRTOS.h>

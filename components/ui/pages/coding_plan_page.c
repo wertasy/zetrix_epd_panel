@@ -10,6 +10,7 @@
  */
 #include "coding_plan_page.h"
 #include "page_registry.h"
+#include "data_refresh.h"
 
 #include "rawdraw_ext.h"
 #include "theme.h"
@@ -316,7 +317,7 @@ bool coding_plan_page_handle_input(page_renderer_t *self, const ui_button_event_
     coding_plan_page_t *r = (coding_plan_page_t *)self;
     switch (event->type) {
     case BTN_BOOT_CLICK:
-        coding_plan_api_fetch_async();
+        data_refresh_request(UI_PAGE_CODING_PLAN);
         r->base.needs_full_refresh_flag = true;
         return true;
     case BTN_UP_CLICK:

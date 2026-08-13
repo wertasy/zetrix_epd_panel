@@ -21,7 +21,6 @@
 #    include "esp_log.h"
 #    include "esp_app_desc.h"
 
-static const char *TAG = "SystemInfo";
 #endif
 
 void system_info_get_mac_address(char *buf, int buf_size)

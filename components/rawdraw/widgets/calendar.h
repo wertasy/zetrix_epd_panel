@@ -17,6 +17,8 @@ typedef struct {
     bool is_leap_month; /* true if this is a leap month (闰月) */
 } widget_calendar_lunar_date_t;
 
+/** Opaque holiday-provider table (full definition below) — injected by the caller. */
+typedef struct holiday_provider_s holiday_provider_t;
 typedef struct {
     /* Bounds */
     int x, y, w, h;
@@ -45,12 +47,25 @@ typedef struct {
     bool show_header;
     bool needs_full_refresh;
 
+    /* Injected holiday data source (NULL = no holiday/makeup annotations). */
+    const holiday_provider_t *hol_provider;
+
     /* Selection cursor state */
     bool selection_mode;
     int  sel_row; /* 0-based grid row (0..5) */
     int  sel_col; /* 0-based grid col (0..6, Sun..Sat) */
     int  selected_day; /* confirmed selected day, 0 if none */
 } widget_calendar_t;
+
+/** Function-pointer table injected by caller — widget never includes holiday headers. */
+struct holiday_provider_s {
+    bool        (*is_holiday)(int year, int month, int day);
+    bool        (*is_makeup_workday)(int year, int month, int day);
+    const char *(*get_holiday_name)(int year, int month, int day);
+    const char *(*get_makeup_label)(int year, int month, int day);
+};
+
+void widget_calendar_set_holiday_provider(widget_calendar_t *c, const holiday_provider_t *provider);
 
 void widget_calendar_init(widget_calendar_t *c, int x, int y, int w, int h);
 void widget_calendar_set_bounds(widget_calendar_t *c, int x, int y, int w, int h);

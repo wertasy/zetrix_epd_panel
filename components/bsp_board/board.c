@@ -231,7 +231,17 @@ void board_set_factory_led_override(bool enabled, bool blink)
 
 void board_flash_activity_led(void)
 {
-    atomic_store(&g_board.led_activity_pulses, 1);
+    board_flash_activity_led_blink(1);
+}
+
+/* Pulse the activity LED `pulses` times (each pulse: 120ms on / 180ms off,
+ * driven by power_led_task). Clamped to >= 1 so the LED always blinks. */
+void board_flash_activity_led_blink(int pulses)
+{
+    if (pulses < 1) {
+        pulses = 1;
+    }
+    atomic_store(&g_board.led_activity_pulses, pulses);
 }
 
 esp_err_t board_i2c_write_reg(i2c_master_dev_handle_t dev, uint8_t reg, uint8_t value)

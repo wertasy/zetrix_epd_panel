@@ -39,5 +39,6 @@ void board_power_vbat_on(void);
 void board_power_vbat_off(void);
 void board_set_factory_led_override(bool enabled, bool blink);
 void board_flash_activity_led(void);
+void board_flash_activity_led_blink(int pulses);
 
 #endif // MAIN_BOARD_H_

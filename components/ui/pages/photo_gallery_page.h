@@ -7,7 +7,7 @@
 #define COMPONENTS_UI_PAGES_PHOTO_GALLERY_PAGE_H_
 
 #include "page_renderer.h"
-#include "photo_storage.h"
+#include "photo_dto.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,4 +1,5 @@
 set(UI_SRCS
+    "src/data_refresh.c"
     "src/ui_text_util.c"
     "src/photo_blit.c"
     "page_registry.c"
@@ -16,8 +17,9 @@ set(UI_SRCS
     "pages/settings_about.c"
     "pages/settings_themes.c"
     "pages/ap_transfer_page.c"
-    "pages/ap_transfer_server.c"
     "ui_manager.c"
+    "ui_status_bar.c"
+    "ui_quick_switch.c"
 )
 
 if(CONFIG_PAGE_EBOOK_ENABLE)
@@ -48,5 +50,4 @@ endif()
 idf_component_register(WHOLE_ARCHIVE
                        INCLUDE_DIRS "include" "pages" "src"
                        SRCS ${UI_SRCS}
-                       REQUIRES rawdraw bsp network 78__xiaozhi-fonts espressif__qrcode
-                       esp_http_server esp_wifi esp_netif)
+                       REQUIRES rawdraw bsp_display bsp_storage app_state data_types network 78__xiaozhi-fonts espressif__qrcode)

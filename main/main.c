@@ -9,6 +9,7 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 #include <esp_sleep.h>
+#include <esp_bit_defs.h>
 #include <freertos/timers.h>
 #include <iot_button.h>
 #include <button_gpio.h>
@@ -17,7 +18,7 @@
 #include "config.h"
 #include "board.h"
 #include "charge_status.h"
-#include "custom_lcd_display.h"
+#include "epd_driver.h"
 #include "rawdraw.h"
 #include "rtc_pcf8563.h"
 #include "zectrix_nfc.h"
@@ -162,6 +163,7 @@ static int nfc_raw_ndef_writer_cb(const uint8_t *data, size_t len, void *user_da
 
 static void render_ui_and_refresh(bool force_full)
 {
+    ESP_LOGI(TAG, "render_ui_and_refresh: force_full=%d", force_full ? 1 : 0);
     SemaphoreHandle_t mutex = get_display_mutex();
     if (!mutex)
         return;
@@ -188,6 +190,9 @@ static void ui_refresh_cb(rawdraw_rect_t rect, bool urgent, void *user_data)
 {
     (void)rect;
     (void)user_data;
+    ui_manager_t *mgr = (ui_manager_t *)application_get_ui_manager();
+    ESP_LOGI(TAG, "refresh_cb: urgent=%d page=%d", urgent ? 1 : 0,
+             mgr ? (int)ui_manager_get_current_page(mgr) : -1);
     render_ui_and_refresh(urgent);
 }
 
@@ -275,10 +280,15 @@ void app_main(void)
         }
     }
 
-    /* Check if this is an RTC slideshow wakeup (to save massive battery by skipping WiFi). */
+    /* Check if this is an RTC slideshow wakeup (to save massive battery by skipping WiFi).
+     * Only skip WiFi when the last-viewed page before sleep was the gallery with the
+     * slideshow enabled — other pages (weather/calendar/etc.) need WiFi to refresh data
+     * after wake, so they must connect normally. */
     bool is_rtc_slideshow_wakeup = false;
-    esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
-    if (cause == ESP_SLEEP_WAKEUP_EXT1) {
+    const uint32_t wakeup_causes = esp_sleep_get_wakeup_causes();
+    if (wakeup_causes & BIT(ESP_SLEEP_WAKEUP_EXT1)) {
+        /* Fast multi-pulse activity blink: signals that the device is waking up. */
+        board_flash_activity_led_blink(3);
         uint64_t pin_mask = esp_sleep_get_ext1_wakeup_status();
         if (pin_mask & (1ULL << RTC_INT_GPIO)) {
             settings_handle_t gallery_nvs = settings_open("gallery", false);
@@ -287,7 +297,8 @@ void app_main(void)
                 slideshow_interval = (int32_t)settings_get_int(gallery_nvs, "slide_min", 5);
                 settings_close(gallery_nvs);
             }
-            if (slideshow_interval > 0) {
+            const bool last_page_is_gallery = ui_manager_get_rtc_saved_page() == UI_PAGE_GALLERY;
+            if (slideshow_interval > 0 && last_page_is_gallery) {
                 is_rtc_slideshow_wakeup = true;
                 ESP_LOGI(TAG, "RTC slideshow wakeup: skipping Wi-Fi connection to save battery.");
             }
@@ -298,7 +309,7 @@ void app_main(void)
         wifi_manager_connect(ssid, password);
     }
 
-    custom_lcd_spi_t spi_data = {
+    epd_spi_t spi_data = {
         .cs         = EPD_CS_PIN,
         .dc         = EPD_DC_PIN,
         .rst        = EPD_RST_PIN,
@@ -310,8 +321,15 @@ void app_main(void)
         .buffer_len = ((EXAMPLE_LCD_WIDTH * 2 + 7) / 8) * EXAMPLE_LCD_HEIGHT,
         .panel_type = EPD_PANEL_4COLOR_SSD2683,
     };
-    custom_lcd_display_init(&spi_data);
+    epd_driver_init(&spi_data);
     ESP_LOGI(TAG, "SSD2683 EPD display initialized");
+    /* When WiFi will connect, boot data (SNTP, weather, holidays) arrives
+     * 3–11 s after boot — during the ~23 s first physical refresh. Extend
+     * the first-merge window so all that data lands in the framebuffer
+     * before the single first refresh, avoiding a second flash. */
+    if (strlen(ssid) > 0 && !is_rtc_slideshow_wakeup) {
+        epd_driver_set_boot_merge_ms(10000);
+    }
 
     button_config_t btn_cfg = {
         .long_press_time = 1000,
@@ -359,9 +377,13 @@ void app_main(void)
         ui_manager_set_refresh_callback(mgr, ui_refresh_cb, NULL);
     }
 
-    /* Initial render. */
+    /* Initial render + first EPD refresh. The refresh scheduler merges
+     * requests that arrive within its first-merge window, so the wifi-icon
+     * status-bar change right after connect is coalesced into this one
+     * refresh instead of flashing the page twice. */
     application_update_status_bar();
     render_ui_and_refresh(true);
+
 
     s_clock_timer = xTimerCreate("clock_timer", pdMS_TO_TICKS(1000), pdTRUE, NULL, clock_timer_callback);
     if (s_clock_timer) {

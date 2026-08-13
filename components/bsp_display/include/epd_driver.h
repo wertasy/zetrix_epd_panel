@@ -1,5 +1,5 @@
-#ifndef MAIN_CUSTOM_LCD_DISPLAY_H_
-#define MAIN_CUSTOM_LCD_DISPLAY_H_
+#ifndef BSP_EPD_DRIVER_H_
+#define BSP_EPD_DRIVER_H_
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -37,7 +37,7 @@ typedef struct {
     int     spi_host;
     int     buffer_len;
     int     panel_type;
-} custom_lcd_spi_t;
+} epd_spi_t;
 
 typedef enum {
     EPD_PANEL_1BPP           = 0,
@@ -45,7 +45,7 @@ typedef enum {
 } epd_panel_type_t;
 
 typedef struct {
-    custom_lcd_spi_t    lcd_spi_data;
+    epd_spi_t    spi_data;
     int                 width;
     int                 height;
     epd_panel_type_t    panel_type;
@@ -66,16 +66,17 @@ typedef struct {
     TickType_t last_sample_tick;
     int        sample_interval_ms;
     uint32_t   next_kick_ms;
+    uint32_t   boot_merge_ms;  /* first-refresh merge window (ms); default 2000 */
 
     bool prev_buffer_synced;
     void (*on_refresh_idle)(void *user_data);
     void *on_refresh_idle_user_data;
-} custom_lcd_display_t;
+} epd_driver_t;
 
-extern custom_lcd_display_t g_display;
+extern epd_driver_t g_display;
 
-void custom_lcd_display_init(const custom_lcd_spi_t *spi_data);
-void custom_lcd_display_deinit(void);
+void epd_driver_init(const epd_spi_t *spi_data);
+void epd_driver_deinit(void);
 
 void epd_init(void);
 void epd_clear(void);
@@ -88,8 +89,9 @@ void request_urgent_full_refresh(void);
 bool is_refresh_pending(void);
 void set_on_refresh_idle(void (*cb)(void *), void *user_data);
 void set_next_kick_ms(uint32_t kick_ms);
+void epd_driver_set_boot_merge_ms(uint32_t ms);
 
 uint8_t          *get_framebuffer(void);
 SemaphoreHandle_t get_display_mutex(void);
 
-#endif // MAIN_CUSTOM_LCD_DISPLAY_H_
+#endif // BSP_EPD_DRIVER_H_

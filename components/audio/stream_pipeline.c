@@ -9,13 +9,9 @@ static const char *TAG = "StreamPipeline";
 static void on_chunk_cb(const char *chunk, void *ctx)
 {
     stream_pipeline_t *sp = (stream_pipeline_t *)ctx;
-    if (!sp)
+    if (!sp || !sp->cb)
         return;
-
-    // Append to UI chat message
-    if (sp->ui) {
-        ui_manager_append_chat_text(sp->ui, chunk);
-    }
+    sp->cb(chunk, sp->cb_ctx);
 }
 
 static void stream_pipeline_on_text(const char *text, void *ctx)
@@ -32,14 +28,15 @@ static void stream_pipeline_on_text(const char *text, void *ctx)
     }
 }
 
-void stream_pipeline_init(stream_pipeline_t *sp, protocol_t *proto, ui_manager_t *ui)
+void stream_pipeline_init(stream_pipeline_t *sp, protocol_t *proto, text_chunk_cb_t cb, void *cb_ctx)
 {
     if (!sp)
         return;
     memset(sp, 0, sizeof(*sp));
-    sp->proto = proto;
-    sp->ui    = ui;
-    sp->mutex = xSemaphoreCreateMutex();
+    sp->proto   = proto;
+    sp->cb      = cb;
+    sp->cb_ctx  = cb_ctx;
+    sp->mutex   = xSemaphoreCreateMutex();
 
     text_chunker_init(&sp->chunker, on_chunk_cb, sp);
 
@@ -81,10 +78,6 @@ void stream_pipeline_begin_stream(stream_pipeline_t *sp)
         xSemaphoreGive(sp->mutex);
     }
 
-    if (sp->ui) {
-        ui_manager_begin_chat_stream(sp->ui);
-    }
-
     ESP_LOGI(TAG, "Begin stream");
 }
 
@@ -118,10 +111,6 @@ void stream_pipeline_end_stream(stream_pipeline_t *sp)
 
     if (sp->mutex) {
         xSemaphoreGive(sp->mutex);
-    }
-
-    if (sp->ui) {
-        ui_manager_end_chat_stream(sp->ui);
     }
 
     ESP_LOGI(TAG, "End stream");

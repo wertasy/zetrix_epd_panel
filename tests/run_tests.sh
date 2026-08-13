@@ -8,7 +8,12 @@ cd "$(dirname "$0")/.."
 C11="-std=c11 -Wall -Werror -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE"
 INCS="-Icomponents/ui/include -Icomponents/ui/pages \
       -Icomponents/rawdraw/include -Icomponents/rawdraw/widgets \
-      -Icomponents/network/include -Icomponents/bsp/include \
+      -Icomponents/network/include -Icomponents/bsp_display/include \
+      -Icomponents/bsp_storage/include -Icomponents/bsp_connectivity/include \
+      -Icomponents/bsp_peripherals/include -Icomponents/bsp_power/include \
+      -Icomponents/bsp_board/include \
+      -Icomponents/app_state/include \
+      -Icomponents/data_types/include \
       -Icomponents/78__xiaozhi-fonts/include \
       -Imanaged_components/lvgl__lvgl/src \
       -Imanaged_components/espressif__cjson/cJSON"
@@ -52,10 +57,10 @@ for t in "${TESTS[@]}"; do
                 components/network/photo_storage.c components/network/photo_downloader.c \
                 components/network/http_client_util.c components/network/cjson_util.c \
                 components/network/coding_plan_api.c \
-                components/bsp/storage_manager.c managed_components/espressif__cjson/cJSON/cJSON.c -lm -lz
+                components/bsp_storage/storage_manager.c managed_components/espressif__cjson/cJSON/cJSON.c -lm -lz
             ;;
         nvs_state)
-            run nvs_state tests/test_nvs_state.c components/bsp/nvs_state.c -lm
+            run nvs_state tests/test_nvs_state.c components/app_state/nvs_state.c -lm
             ;;
         ui_text_util)
             run ui_text_util tests/test_ui_text_util.c \
@@ -64,6 +69,7 @@ for t in "${TESTS[@]}"; do
         ui_pages_smoke)
             run ui_pages_smoke tests/test_ui_pages_smoke.c \
                 components/ui/page_registry.c \
+                components/ui/src/data_refresh.c \
                 components/ui/pages/chat_page.c \
                 components/ui/pages/coding_plan_page.c \
                 components/rawdraw/widgets/progress_bar.c \

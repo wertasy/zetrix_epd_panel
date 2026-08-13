@@ -4,7 +4,6 @@
 #include "../include/theme.h"
 #include "../include/style.h"
 #include "../include/layout.h"
-#include "holiday_fetcher.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -274,6 +273,7 @@ void widget_calendar_init(widget_calendar_t *c, int x, int y, int w, int h)
     c->show_overflow      = false;
     c->show_header        = true;
     c->needs_full_refresh = true;
+    c->hol_provider       = NULL;
     c->selection_mode     = false;
     c->sel_row            = -1;
     c->sel_col            = -1;
@@ -345,6 +345,13 @@ void widget_calendar_set_fonts(widget_calendar_t *c, const lv_font_t *title_font
     c->body_font          = body_font;
     c->small_font         = small_font;
     c->needs_full_refresh = true;
+}
+
+void widget_calendar_set_holiday_provider(widget_calendar_t *c, const holiday_provider_t *provider)
+{
+    if (!c)
+        return;
+    c->hol_provider = provider;
 }
 
 /* ============================================================
@@ -690,13 +697,15 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
             }
 
             int q_year = c->year, q_month = c->month, q_day = display_day;
-            if (holiday_fetcher_is_holiday(q_year, q_month, q_day)) {
-                is_holiday = true;
-                holiday    = holiday_fetcher_get_holiday_name(q_year, q_month, q_day);
-                if (!holiday)
-                    holiday = "休";
-            } else if (holiday_fetcher_is_makeup_workday(q_year, q_month, q_day)) {
-                makeup_label = holiday_fetcher_get_makeup_label(q_year, q_month, q_day);
+            if (c->hol_provider) {
+                if (c->hol_provider->is_holiday(q_year, q_month, q_day)) {
+                    is_holiday = true;
+                    holiday    = c->hol_provider->get_holiday_name(q_year, q_month, q_day);
+                    if (!holiday)
+                        holiday = "休";
+                } else if (c->hol_provider->is_makeup_workday(q_year, q_month, q_day)) {
+                    makeup_label = c->hol_provider->get_makeup_label(q_year, q_month, q_day);
+                }
             }
         }
 

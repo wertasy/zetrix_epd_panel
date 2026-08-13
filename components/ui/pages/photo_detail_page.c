@@ -7,6 +7,7 @@
  */
 #include "photo_detail_page.h"
 #include "page_registry.h"
+#include "photo_storage.h"
 
 #include "rawdraw_ext.h"
 #include "theme.h"

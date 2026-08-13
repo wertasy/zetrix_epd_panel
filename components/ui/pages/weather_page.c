@@ -4,6 +4,7 @@
  */
 #include "weather_page.h"
 #include "page_registry.h"
+#include "data_refresh.h"
 
 #include "rawdraw_ext.h"
 #include "theme.h"
@@ -295,7 +296,7 @@ bool weather_page_handle_input(page_renderer_t *self, const ui_button_event_t *e
     case BTN_UP_LONG_PRESS:
     case BTN_DOWN_LONG_PRESS:
     case BTN_BOOT_LONG_PRESS:
-        weather_api_fetch_now();
+        data_refresh_request(UI_PAGE_WEATHER);
         r->base.needs_full_refresh_flag = true;
         return true;
     default:
