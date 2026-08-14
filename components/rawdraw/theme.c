@@ -10,7 +10,7 @@
 
 static rawdraw_theme_id_t g_current_theme = THEME_INDUSTRIAL;
 
-static const rawdraw_theme_definition_t kThemes[] = {
+static const rawdraw_theme_definition_t themes[] = {
     // 1. Nintendo Pop / Industrial
     {.id = THEME_INDUSTRIAL,
      .key = "nintendo_pop",
@@ -218,13 +218,13 @@ static const rawdraw_theme_definition_t kThemes[] = {
 
 static const rawdraw_theme_definition_t *ThemeById(rawdraw_theme_id_t id)
 {
-    int theme_count = (int)(sizeof(kThemes) / sizeof(kThemes[0]));
+    int theme_count = (int)(sizeof(themes) / sizeof(themes[0]));
     for (int i = 0; i < theme_count; i++) {
-        if (kThemes[i].id == id) {
-            return &kThemes[i];
+        if (themes[i].id == id) {
+            return &themes[i];
         }
     }
-    return &kThemes[0];
+    return &themes[0];
 }
 
 static rawdraw_paint_style_t NormalizeForPanel(rawdraw_paint_style_t style)
@@ -409,7 +409,7 @@ const rawdraw_theme_definition_t *rawdraw_theme_get(rawdraw_theme_id_t id)
 
 bool rawdraw_theme_set(rawdraw_theme_id_t id)
 {
-    int theme_count = (int)(sizeof(kThemes) / sizeof(kThemes[0]));
+    int theme_count = (int)(sizeof(themes) / sizeof(themes[0]));
     if (id < 0 || id >= theme_count)
         return false;
     g_current_theme = id;
@@ -479,15 +479,15 @@ rawdraw_color_t rawdraw_theme_color_for(rawdraw_theme_token_t token)
 
 int rawdraw_theme_count(void)
 {
-    return (int)(sizeof(kThemes) / sizeof(kThemes[0]));
+    return (int)(sizeof(themes) / sizeof(themes[0]));
 }
 
 rawdraw_theme_id_t rawdraw_theme_at(int index)
 {
-    int theme_count = (int)(sizeof(kThemes) / sizeof(kThemes[0]));
+    int theme_count = (int)(sizeof(themes) / sizeof(themes[0]));
     if (index < 0 || index >= theme_count)
         return THEME_INDUSTRIAL;
-    return kThemes[index].id;
+    return themes[index].id;
 }
 
 const char *rawdraw_theme_key(rawdraw_theme_id_t id)
@@ -504,10 +504,10 @@ rawdraw_theme_id_t rawdraw_theme_from_key(const char *key, rawdraw_theme_id_t fa
 {
     if (!key || key[0] == '\0')
         return fallback;
-    int theme_count = (int)(sizeof(kThemes) / sizeof(kThemes[0]));
+    int theme_count = (int)(sizeof(themes) / sizeof(themes[0]));
     for (int i = 0; i < theme_count; i++) {
-        if (strcmp(key, kThemes[i].key) == 0) {
-            return kThemes[i].id;
+        if (strcmp(key, themes[i].key) == 0) {
+            return themes[i].id;
         }
     }
     if (strcmp(key, "industrial") == 0) {

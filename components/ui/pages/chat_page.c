@@ -18,11 +18,11 @@
 #include <stdio.h>
 #include <string.h>
 
-static const lv_font_t *const kChatFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kChatTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const chat_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const chat_title_font = &SourceHanSansSC_Medium_slim;
 
-#define kChatContentY (STYLE_STATUS_BAR_HEIGHT + 10)
-#define kChatBottomReserve 2
+#define chat_content_y (STYLE_STATUS_BAR_HEIGHT + 10)
+#define chat_bottom_reserve 2
 
 /* Bubble layout metrics produced by build_bubble_metrics. */
 typedef struct {
@@ -160,7 +160,7 @@ static void layout_messages(page_renderer_t *self)
     }
 
     const int total_height = y;
-    const int visible_height = RD_MAX(40, r->base.height - kChatBottomReserve - kChatContentY);
+    const int visible_height = RD_MAX(40, r->base.height - chat_bottom_reserve - chat_content_y);
     r->max_scroll_offset = total_height - visible_height;
     if (r->max_scroll_offset < 0)
         r->max_scroll_offset = 0;
@@ -263,8 +263,8 @@ void chat_page_init(page_renderer_t *self, int width, int height)
     r->stream_frame = 0;
     r->showing_volume_dialog = false;
     r->volume_dialog_value = 70;
-    r->font = kChatFont;
-    r->title_font = kChatTitleFont;
+    r->font = chat_font;
+    r->title_font = chat_title_font;
     r->volume_dialog_handler = NULL;
     r->volume_dialog_ctx = NULL;
     r->bottom_status_text[0] = '\0';
@@ -290,8 +290,8 @@ void chat_page_render(page_renderer_t *self, uint8_t *fb, int width, int height)
     const rawdraw_paint_style_t system_style = rawdraw_theme_style(THEME_TOKEN_TEXT_SECONDARY);
     const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
 
-    const int content_y = kChatContentY;
-    const int content_bottom = height - kChatBottomReserve;
+    const int content_y = chat_content_y;
+    const int content_bottom = height - chat_bottom_reserve;
     const int content_height = RD_MAX(40, content_bottom - content_y);
 
     rawdraw_draw_styled_rect(fb, width, height,

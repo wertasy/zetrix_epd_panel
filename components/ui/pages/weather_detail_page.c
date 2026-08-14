@@ -21,9 +21,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const lv_font_t *const kDetailFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kDetailTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kDetailIconFont = &weather_icons_16;
+static const lv_font_t *const detail_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const detail_title_font = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const detail_icon_font = &weather_icons_16;
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -42,9 +42,9 @@ void weather_detail_page_init(page_renderer_t *self, int width, int height)
     r->base.width = width;
     r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font = kDetailFont;
-    r->title_font = kDetailTitleFont;
-    r->icon_font = kDetailIconFont;
+    r->font = detail_font;
+    r->title_font = detail_title_font;
+    r->icon_font = detail_icon_font;
     r->hourly_count = 0;
     r->selected_hour = 0;
     r->detail_open = false;

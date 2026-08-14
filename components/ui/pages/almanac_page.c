@@ -19,17 +19,17 @@
 #include <time.h>
 
 /* Weekday characters (matches calendar.c) */
-static const char *const kWeekdayFull[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+static const char *const weekday_full[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
 
 /* Simplified yiji (宜忌) based on lunar day patterns.
  * This is a traditional approximation, not a full almanac calculation. */
-static const char *const kYiTable[][4] = {
+static const char *const yi_table[][4] = {
     {"祭祀", "祈福", "出行", "动土"}, {"嫁娶", "纳采", "订盟", "出行"}, {"开市", "交易", "立券", "纳财"},
     {"破土", "启钻", "安葬", "修坟"}, {"修造", "动土", "起基", "定磉"}, {"安床", "开市", "交易", "立券"},
     {"祭祀", "沐浴", "扫舍", "修造"}, {"祈福", "求嗣", "出行", "解除"}, {"嫁娶", "祭祀", "祈福", "出行"},
     {"开市", "立券", "交易", "纳财"},
 };
-static const char *const kJiTable[][3] = {
+static const char *const ji_table[][3] = {
     {"破土", "安葬", "启钻"}, {"开仓", "出货财", "纳粟"}, {"词讼", "争执", "诽谤"}, {"嫁娶", "出行", "祈福"},
     {"安床", "移徙", "入宅"}, {"祭祀", "修造", "动土"},   {"开市", "纳财", "交易"}, {"出行", "解除", "拆卸"},
     {"破土", "启钻", "安葬"}, {"纳采", "订盟", "嫁娶"},
@@ -62,9 +62,9 @@ void almanac_page_refresh_data(page_renderer_t *self)
     const int yi_idx = (r->lunar.lunar_day - 1) % 10;
     const int ji_idx = r->lunar.lunar_day % 10;
     for (int i = 0; i < 4; ++i)
-        r->yi[i] = kYiTable[yi_idx][i];
+        r->yi[i] = yi_table[yi_idx][i];
     for (int i = 0; i < 3; ++i)
-        r->ji[i] = kJiTable[ji_idx][i];
+        r->ji[i] = ji_table[ji_idx][i];
 }
 
 /* ------------------------------------------------------------------ */
@@ -143,7 +143,7 @@ void almanac_page_render(page_renderer_t *self, uint8_t *fb, int width, int heig
 
     /* === Gregorian date === */
     char greg_buf[64];
-    snprintf(greg_buf, sizeof(greg_buf), "公历 %d年%d月%d日 %s", r->year, r->month, r->day, kWeekdayFull[r->weekday]);
+    snprintf(greg_buf, sizeof(greg_buf), "公历 %d年%d月%d日 %s", r->year, r->month, r->day, weekday_full[r->weekday]);
     const int greg_w = rawdraw_measure_text_width(greg_buf, r->font);
     const int greg_x = (width - greg_w) / 2;
     rawdraw_draw_text(fb, width, height, greg_x, y, greg_buf, r->font, secondary);

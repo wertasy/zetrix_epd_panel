@@ -90,10 +90,10 @@ static void draw_mini_time_digit(uint8_t *fb, int width, int height, int x, int 
 {
     if (digit < '0' || digit > '9')
         return;
-    static const uint8_t kSegments[10] = {
+    static const uint8_t segments[10] = {
         0b1111110, 0b0110000, 0b1101101, 0b1111001, 0b0110011, 0b1011011, 0b1011111, 0b1110000, 0b1111111, 0b1111011,
     };
-    const uint8_t seg = kSegments[digit - '0'];
+    const uint8_t seg = segments[digit - '0'];
     if (seg & 0b1000000)
         rawdraw_draw_hline(fb, width, height, y, x + 1, x + 4, color);
     if (seg & 0b0100000)

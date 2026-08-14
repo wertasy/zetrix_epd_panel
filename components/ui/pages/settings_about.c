@@ -16,8 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#define kAboutRowHeight 24
-#define kAboutTitlebarH 28
+#define about_row_height 24
+#define about_titlebar_h 28
 
 void settings_page_render_about_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
@@ -32,7 +32,7 @@ void settings_page_render_about_dialog(settings_page_t *r, uint8_t *fb, int widt
     const int dialog_x = (width - dialog_w) / 2;
     const int dialog_y = STYLE_STATUS_BAR_HEIGHT + 30;
     const int content_right = dialog_x + dialog_w - 20;
-    const int titlebar_h = kAboutTitlebarH;
+    const int titlebar_h = about_titlebar_h;
     const int shadow_offset = 2;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
@@ -87,7 +87,7 @@ void settings_page_render_about_dialog(settings_page_t *r, uint8_t *fb, int widt
         {"序列号", serial_buf},    {"官方网站", "canhui.wang"},
     };
     const int row_count = (int)(sizeof(rows) / sizeof(rows[0]));
-    const int row_h = kAboutRowHeight;
+    const int row_h = about_row_height;
     int y = dialog_y + titlebar_h + 12;
     const int rows_x = dialog_x + 70;
     for (int i = 0; i < row_count; ++i) {

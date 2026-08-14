@@ -24,9 +24,9 @@
 #    define PROJECT_VER "3.8.0"
 #endif
 
-static const lv_font_t *const kLogFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kLogTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kLogIconFont = &font_zectrix_16_1;
+static const lv_font_t *const log_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const log_title_font = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const log_icon_font = &font_zectrix_16_1;
 
 /* ------------------------------------------------------------------ */
 /* Internal helpers                                                    */
@@ -144,9 +144,9 @@ void log_page_init(page_renderer_t *self, int width, int height)
     r->base.needs_full_refresh_flag = true;
     r->selected_index = 0;
     r->scroll_offset = 0;
-    r->font = kLogFont;
-    r->title_font = kLogTitleFont;
-    r->icon_font = kLogIconFont;
+    r->font = log_font;
+    r->title_font = log_title_font;
+    r->icon_font = log_icon_font;
     r->count = 0;
     r->head = 0;
     collect_log_entries(r);

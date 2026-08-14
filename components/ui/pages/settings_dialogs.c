@@ -18,13 +18,13 @@
 #include <string.h>
 
 /* Shared layout constants (single source of truth, see settings_page.c). */
-#define kTextOpticalNudgeY 0
-#define kValueOpticalNudgeY 0
-#define kVolumeDialogClearPad 0
-#define kAboutRowHeight 24
-#define kServerListVisibleRows 5
-#define kOtaVisibleRows 4
-#define kDialogClearPad 0
+#define text_optical_nudge_y 0
+#define value_optical_nudge_y 0
+#define volume_dialog_clear_pad 0
+#define about_row_height 24
+#define server_list_visible_rows 5
+#define ota_visible_rows 4
+#define dialog_clear_pad 0
 
 void settings_page_render_volume_dialog(settings_page_t *r, uint8_t *fb, int width, int height)
 {
@@ -45,7 +45,7 @@ void settings_page_render_volume_dialog(settings_page_t *r, uint8_t *fb, int wid
     const int inner_w = dialog_w - 36;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x, dialog_y, dialog_w, dialog_h, STYLE_BORDER_RADIUS_LG,
-                                      kVolumeDialogClearPad);
+                                      volume_dialog_clear_pad);
     /* Same solid 2px offset shadow as the other dialogs: no white gap. */
     rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){dialog_x + 2, dialog_y + 2, dialog_w, dialog_h},
                                    STYLE_BORDER_RADIUS_LG, &shadow_style);
@@ -55,7 +55,7 @@ void settings_page_render_volume_dialog(settings_page_t *r, uint8_t *fb, int wid
     const char *title = "音量调整";
     const int title_w = rawdraw_measure_text_width(title, r->font);
     rawdraw_draw_text(fb, width, height, dialog_x + (dialog_w - title_w) / 2,
-                      rawdraw_layout_ink_centered_text_top_y(r->font, title, dialog_y + 24, kTextOpticalNudgeY), title,
+                      rawdraw_layout_ink_centered_text_top_y(r->font, title, dialog_y + 24, text_optical_nudge_y), title,
                       r->font, text);
     rawdraw_draw_hline(fb, width, height, dialog_y + 42, dialog_x + 14, dialog_x + dialog_w - 14, border);
 
@@ -92,7 +92,7 @@ void settings_page_render_volume_dialog(settings_page_t *r, uint8_t *fb, int wid
     const int hint_center_y = dialog_y + dialog_h - 20;
     rawdraw_draw_text(
         fb, width, height, inner_x + 6,
-        rawdraw_layout_ink_centered_text_top_y(r->font, "UP/DN 调整  BOOT 保存", hint_center_y, kTextOpticalNudgeY),
+        rawdraw_layout_ink_centered_text_top_y(r->font, "UP/DN 调整  BOOT 保存", hint_center_y, text_optical_nudge_y),
         "UP/DN 调整  BOOT 保存", r->font, secondary);
 }
 
@@ -114,7 +114,7 @@ void settings_page_render_storage_dialog(settings_page_t *r, uint8_t *fb, int wi
     const int content_right = dialog_x + dialog_w - 20;
     const int titlebar_h = 28;
     const int shadow_offset = 2;
-    const int row_h = kAboutRowHeight;
+    const int row_h = about_row_height;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -212,7 +212,7 @@ void settings_page_render_server_dialog(settings_page_t *r, uint8_t *fb, int wid
     const int content_right = dialog_x + dialog_w - 20;
     const int titlebar_h = 28;
     const int shadow_offset = 2;
-    const int row_h = kAboutRowHeight;
+    const int row_h = about_row_height;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -313,7 +313,7 @@ void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, in
     const int content_right = dialog_x + dialog_w - 20;
     const int titlebar_h = 28;
     const int shadow_offset = 2;
-    const int row_h = kAboutRowHeight;
+    const int row_h = about_row_height;
 
     settings_page_clear_dialog_region(fb, width, height, dialog_x + 3, dialog_y + 3, dialog_w, dialog_h,
                                       STYLE_BORDER_RADIUS_MD, 2);
@@ -351,7 +351,7 @@ void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, in
                           rawdraw_layout_ink_centered_text_top_y(r->font, "无历史地址", y + row_h / 2, 0), "无历史地址",
                           r->font, secondary);
     } else {
-        const int visible_rows = RD_MIN(kServerListVisibleRows, total);
+        const int visible_rows = RD_MIN(server_list_visible_rows, total);
         const int scroll_start = r->server_list_scroll_offset;
 
         for (int i = 0; i < visible_rows; ++i) {
@@ -397,12 +397,12 @@ void settings_page_render_server_list_dialog(settings_page_t *r, uint8_t *fb, in
         }
 
         /* Scroll indicator (when more items than visible rows). */
-        if (total > kServerListVisibleRows) {
+        if (total > server_list_visible_rows) {
             const int scroll_bar_x = content_right + 4;
-            const int scroll_bar_h = kServerListVisibleRows * row_h;
+            const int scroll_bar_h = server_list_visible_rows * row_h;
             const int scroll_bar_y = dialog_y + titlebar_h + 10;
             rawdraw_draw_vline(fb, width, height, scroll_bar_x, scroll_bar_y, scroll_bar_y + scroll_bar_h, border);
-            const int thumb_h = scroll_bar_h * kServerListVisibleRows / total;
+            const int thumb_h = scroll_bar_h * server_list_visible_rows / total;
             const int thumb_y = scroll_bar_y + (scroll_start * scroll_bar_h / total);
             rawdraw_fill_rect(fb, width, height, (rawdraw_rect_t){scroll_bar_x - 2, thumb_y, 4, thumb_h}, accent);
         }
@@ -480,7 +480,7 @@ void settings_page_render_ota_dialog(settings_page_t *r, uint8_t *fb, int width,
 
     if (selecting && r->ota_version_count > 0) {
         const int total = r->ota_version_count;
-        const int visible_rows = RD_MIN(kOtaVisibleRows, total);
+        const int visible_rows = RD_MIN(ota_visible_rows, total);
         int start = RD_MAX(0, r->ota_selected_index - visible_rows / 2);
         if (start + visible_rows > total)
             start = RD_MAX(0, total - visible_rows);
@@ -562,8 +562,8 @@ void settings_page_render_ota_confirm_dialog(settings_page_t *r, uint8_t *fb, in
     const int row_h = 28;
 
     rawdraw_draw_styled_rect(fb, width, height,
-                             (rawdraw_rect_t){dialog_x - kDialogClearPad, dialog_y - kDialogClearPad,
-                                              dialog_w + kDialogClearPad * 2, dialog_h + kDialogClearPad * 2},
+                             (rawdraw_rect_t){dialog_x - dialog_clear_pad, dialog_y - dialog_clear_pad,
+                                              dialog_w + dialog_clear_pad * 2, dialog_h + dialog_clear_pad * 2},
                              &bg_style);
 
     /* Dialog border. */

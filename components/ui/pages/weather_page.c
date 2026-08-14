@@ -16,8 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
-static const lv_font_t *const kWeatherFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kWeatherTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const weather_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const weather_title_font = &SourceHanSansSC_Medium_slim;
 
 /* ------------------------------------------------------------------ */
 /* Forecaster helper                                                   */
@@ -63,8 +63,8 @@ void weather_page_init(page_renderer_t *self, int width, int height)
     r->base.width = width;
     r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font = kWeatherFont;
-    r->title_font = kWeatherTitleFont;
+    r->font = weather_font;
+    r->title_font = weather_title_font;
     r->has_data = false;
     r->page_index = 0;
     r->city_name[0] = '\0';
@@ -128,11 +128,11 @@ void weather_page_render(page_renderer_t *self, uint8_t *fb, int width, int heig
         ui_text_fit_to_width(location, r->title_font, 180, location_line, sizeof(location_line));
 
         /* Top summary: three equal-height blocks on one visual baseline. */
-        const int kSummaryY = STYLE_STATUS_BAR_HEIGHT + 8;
-        const int kSummaryH = 68;
-        const rawdraw_rect_t location_box = {24, kSummaryY, 92, kSummaryH};
-        const rawdraw_rect_t temp_box = {136, kSummaryY, 112, kSummaryH};
-        const rawdraw_rect_t aqi_box = {276, kSummaryY, 92, kSummaryH};
+        const int summary_y = STYLE_STATUS_BAR_HEIGHT + 8;
+        const int summary_h = 68;
+        const rawdraw_rect_t location_box = {24, summary_y, 92, summary_h};
+        const rawdraw_rect_t temp_box = {136, summary_y, 112, summary_h};
+        const rawdraw_rect_t aqi_box = {276, summary_y, 92, summary_h};
 
         rawdraw_draw_styled_round_rect(fb, width, height, location_box, STYLE_BORDER_RADIUS_MD, &selected_style);
         const int pin_cx = location_box.x + location_box.w / 2;
@@ -198,11 +198,11 @@ void weather_page_render(page_renderer_t *self, uint8_t *fb, int width, int heig
         const int desc_icon_w = rawdraw_measure_text_width(desc_glyph, &weather_icons_16);
         rawdraw_draw_text(
             fb, width, height, condition_center_x - desc_icon_w / 2,
-            rawdraw_layout_ink_centered_text_top_y(&weather_icons_16, desc_glyph, kSummaryY + kSummaryH + 16, 0),
+            rawdraw_layout_ink_centered_text_top_y(&weather_icons_16, desc_glyph, summary_y + summary_h + 16, 0),
             desc_glyph, &weather_icons_16, accent);
         const int desc_w = rawdraw_measure_text_width(desc_buf, r->font);
         rawdraw_draw_text(fb, width, height, condition_center_x - desc_w / 2,
-                          rawdraw_layout_ink_centered_text_top_y(r->font, desc_buf, kSummaryY + kSummaryH + 35, 0),
+                          rawdraw_layout_ink_centered_text_top_y(r->font, desc_buf, summary_y + summary_h + 35, 0),
                           desc_buf, r->font, text);
 
         const int metrics_y = 156;

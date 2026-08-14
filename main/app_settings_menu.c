@@ -95,11 +95,11 @@ void app_settings_menu_cb(void *ctx)
         if (nvs) {
             current = (int)settings_get_int(nvs, APP_SLIDESHOW_KEY, 5);
         }
-        static const int kOptions[] = {0, 5, 10, 30};
+        static const int options[] = {0, 5, 10, 30};
         int next = 5;
-        for (unsigned i = 0; i < sizeof(kOptions) / sizeof(kOptions[0]); ++i) {
-            if (kOptions[i] == current) {
-                next = kOptions[(i + 1) % (sizeof(kOptions) / sizeof(kOptions[0]))];
+        for (unsigned i = 0; i < sizeof(options) / sizeof(options[0]); ++i) {
+            if (options[i] == current) {
+                next = options[(i + 1) % (sizeof(options) / sizeof(options[0]))];
                 break;
             }
         }

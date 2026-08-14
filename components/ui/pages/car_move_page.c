@@ -40,8 +40,8 @@
 #define CAR_MOVE_QR_BOX_SIZE 210 /* on-screen QR box (px), screen-centered */
 #define CAR_MOVE_QR_MAX_MODULES 177 /* version-40 max; we cap version at 10  */
 
-static const lv_font_t *const kCarMoveFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kCarMoveTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const car_move_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const car_move_title_font = &SourceHanSansSC_Medium_slim;
 
 static void reload_phone(car_move_page_t *r)
 {
@@ -201,8 +201,8 @@ void car_move_page_init(page_renderer_t *self, int width, int height)
     r->base.width = width;
     r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font = kCarMoveFont;
-    r->title_font = kCarMoveTitleFont;
+    r->font = car_move_font;
+    r->title_font = car_move_title_font;
     reload_phone(r);
 }
 

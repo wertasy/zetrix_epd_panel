@@ -110,26 +110,26 @@ static void ap_server_state_cb(int state, const char *message, void *ctx)
     (void)ctx;
     bool should_refresh = false;
     switch (state) {
-    case 1: /* kApStarted */
+    case 1: /* AP started */
         ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
                                    AP_TRANSFER_STATE_WAITING_CONNECTION, message);
         should_refresh = true;
         break;
-    case 2: /* kClientConnected */
+    case 2: /* client connected */
         ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
                                    AP_TRANSFER_STATE_CLIENT_CONNECTED, message);
         break;
-    case 5: /* kImageSaved */
+    case 5: /* image saved */
         ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
                                    AP_TRANSFER_STATE_COMPLETE, message);
         should_refresh = true;
         break;
-    case 6: /* kError */
+    case 6: /* error */
         ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
                                    AP_TRANSFER_STATE_ERROR, message);
         should_refresh = true;
         break;
-    case 0: /* kStopped */
+    case 0: /* stopped */
     default:
         ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
                                    AP_TRANSFER_STATE_WAITING_CONNECTION, message);

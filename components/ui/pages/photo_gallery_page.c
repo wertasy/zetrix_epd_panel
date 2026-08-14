@@ -26,9 +26,9 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-static const lv_font_t *const kGalleryFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kGalleryTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kGalleryIconFont = &font_zectrix_16_1;
+static const lv_font_t *const gallery_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const gallery_title_font = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const gallery_icon_font = &font_zectrix_16_1;
 
 /* ------------------------------------------------------------------ */
 /* Photo rendering                                                     */
@@ -207,25 +207,25 @@ static void render_memory_card_mode(page_renderer_t *self, uint8_t *fb, int widt
     int title_n = 0;
     ui_text_wrap_lines(r->title_font, entry->title[0] ? entry->title : "那年今日", text_w, title_lines, 128, 2,
                        &title_n);
-    const int kTitleLineBoxH = 24;
+    const int title_line_box_h = 24;
     for (int i = 0; i < title_n; ++i) {
         rawdraw_draw_text(
             fb, width, height, text_x,
-            rawdraw_layout_ink_centered_text_top_y_in_box(r->title_font, title_lines[i], y, kTitleLineBoxH, 0),
+            rawdraw_layout_ink_centered_text_top_y_in_box(r->title_font, title_lines[i], y, title_line_box_h, 0),
             title_lines[i], r->title_font, text);
-        y += kTitleLineBoxH + 2;
+        y += title_line_box_h + 2;
     }
     y += 4;
 
     char body_lines[5][128];
     int body_n = 0;
     ui_text_wrap_lines(r->font, entry->body[0] ? entry->body : "暂无文案", text_w, body_lines, 128, 5, &body_n);
-    const int kBodyLineBoxH = 22;
+    const int body_line_box_h = 22;
     for (int i = 0; i < body_n; ++i) {
         rawdraw_draw_text(fb, width, height, text_x,
-                          rawdraw_layout_ink_centered_text_top_y_in_box(r->font, body_lines[i], y, kBodyLineBoxH, 0),
+                          rawdraw_layout_ink_centered_text_top_y_in_box(r->font, body_lines[i], y, body_line_box_h, 0),
                           body_lines[i], r->font, text);
-        y += kBodyLineBoxH + 1;
+        y += body_line_box_h + 1;
     }
 
     const int meta_block_h = 44;
@@ -470,9 +470,9 @@ void photo_gallery_init(page_renderer_t *self, int width, int height)
     r->current_photo_size = 0;
     r->current_photo_width = STYLE_SCREEN_WIDTH;
     r->current_photo_height = STYLE_SCREEN_HEIGHT;
-    r->font = kGalleryFont;
-    r->title_font = kGalleryTitleFont;
-    r->icon_font = kGalleryIconFont;
+    r->font = gallery_font;
+    r->title_font = gallery_title_font;
+    r->icon_font = gallery_icon_font;
     r->photo_count = 0;
     photo_gallery_refresh_photo_list(self);
     /* If returning to fullscreen mode, reload the photo data. */

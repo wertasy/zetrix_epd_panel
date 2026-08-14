@@ -24,8 +24,8 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-static const lv_font_t *const kDetailFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kDetailTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const detail_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const detail_title_font = &SourceHanSansSC_Medium_slim;
 
 /* Data management                                                     */
 /* ------------------------------------------------------------------ */
@@ -114,8 +114,8 @@ void photo_detail_page_init(page_renderer_t *self, int width, int height)
     r->current_photo_size = 0;
     r->current_photo_width = STYLE_SCREEN_WIDTH;
     r->current_photo_height = STYLE_SCREEN_HEIGHT;
-    r->font = kDetailFont;
-    r->title_font = kDetailTitleFont;
+    r->font = detail_font;
+    r->title_font = detail_title_font;
     photo_detail_page_refresh_photo_list(self);
     pd_load_photo_data(self, r->selected_index);
     r->base.needs_full_refresh_flag = true;

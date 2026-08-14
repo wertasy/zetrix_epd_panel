@@ -19,27 +19,27 @@ typedef struct {
     const char *name;
 } solar_term_entry_t;
 
-static const solar_term_entry_t kSolarTerms[] = {
+static const solar_term_entry_t solar_terms[] = {
     {1, 5, "小寒"},  {1, 20, "大寒"},  {2, 4, "立春"},  {2, 19, "雨水"},  {3, 5, "惊蛰"},  {3, 20, "春分"},
     {4, 4, "清明"},  {4, 20, "谷雨"},  {5, 5, "立夏"},  {5, 21, "小满"},  {6, 5, "芒种"},  {6, 21, "夏至"},
     {7, 7, "小暑"},  {7, 23, "大暑"},  {8, 7, "立秋"},  {8, 23, "处暑"},  {9, 7, "白露"},  {9, 23, "秋分"},
     {10, 8, "寒露"}, {10, 23, "霜降"}, {11, 7, "立冬"}, {11, 22, "小雪"}, {12, 7, "大雪"}, {12, 22, "冬至"},
 };
 
-static const int kSolarTermCount = sizeof(kSolarTerms) / sizeof(kSolarTerms[0]);
+static const int solar_term_count = sizeof(solar_terms) / sizeof(solar_terms[0]);
 
 /* Lunar month names (lunar calendar months 1-12) */
-static const char *kLunarMonths[] = {"正月", "二月", "三月", "四月", "五月",   "六月",
+static const char *lunar_months[] = {"正月", "二月", "三月", "四月", "五月",   "六月",
                                      "七月", "八月", "九月", "十月", "十一月", "腊月"};
 
 /* Lunar day names */
-static const char *kLunarDays[] = {"初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+static const char *lunar_days[] = {"初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
                                    "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
                                    "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"};
 
 /* Weekday header characters */
-static const char *kWeekdayChars[] = {"日", "一", "二", "三", "四", "五", "六"};
-static const char *kWeekdayFull[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+static const char *weekday_chars[] = {"日", "一", "二", "三", "四", "五", "六"};
+static const char *weekday_full[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
 
 /* Holidays (fixed-date solar holidays in Gregorian calendar) */
 typedef struct {
@@ -48,19 +48,19 @@ typedef struct {
     const char *name;
 } calendar_holiday_entry_t;
 
-static const calendar_holiday_entry_t kHolidays[] = {
+static const calendar_holiday_entry_t holidays[] = {
     {1, 1, "元旦"},    {2, 14, "情人节"}, {3, 8, "妇女节"},   {3, 12, "植树节"},  {4, 1, "愚人节"},
     {5, 1, "劳动节"},  {5, 4, "青年节"},  {6, 1, "儿童节"},   {7, 1, "建党节"},   {8, 1, "建军节"},
     {9, 10, "教师节"}, {10, 1, "国庆节"}, {10, 31, "万圣节"}, {12, 25, "圣诞节"},
 };
 
-static const int kHolidayCount = sizeof(kHolidays) / sizeof(kHolidays[0]);
+static const int holiday_count = sizeof(holidays) / sizeof(holidays[0]);
 
 /* ============================================================
  * Lunar calendar algorithm (2000-2050)
  * ============================================================ */
 
-static const uint16_t kSpringInfo[] = {
+static const uint16_t spring_info[] = {
     0x0205, 0x0118, 0x020C, 0x0201, 0x0116, /* 2000-2004 */
     0x0209, 0x011D, 0x0212, 0x0207, 0x011A, /* 2005-2009 */
     0x020E, 0x0203, 0x0117, 0x020A, 0x011F, /* 2010-2014 */
@@ -74,14 +74,14 @@ static const uint16_t kSpringInfo[] = {
     0x0117, /* 2050 */
 };
 
-static const int kLunarMinYear = 2000;
-static const int kLunarMaxYear = 2050;
+static const int lunar_min_year = 2000;
+static const int lunar_max_year = 2050;
 
 /* Standard lunarInfo table (bits 0-3 = leap month, bits 4-15 = month
  * lengths 1=30d/0=29d, bit 16 = leap month 30d).
  * Used for exact per-year month lengths instead of the old alternating
  * 30/29 approximation which caused off-by-one errors. */
-static const uint32_t kLunarInfo[] = {
+static const uint32_t lunar_info[] = {
     0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, /* 2000-2004 */
     0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5, /* 2005-2009 */
     0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, /* 2010-2014 */
@@ -97,23 +97,23 @@ static const uint32_t kLunarInfo[] = {
 
 static int lunar_month_days(int year, int month)
 {
-    /* month 1-12 → bit 15..4 in kLunarInfo */
-    return ((kLunarInfo[year - kLunarMinYear] >> (16 - month)) & 1) ? 30 : 29;
+    /* month 1-12 → bit 15..4 in lunar_info */
+    return ((lunar_info[year - lunar_min_year] >> (16 - month)) & 1) ? 30 : 29;
 }
 
 static int lunar_leap_month(int year)
 {
-    return kLunarInfo[year - kLunarMinYear] & 0xf;
+    return lunar_info[year - lunar_min_year] & 0xf;
 }
 
 static int lunar_leap_days(int year)
 {
-    return ((kLunarInfo[year - kLunarMinYear] >> 16) & 1) ? 30 : 29;
+    return ((lunar_info[year - lunar_min_year] >> 16) & 1) ? 30 : 29;
 }
 
 /* Tian Gan (天干) and Di Zhi (地支) for year names */
-static const char *kTianGan[] = {"甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"};
-static const char *kDiZhi[] = {"子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"};
+static const char *tian_gan[] = {"甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"};
+static const char *di_zhi[] = {"子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"};
 
 static bool is_leap_year(int year)
 {
@@ -160,11 +160,11 @@ static int days_in_year(int year)
 widget_calendar_lunar_date_t widget_calendar_to_lunar_date(int year, int month, int day)
 {
     widget_calendar_lunar_date_t fail = {0, 0, 0, false};
-    if (year < kLunarMinYear || year > kLunarMaxYear)
+    if (year < lunar_min_year || year > lunar_max_year)
         return fail;
 
-    int idx = year - kLunarMinYear;
-    uint16_t cny = kSpringInfo[idx];
+    int idx = year - lunar_min_year;
+    uint16_t cny = spring_info[idx];
     int cny_m = (cny >> 8) & 0xff;
     int cny_d = cny & 0xff;
 
@@ -175,10 +175,10 @@ widget_calendar_lunar_date_t widget_calendar_to_lunar_date(int year, int month, 
     int days_since_cny;
 
     if (doy < cny_doy) {
-        if (year <= kLunarMinYear)
+        if (year <= lunar_min_year)
             return fail;
         lunar_year = year - 1;
-        uint16_t prev_cny = kSpringInfo[idx - 1];
+        uint16_t prev_cny = spring_info[idx - 1];
         int prev_cny_m = (prev_cny >> 8) & 0xff;
         int prev_cny_d = prev_cny & 0xff;
         int prev_cny_doy = day_of_year(year - 1, prev_cny_m, prev_cny_d);
@@ -224,28 +224,28 @@ void widget_calendar_get_lunar_year_name(int year, char *buf, int buf_size)
     }
     int tg = (year - 4) % 10;
     int dz = (year - 4) % 12;
-    snprintf(buf, buf_size, "%s%s", kTianGan[tg], kDiZhi[dz]);
+    snprintf(buf, buf_size, "%s%s", tian_gan[tg], di_zhi[dz]);
 }
 
 const char *widget_calendar_get_lunar_month_name(int month)
 {
     if (month < 1 || month > 12)
         return "";
-    return kLunarMonths[month - 1];
+    return lunar_months[month - 1];
 }
 
 const char *widget_calendar_get_lunar_day_name(int day)
 {
     if (day < 1 || day > 30)
         return "";
-    return kLunarDays[day - 1];
+    return lunar_days[day - 1];
 }
 
 const char *widget_calendar_get_solar_term(int month, int day)
 {
-    for (int i = 0; i < kSolarTermCount; i++) {
-        if (kSolarTerms[i].month == month && kSolarTerms[i].day == day) {
-            return kSolarTerms[i].name;
+    for (int i = 0; i < solar_term_count; i++) {
+        if (solar_terms[i].month == month && solar_terms[i].day == day) {
+            return solar_terms[i].name;
         }
     }
     return NULL;
@@ -627,7 +627,7 @@ static void draw_weekday_row(const widget_calendar_t *c, uint8_t *fb, int width,
     rawdraw_draw_styled_rect(fb, width, height, rect, &bg);
 
     for (int i = 0; i < CALENDAR_COLS; i++) {
-        const char *ch = kWeekdayChars[i];
+        const char *ch = weekday_chars[i];
         int ch_w = rawdraw_measure_text_width(ch, c->body_font);
         int cx = c->x + i * c->cell_w;
         int text_x = cx + (c->cell_w - ch_w) / 2;
@@ -689,9 +689,9 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
 
         if (is_current_month) {
             solar_term = widget_calendar_get_solar_term(c->month, display_day);
-            for (int h = 0; h < kHolidayCount; h++) {
-                if (kHolidays[h].month == c->month && kHolidays[h].day == display_day) {
-                    holiday = kHolidays[h].name;
+            for (int h = 0; h < holiday_count; h++) {
+                if (holidays[h].month == c->month && holidays[h].day == display_day) {
+                    holiday = holidays[h].name;
                     break;
                 }
             }
@@ -712,17 +712,17 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
         char buf[16];
         snprintf(buf, sizeof(buf), "%d", display_day);
         int num_w = rawdraw_measure_text_width(buf, c->body_font);
-        int kDateBoxH = 18;
-        int kDateTopPad = 2;
-        int kDateLunarGap = 2;
-        int kLunarBoxH = 16;
+        int date_box_h = 18;
+        int date_top_pad = 2;
+        int date_lunar_gap = 2;
+        int lunar_box_h = 16;
         int num_x = cx + (c->cell_w - num_w) / 2;
-        int num_box_y = cy + kDateTopPad;
-        int num_y = rawdraw_layout_ink_centered_text_top_y_in_box(c->body_font, buf, num_box_y, kDateBoxH, 0);
+        int num_box_y = cy + date_top_pad;
+        int num_y = rawdraw_layout_ink_centered_text_top_y_in_box(c->body_font, buf, num_box_y, date_box_h, 0);
 
         if (num_x + num_w > c->x + c->w)
             continue;
-        if (num_y + kDateBoxH > c->y + c->h)
+        if (num_y + date_box_h > c->y + c->h)
             continue;
 
         if (is_today) {
@@ -738,16 +738,16 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
         } else if (is_holiday) {
             /* Holiday: red circle background + white date number. */
             int circle_cx = cx + c->cell_w / 2;
-            int circle_cy = num_box_y + kDateBoxH / 2;
-            int circle_r = kDateBoxH / 2 + 1;
+            int circle_cy = num_box_y + date_box_h / 2;
+            int circle_r = date_box_h / 2 + 1;
             rawdraw_draw_circle(fb, width, height, (rawdraw_point_t){circle_cx, circle_cy}, circle_r,
                                 RAWDRAW_COLOR_RED);
             rawdraw_draw_text(fb, width, height, num_x, num_y, buf, c->body_font, RAWDRAW_COLOR_WHITE);
         } else if (makeup_label) {
             /* Makeup workday (补班): yellow circle background + white date number. */
             int circle_cx = cx + c->cell_w / 2;
-            int circle_cy = num_box_y + kDateBoxH / 2;
-            int circle_r = kDateBoxH / 2 + 1;
+            int circle_cy = num_box_y + date_box_h / 2;
+            int circle_r = date_box_h / 2 + 1;
             rawdraw_draw_circle(fb, width, height, (rawdraw_point_t){circle_cx, circle_cy}, circle_r,
                                 RAWDRAW_COLOR_YELLOW);
             rawdraw_draw_text(fb, width, height, num_x, num_y, buf, c->body_font, RAWDRAW_COLOR_BLACK);
@@ -778,11 +778,11 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
             if (label && *label) {
                 int label_w = rawdraw_measure_text_width(label, c->small_font);
                 int label_x = cx + (c->cell_w - label_w) / 2;
-                int label_box_y = num_box_y + kDateBoxH + kDateLunarGap;
+                int label_box_y = num_box_y + date_box_h + date_lunar_gap;
                 int label_y =
-                    rawdraw_layout_ink_centered_text_top_y_in_box(c->small_font, label, label_box_y, kLunarBoxH, 0);
+                    rawdraw_layout_ink_centered_text_top_y_in_box(c->small_font, label, label_box_y, lunar_box_h, 0);
 
-                if (label_x + label_w <= c->x + c->w && label_box_y + kLunarBoxH <= c->y + c->h) {
+                if (label_x + label_w <= c->x + c->w && label_box_y + lunar_box_h <= c->y + c->h) {
                     rawdraw_color_t label_color =
                         is_today ? today_style.fg
                                  : (is_solar_term ? accent : (is_holiday ? RAWDRAW_COLOR_RED : text_color));
@@ -801,7 +801,7 @@ static void draw_bottom_info(const widget_calendar_t *c, uint8_t *fb, int width,
     char buf[80];
     if (c->year == c->today_year && c->month == c->today_month) {
         int weekday_idx = weekday_of_date(c->today_year, c->today_month, c->today_day);
-        snprintf(buf, sizeof(buf), "今天 %d月%d日 %s", c->today_month, c->today_day, kWeekdayFull[weekday_idx]);
+        snprintf(buf, sizeof(buf), "今天 %d月%d日 %s", c->today_month, c->today_day, weekday_full[weekday_idx]);
 
         widget_calendar_lunar_date_t ld = widget_calendar_to_lunar_date(c->today_year, c->today_month, c->today_day);
         char year_name[16];

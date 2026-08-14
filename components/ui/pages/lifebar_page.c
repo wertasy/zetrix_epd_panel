@@ -24,16 +24,16 @@
 #define LIFEBAR_EXPECTED_LIFESPAN_YEARS 80
 
 /* Motivational quotes (rotated by index) */
-static const char *kLifebarQuotes[] = {
+static const char *lifebar_quotes[] = {
     "时间是最公平的，\n每人每天都只有24小时", "余生很长，何必慌张；\n余生很短，何必平凡",
     "把每一天当成\n生命中最后一天来过",       "种一棵树最好的时间\n是十年前，其次是现在",
     "人生没有白走的路，\n每一步都算数",
 };
-#define LIFEBAR_NUM_QUOTES ((int)(sizeof(kLifebarQuotes) / sizeof(kLifebarQuotes[0])))
+#define LIFEBAR_NUM_QUOTES ((int)(sizeof(lifebar_quotes) / sizeof(lifebar_quotes[0])))
 
-static const lv_font_t *const kLifebarTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kLifebarBodyFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kLifebarSmallFont = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const lifebar_title_font = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const lifebar_body_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const lifebar_small_font = &SourceHanSansSC_Regular_slim;
 
 /* Round down to the nearest multiple of 8 (e-paper anti-aliasing grid). */
 static int align_x8(int x)
@@ -153,7 +153,7 @@ static void render_quote(lifebar_page_t *r, uint8_t *fb, int width, int height, 
     struct tm tm_buf;
     localtime_r(&now, &tm_buf);
     const int idx = (tm_buf.tm_yday) % LIFEBAR_NUM_QUOTES;
-    const char *quote = kLifebarQuotes[idx];
+    const char *quote = lifebar_quotes[idx];
 
     /* Draw quote lines */
     char line[64];
@@ -265,9 +265,9 @@ void lifebar_page_init(page_renderer_t *self, int width, int height)
     r->base.width = width;
     r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->title_font = kLifebarTitleFont;
-    r->body_font = kLifebarBodyFont;
-    r->small_font = kLifebarSmallFont;
+    r->title_font = lifebar_title_font;
+    r->body_font = lifebar_body_font;
+    r->small_font = lifebar_small_font;
     r->age_years = 0;
     r->age_months = 0;
     r->days_elapsed = 0;

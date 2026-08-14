@@ -35,8 +35,8 @@
 /* Reader page wrap storage. */
 #define EBOOK_MAX_DISPLAY_LINES 16
 
-static const lv_font_t *const kEbookFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kEbookTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const ebook_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const ebook_title_font = &SourceHanSansSC_Medium_slim;
 
 static int ebook_chars_per_page(const ebook_page_t *r)
 {
@@ -86,8 +86,8 @@ void ebook_page_init(page_renderer_t *self, int width, int height)
     r->reader_content[0] = '\0';
     r->current_page = 0;
     r->total_pages = 0;
-    r->font = kEbookFont;
-    r->title_font = kEbookTitleFont;
+    r->font = ebook_font;
+    r->title_font = ebook_title_font;
     r->base.needs_full_refresh_flag = true;
 
     /* P1: Restore reader position from NVS on wake. */
@@ -260,9 +260,9 @@ static void ebook_render_reader_page(page_renderer_t *self, uint8_t *fb, int wid
 static void ebook_render_reader_portrait(page_renderer_t *self, uint8_t *fb, int width, int height)
 {
     ebook_page_t *r = (ebook_page_t *)self;
-    const int kPortraitW = STYLE_SCREEN_HEIGHT; /* portrait = rotated screen */
-    const int kPortraitH = STYLE_SCREEN_WIDTH;
-    const size_t portrait_bytes = ((size_t)kPortraitW * 2 + 7) / 8 * (size_t)kPortraitH;
+    const int portrait_w = STYLE_SCREEN_HEIGHT; /* portrait = rotated screen */
+    const int portrait_h = STYLE_SCREEN_WIDTH;
+    const size_t portrait_bytes = ((size_t)portrait_w * 2 + 7) / 8 * (size_t)portrait_h;
     uint8_t *portrait = (uint8_t *)heap_caps_malloc(portrait_bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (!portrait)
         portrait = (uint8_t *)malloc(portrait_bytes);
@@ -271,20 +271,20 @@ static void ebook_render_reader_portrait(page_renderer_t *self, uint8_t *fb, int
     memset(portrait, 0x55, portrait_bytes);
 
     const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    rawdraw_draw_styled_rect(portrait, kPortraitW, kPortraitH, (rawdraw_rect_t){0, 0, kPortraitW, kPortraitH},
+    rawdraw_draw_styled_rect(portrait, portrait_w, portrait_h, (rawdraw_rect_t){0, 0, portrait_w, portrait_h},
                              &bg_style);
-    ebook_render_reader_page(self, portrait, kPortraitW, kPortraitH, 12, kPortraitH - 24);
+    ebook_render_reader_page(self, portrait, portrait_w, portrait_h, 12, portrait_h - 24);
 
     const rawdraw_color_t secondary = rawdraw_theme_color_for(THEME_TOKEN_TEXT_SECONDARY);
     char page_buf[24];
     snprintf(page_buf, sizeof(page_buf), "%d/%d", r->current_page + 1, r->total_pages);
     const int page_w = rawdraw_measure_text_width(page_buf, r->font);
-    rawdraw_draw_text(portrait, kPortraitW, kPortraitH, kPortraitW - page_w - 10, kPortraitH - 18, page_buf, r->font,
+    rawdraw_draw_text(portrait, portrait_w, portrait_h, portrait_w - page_w - 10, portrait_h - 18, page_buf, r->font,
                       secondary);
 
     /* Rotate the portrait page into the landscape screen (batched 2bpp blit). */
     rawdraw_draw_styled_rect(fb, width, height, (rawdraw_rect_t){0, 0, width, height}, &bg_style);
-    rawdraw_blit_rotated_90(portrait, kPortraitW, kPortraitH, fb, width, height, 0, 0);
+    rawdraw_blit_rotated_90(portrait, portrait_w, portrait_h, fb, width, height, 0, 0);
     free(portrait);
 }
 

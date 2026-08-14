@@ -29,8 +29,8 @@
 #define CODING_PLAN_5H_QUOTA_TOKENS 2000000ULL /* 2M tokens / 5h window */
 #define CODING_PLAN_WEEK_QUOTA_TOKENS 10000000ULL /* 10M tokens / week     */
 
-static const lv_font_t *const kCodingPlanFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kCodingPlanTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const coding_plan_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const coding_plan_title_font = &SourceHanSansSC_Medium_slim;
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -55,7 +55,7 @@ static void format_tokens(uint64_t tokens, char *out, int out_size)
 
 /* Aggregate the hourly series into 7 daily buckets and draw them as
  * accent-coloured bars inside the chart frame. Each hour h maps to bar
- * index (h * kBARS) / hours, so a full 168-point series collapses to one
+ * index (h * bars) / hours, so a full 168-point series collapses to one
  * 24-hour bar per day and shorter series still spread evenly. */
 static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width, int height, int panel_y, int panel_h)
 {
@@ -71,7 +71,7 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
 
     const int hours = r->data.hourly_count;
     enum {
-        kBARS = 7
+        bars = 7
     };
 
     int bars_num = 0;
@@ -88,14 +88,14 @@ static void render_chart_from_data(page_renderer_t *self, uint8_t *fb, int width
                               r->font, secondary);
             return;
         }
-        bars_num = kBARS;
+        bars_num = bars;
         const int limit = hours < CODING_PLAN_HOURS_7D ? hours : CODING_PLAN_HOURS_7D;
         for (int i = 0; i < limit; ++i) {
-            int d = (i * kBARS) / limit;
+            int d = (i * bars) / limit;
             if (d < 0)
                 d = 0;
-            if (d >= kBARS)
-                d = kBARS - 1;
+            if (d >= bars)
+                d = bars - 1;
             bar_values[d] += r->data.hourly_tokens[i];
         }
     } else {
@@ -183,8 +183,8 @@ void coding_plan_page_init(page_renderer_t *self, int width, int height)
     r->base.width = width;
     r->base.height = height;
     r->base.needs_full_refresh_flag = true;
-    r->font = kCodingPlanFont;
-    r->title_font = kCodingPlanTitleFont;
+    r->font = coding_plan_font;
+    r->title_font = coding_plan_title_font;
     r->view_mode = 0;
     if (!r->has_data) {
         memset(&r->data, 0, sizeof(r->data));

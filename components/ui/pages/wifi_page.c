@@ -20,10 +20,10 @@
 #include <stdio.h>
 #include <string.h>
 
-static const lv_font_t *const kWifiFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kWifiTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kWifiIconFont = &font_zectrix_16_1;
-static const lv_font_t *const kWifiLargeIconFont = &font_zectrix_48_1;
+static const lv_font_t *const wifi_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const wifi_title_font = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const wifi_icon_font = &font_zectrix_16_1;
+static const lv_font_t *const wifi_large_icon_font = &font_zectrix_48_1;
 
 /* ------------------------------------------------------------------ */
 /* Signal helpers                                                      */
@@ -316,10 +316,10 @@ void wifi_page_init(page_renderer_t *self, int width, int height)
     r->status.server_uri[0] = '\0';
     r->is_blinking = false;
     r->blink_frame = 0;
-    r->font = kWifiFont;
-    r->title_font = kWifiTitleFont;
-    r->icon_font = kWifiIconFont;
-    r->large_icon_font = kWifiLargeIconFont;
+    r->font = wifi_font;
+    r->title_font = wifi_title_font;
+    r->icon_font = wifi_icon_font;
+    r->large_icon_font = wifi_large_icon_font;
 }
 
 /* Page gained focus: request a redraw but keep the live WiFi status. */

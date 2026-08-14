@@ -18,10 +18,10 @@
 #include <string.h>
 #include <time.h>
 
-static const char *const kMonthNames[] = {"1月", "2月", "3月", "4月",  "5月",  "6月",
+static const char *const month_names[] = {"1月", "2月", "3月", "4月",  "5月",  "6月",
                                           "7月", "8月", "9月", "10月", "11月", "12月"};
 
-static const char *const kWeekdayNames[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
+static const char *const weekday_names[] = {"周日", "周一", "周二", "周三", "周四", "周五", "周六"};
 
 /* ------------------------------------------------------------------ */
 /* Date calculation helpers                                            */
@@ -60,14 +60,14 @@ static int yearprogress_get_days_in_month(int year, int month)
 
 static void yearprogress_format_date(const yearprogress_page_t *r, char *buf, int len)
 {
-    snprintf(buf, len, "%04d年%02d月%02d日 %s", r->year, r->month + 1, r->day, kWeekdayNames[r->wday]);
+    snprintf(buf, len, "%04d年%02d月%02d日 %s", r->year, r->month + 1, r->day, weekday_names[r->wday]);
 }
 
 static const char *yearprogress_get_month_name(int month)
 {
     if (month < 0 || month > 11)
         return "";
-    return kMonthNames[month];
+    return month_names[month];
 }
 
 /* ------------------------------------------------------------------ */

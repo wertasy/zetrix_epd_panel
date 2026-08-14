@@ -34,8 +34,8 @@
 #define NEWS_LINE_LEN 128
 #define NEWS_ROW_H 20
 
-static const lv_font_t *const kNewsFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kNewsTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const news_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const news_title_font = &SourceHanSansSC_Medium_slim;
 
 /* ------------------------------------------------------------------ */
 /* PageRenderer vtable                                                 */
@@ -52,8 +52,8 @@ void news_page_init(page_renderer_t *self, int width, int height)
     r->preview_open = false;
     r->footer_focus = 0;
     r->preview_scroll = 0;
-    r->font = kNewsFont;
-    r->title_font = kNewsTitleFont;
+    r->font = news_font;
+    r->title_font = news_title_font;
     r->tts_request_cb = NULL;
     r->tts_ctx = NULL;
     r->base.needs_full_refresh_flag = true;

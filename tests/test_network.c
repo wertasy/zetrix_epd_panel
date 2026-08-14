@@ -43,7 +43,7 @@ static int g_failed = 0;
 /* QWeather v1 /weather/current sample (flat JSON, no code/now wrapper).
  * condition.text=晴, condition.code=100, temperature=25.0, feelsLike=27.0,
  * humidity=0.45 (→45%), wind.direction.compass=sw, wind.scale=3, uvIndex=2. */
-static const char *kNowJson = "{\"condition\":{\"text\":\"\xe6\x99\xb4\",\"code\":\"100\"},"
+static const char *now_json = "{\"condition\":{\"text\":\"\xe6\x99\xb4\",\"code\":\"100\"},"
                               "\"temperature\":{\"value\":25.0},"
                               "\"feelsLike\":{\"value\":27.0},"
                               "\"humidity\":0.45,"
@@ -51,7 +51,7 @@ static const char *kNowJson = "{\"condition\":{\"text\":\"\xe6\x99\xb4\",\"code\
                               "\"uvIndex\":2.0}";
 
 /* QWeather v1 /weather/daily sample (3 days, days[] array). */
-static const char *kForecastJson =
+static const char *forecast_json =
     "{\"days\":["
     "{\"daytime\":{\"condition\":{\"text\":\"\xe6\x99\xb4\",\"code\":\"100\"}},"
     "\"temperatureMax\":{\"value\":25.0},\"temperatureMin\":{\"value\":10.0}},"
@@ -62,13 +62,13 @@ static const char *kForecastJson =
     "]}";
 
 /* QWeather v1 /airquality/current sample (indexes[] array, cn-mee entry). */
-static const char *kAirJson = "{\"indexes\":["
+static const char *air_json = "{\"indexes\":["
                               "{\"code\":\"cn-mee\",\"aqi\":45,\"category\":\"\xe4\xbc\x98\"},"
                               "{\"code\":\"qaqi\",\"aqi\":50,\"category\":\"Good\"}"
                               "]}";
 
 /* timor.tech holiday sample for 2026. */
-static const char *kHolidayJson =
+static const char *holiday_json =
     "{\"code\":0,\"holiday\":{"
     "\"2026-01-01\":{\"holiday\":true,\"name\":\"元旦\",\"wage\":3,\"date\":\"2026-01-01\",\"rest\":1},"
     "\"2026-02-15\":{\"holiday\":false,\"name\":\"春节\",\"wage\":1,\"date\":\"2026-02-15\",\"rest\":0},"
@@ -101,7 +101,7 @@ static void test_weather_now(void)
     weather_data_t d;
     memset(&d, 0, sizeof(d));
     printf("Running test_weather_now...\n");
-    CHECK(weather_api_parse_now_json(kNowJson, &d), "parse_now_json failed\n");
+    CHECK(weather_api_parse_now_json(now_json, &d), "parse_now_json failed\n");
     CHECK(strcmp(d.temp, "25") == 0, "temp=%s\n", d.temp);
     CHECK(d.temp_int == 25, "temp_int=%d\n", d.temp_int);
     CHECK(strcmp(d.feels_like, "27") == 0, "feels_like=%s\n", d.feels_like);
@@ -122,7 +122,7 @@ static void test_weather_forecast(void)
     weather_data_t d;
     memset(&d, 0, sizeof(d));
     printf("Running test_weather_forecast...\n");
-    CHECK(weather_api_parse_forecast_json(kForecastJson, &d), "parse_forecast_json failed\n");
+    CHECK(weather_api_parse_forecast_json(forecast_json, &d), "parse_forecast_json failed\n");
     CHECK(d.forecast_count == 3, "forecast_count=%d\n", d.forecast_count);
     CHECK(strcmp(d.forecast[0].label, "今天") == 0, "label0=%s\n", d.forecast[0].label);
     CHECK(strcmp(d.forecast[1].label, "明天") == 0, "label1=%s\n", d.forecast[1].label);
@@ -140,7 +140,7 @@ static void test_weather_air(void)
     weather_data_t d;
     memset(&d, 0, sizeof(d));
     printf("Running test_weather_air...\n");
-    CHECK(weather_api_parse_air_json(kAirJson, &d), "parse_air_json failed\n");
+    CHECK(weather_api_parse_air_json(air_json, &d), "parse_air_json failed\n");
     CHECK(d.air_aqi == 45, "aqi=%d\n", d.air_aqi);
     CHECK(strcmp(d.air_quality, "优") == 0, "category=%s\n", d.air_quality);
 }
@@ -151,15 +151,15 @@ static void test_weather_autodetect(void)
     memset(&d, 0, sizeof(d));
     printf("Running test_weather_autodetect...\n");
     /* now */
-    CHECK(weather_api_parse_json(kNowJson, &d), "autodetect now failed\n");
+    CHECK(weather_api_parse_json(now_json, &d), "autodetect now failed\n");
     CHECK(strcmp(d.temp, "25") == 0, "autodetect temp=%s\n", d.temp);
     /* forecast */
     memset(&d, 0, sizeof(d));
-    CHECK(weather_api_parse_json(kForecastJson, &d), "autodetect forecast failed\n");
+    CHECK(weather_api_parse_json(forecast_json, &d), "autodetect forecast failed\n");
     CHECK(d.forecast_count == 3, "autodetect fc=%d\n", d.forecast_count);
     /* air */
     memset(&d, 0, sizeof(d));
-    CHECK(weather_api_parse_json(kAirJson, &d), "autodetect air failed\n");
+    CHECK(weather_api_parse_json(air_json, &d), "autodetect air failed\n");
     CHECK(d.air_aqi == 45, "autodetect aqi=%d\n", d.air_aqi);
     /* error code path */
     CHECK(!weather_api_parse_json("{\"code\":\"404\"}", &d), "expected failure\n");
@@ -172,7 +172,7 @@ static void test_weather_autodetect(void)
 static void test_holiday_parse(void)
 {
     printf("Running test_holiday_parse...\n");
-    CHECK(holiday_fetcher_parse_json(2026, kHolidayJson), "parse failed\n");
+    CHECK(holiday_fetcher_parse_json(2026, holiday_json), "parse failed\n");
     /* 元旦 (2026-01-01) is a rest day / holiday */
     CHECK(holiday_fetcher_is_holiday(2026, 1, 1), "01-01 should be holiday\n");
     CHECK(!holiday_fetcher_is_makeup_workday(2026, 1, 1), "01-01 not makeup\n");
@@ -264,13 +264,13 @@ static void test_photo_storage_cycle(void)
 
 /* quota/limit sample: unit=3 @50% (5h → 2M*0.5=1M), unit=6 @25% (week →
  * 10M*0.25=2.5M), nextResetTime 1723000000000ms. */
-static const char *kQuotaJson = "{\"data\":{\"limits\":["
+static const char *quota_json = "{\"data\":{\"limits\":["
                                 "{\"type\":\"TOKENS_LIMIT\",\"unit\":3,\"number\":5,\"percentage\":50},"
                                 "{\"type\":\"TOKENS_LIMIT\",\"unit\":6,\"number\":1,\"percentage\":25}"
                                 "],\"nextResetTime\":1723000000000}}";
 
 /* model-usage sample: 2 models + 5 hourly points + weekly total 5M. */
-static const char *kUsageJson = "{\"data\":{\"totalUsage\":{\"totalTokensUsage\":5000000,"
+static const char *usage_json = "{\"data\":{\"totalUsage\":{\"totalTokensUsage\":5000000,"
                                 "\"modelSummaryList\":["
                                 "{\"modelName\":\"glm-4\",\"totalTokens\":3000000},"
                                 "{\"modelName\":\"glm-4-air\",\"totalTokens\":2000000}"
@@ -281,7 +281,7 @@ static void test_coding_plan_quota(void)
     coding_plan_api_data_t d;
     printf("Running test_coding_plan_quota...\n");
     memset(&d, 0, sizeof(d));
-    CHECK(parse_quota_limit_json(kQuotaJson, &d), "quota parse should succeed\n");
+    CHECK(parse_quota_limit_json(quota_json, &d), "quota parse should succeed\n");
     /* 2M * 50% = 1,000,000 */
     CHECK(d.five_hour_tokens == 1000000ULL, "5h tokens=%llu expected 1000000\n",
           (unsigned long long)d.five_hour_tokens);
@@ -308,7 +308,7 @@ static void test_coding_plan_usage(void)
     coding_plan_api_data_t d;
     printf("Running test_coding_plan_usage...\n");
     memset(&d, 0, sizeof(d));
-    CHECK(parse_model_usage_json(kUsageJson, &d), "usage parse should succeed\n");
+    CHECK(parse_model_usage_json(usage_json, &d), "usage parse should succeed\n");
     CHECK(d.week_tokens == 5000000ULL, "week tokens=%llu expected 5000000\n", (unsigned long long)d.week_tokens);
     CHECK(d.per_model_count == 2, "model count=%d expected 2\n", d.per_model_count);
     CHECK(strcmp(d.per_model[0].name, "glm-4") == 0, "model[0] name=%s\n", d.per_model[0].name);

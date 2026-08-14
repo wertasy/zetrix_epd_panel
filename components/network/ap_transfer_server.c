@@ -52,7 +52,7 @@
 
 /* Embedded HTML. Kept self-contained because the ESP-IDF HTTP server serves
  * this page from flash while the device is in AP mode. */
-static const char kUploadHtml[] =
+static const char upload_html[] =
     "\n"
     "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>墨水屏传图</title>\n"
     "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1,maximum-scale=1\">\n"
@@ -396,7 +396,7 @@ static esp_err_t index_handler(httpd_req_t *req)
     httpd_resp_set_type(req, "text/html");
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     httpd_resp_set_hdr(req, "Connection", "close");
-    esp_err_t ret = httpd_resp_send(req, kUploadHtml, strlen(kUploadHtml));
+    esp_err_t ret = httpd_resp_send(req, upload_html, strlen(upload_html));
     close_current_session(req);
     return ret;
 }

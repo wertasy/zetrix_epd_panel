@@ -31,27 +31,27 @@
 /* Layout constants (single source of truth, from the C++ renderer).   */
 /* ------------------------------------------------------------------ */
 
-#define kTextOpticalNudgeY 0
-#define kIconOpticalNudgeY 0
-#define kValueOpticalNudgeY 0
-#define kVolumeDialogClearPad 0
-#define kAboutRowHeight 24
-#define kDialogClearPad 0
-#define kDialogClearRadiusBoost 0
-#define kCategoryHintDurationUs (2 * 1000 * 1000)
-#define kSettingsNavDividerX 90
-#define kSettingsNavItemH 44
-#define kSettingsTableRowH 34
-#define kSettingsContentTopGap 8
-#define kSettingsTableTop (STYLE_STATUS_BAR_HEIGHT + kSettingsContentTopGap)
-#define kVisibleOptionCount 8
-#define kServerListVisibleRows 5
-#define kOtaVisibleRows 4
+#define text_optical_nudge_y 0
+#define icon_optical_nudge_y 0
+#define value_optical_nudge_y 0
+#define volume_dialog_clear_pad 0
+#define about_row_height 24
+#define dialog_clear_pad 0
+#define dialog_clear_radius_boost 0
+#define category_hint_duration_us (2 * 1000 * 1000)
+#define settings_nav_divider_x 90
+#define settings_nav_item_h 44
+#define settings_table_row_h 34
+#define settings_content_top_gap 8
+#define settings_table_top (STYLE_STATUS_BAR_HEIGHT + settings_content_top_gap)
+#define visible_option_count 8
+#define server_list_visible_rows 5
+#define ota_visible_rows 4
 
-static const lv_font_t *const kSettingsFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kSettingsTitleFont = &SourceHanSansSC_Medium_slim;
-static const lv_font_t *const kSettingsIconFont = &fa_settings_16;
-static const lv_font_t *const kSettingsValueFont = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const settings_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const settings_title_font = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const settings_icon_font = &fa_settings_16;
+static const lv_font_t *const settings_value_font = &SourceHanSansSC_Regular_slim;
 
 /* ------------------------------------------------------------------ */
 /* Shared helpers (exported for the dialog TUs).                       */
@@ -120,7 +120,7 @@ void settings_page_clear_dialog_region(uint8_t *fb, int width, int height, int x
                                        int pad)
 {
     const rawdraw_paint_style_t bg = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
-    int r = radius + kDialogClearRadiusBoost;
+    int r = radius + dialog_clear_radius_boost;
     if (r < 0)
         r = 0;
     rawdraw_draw_styled_round_rect(fb, width, height, (rawdraw_rect_t){x - pad, y - pad, w + pad * 2, h + pad * 2}, r,
@@ -167,7 +167,7 @@ static int find_next_selectable(const settings_page_t *r, int index)
     return index;
 }
 
-/* Count non-section items from first_visible_index (up to kVisibleOptionCount)
+/* Count non-section items from first_visible_index (up to visible_option_count)
  * and report whether the selection lies inside that window. */
 static int count_visible_from(const settings_page_t *r, int start, bool *selection_visible)
 {
@@ -179,7 +179,7 @@ static int count_visible_from(const settings_page_t *r, int start, bool *selecti
         if (i == r->selected_index)
             *selection_visible = true;
         visible_count++;
-        if (visible_count >= kVisibleOptionCount)
+        if (visible_count >= visible_option_count)
             break;
     }
     return visible_count;
@@ -237,7 +237,7 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
     const int row_center_y = y + row_h / 2;
     const int icon_x = content_left;
     const int label_x = icon_x + 16 + STYLE_SPACING_SM; /* 16 is icon width */
-    const int label_y = rawdraw_layout_ink_centered_text_top_y(r->font, item->label, row_center_y, kTextOpticalNudgeY);
+    const int label_y = rawdraw_layout_ink_centered_text_top_y(r->font, item->label, row_center_y, text_optical_nudge_y);
 
     if (selected) {
         /* Compact focus rail as solid ink (1bpp-friendly cursor). */
@@ -265,7 +265,7 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
         const int text_x = item->checked ? (track_x + 7) : (track_x + track_w - text_w - 6);
         rawdraw_draw_text(
             fb, width, height, text_x,
-            rawdraw_layout_ink_centered_text_top_y(r->value_font, switch_text, row_center_y, kValueOpticalNudgeY),
+            rawdraw_layout_ink_centered_text_top_y(r->value_font, switch_text, row_center_y, value_optical_nudge_y),
             switch_text, r->value_font, switch_style.fg);
         /* True circle knob: fill with paper, then outline. */
         const int knob_x = item->checked ? (track_x + track_w - knob - 2) : (track_x + 2);
@@ -285,7 +285,7 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
         if (display_value[0] != '\0') {
             rawdraw_draw_text(
                 fb, width, height, val_x,
-                rawdraw_layout_ink_centered_text_top_y(r->value_font, display_value, row_center_y, kValueOpticalNudgeY),
+                rawdraw_layout_ink_centered_text_top_y(r->value_font, display_value, row_center_y, value_optical_nudge_y),
                 display_value, r->value_font, text_style.fg);
         }
     } else if (item->type == SETTINGS_ITEM_ACTION) {
@@ -295,7 +295,7 @@ static void render_item(settings_page_t *r, uint8_t *fb, int width, int height, 
         label_right = act_x - STYLE_SPACING_LG;
         rawdraw_draw_text(
             fb, width, height, act_x,
-            rawdraw_layout_ink_centered_text_top_y(r->value_font, action_text, row_center_y, kValueOpticalNudgeY),
+            rawdraw_layout_ink_centered_text_top_y(r->value_font, action_text, row_center_y, value_optical_nudge_y),
             action_text, r->value_font, action_color);
     }
 
@@ -329,10 +329,10 @@ void settings_page_init(page_renderer_t *self, int width, int height)
     r->first_visible_index = 0;
     r->showing_debug_info = false;
     r->debug_hint_until_us = 0;
-    r->font = kSettingsFont;
-    r->title_font = kSettingsTitleFont;
-    r->icon_font = kSettingsIconFont;
-    r->value_font = kSettingsValueFont;
+    r->font = settings_font;
+    r->title_font = settings_title_font;
+    r->icon_font = settings_icon_font;
+    r->value_font = settings_value_font;
     settings_page_show_category_hint(self, 0);
     if (r->firmware_version[0] == '\0') {
         snprintf(r->firmware_version, sizeof(r->firmware_version), "v%s", PROJECT_VER);
@@ -342,7 +342,7 @@ void settings_page_init(page_renderer_t *self, int width, int height)
 void settings_page_show_category_hint(page_renderer_t *self, int duration_ms)
 {
     settings_page_t *r = (settings_page_t *)self;
-    const int64_t duration_us = duration_ms > 0 ? (int64_t)duration_ms * 1000 : kCategoryHintDurationUs;
+    const int64_t duration_us = duration_ms > 0 ? (int64_t)duration_ms * 1000 : category_hint_duration_us;
     r->category_hint_until_us = esp_timer_get_time() + duration_us;
     r->base.needs_full_refresh_flag = true;
 }
@@ -367,13 +367,13 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
     const rawdraw_paint_style_t selected_style = rawdraw_theme_component(ROLE_SETTINGS_SELECTED);
     const int body_top = STYLE_STATUS_BAR_HEIGHT;
     const int body_bottom = height - 3;
-    const int content_x = kSettingsNavDividerX + 16;
+    const int content_x = settings_nav_divider_x + 16;
     const int content_right = width - 20;
-    const int row_h = kSettingsTableRowH;
+    const int row_h = settings_table_row_h;
 
     rawdraw_draw_styled_rect(fb, width, height, (rawdraw_rect_t){0, body_top, width, body_bottom - body_top},
                              &bg_style);
-    rawdraw_draw_vline(fb, width, height, kSettingsNavDividerX, body_top + kSettingsContentTopGap, body_bottom - 1,
+    rawdraw_draw_vline(fb, width, height, settings_nav_divider_x, body_top + settings_content_top_gap, body_bottom - 1,
                        border_style.border);
 
     /* Sidebar: one pill per SECTION item. */
@@ -396,19 +396,19 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
     const char *current_section =
         (section_indices[current_section_pos] >= 0) ? r->items[section_indices[current_section_pos]].label : "系统";
 
-    const int nav_top = body_top + kSettingsContentTopGap;
+    const int nav_top = body_top + settings_content_top_gap;
     for (int i = 0; i < section_count; ++i) {
-        const int sy = nav_top + i * kSettingsNavItemH;
+        const int sy = nav_top + i * settings_nav_item_h;
         const bool selected = (i == current_section_pos);
         const char *label = (section_indices[i] >= 0) ? r->items[section_indices[i]].label : "系统";
         const int nav_pill_x = 16;
-        const int nav_pill_w = kSettingsNavDividerX - 26;
+        const int nav_pill_w = settings_nav_divider_x - 26;
         const int nav_pill_h = 28;
-        const int nav_pill_y = sy + (kSettingsNavItemH - nav_pill_h) / 2;
+        const int nav_pill_y = sy + (settings_nav_item_h - nav_pill_h) / 2;
         const int icon_x = nav_pill_x + 7;
-        const int icon_center_y = sy + kSettingsNavItemH / 2;
+        const int icon_center_y = sy + settings_nav_item_h / 2;
         const int label_x = nav_pill_x + 27;
-        const int label_y = rawdraw_layout_ink_centered_text_top_y(r->font, label, icon_center_y, kTextOpticalNudgeY);
+        const int label_y = rawdraw_layout_ink_centered_text_top_y(r->font, label, icon_center_y, text_optical_nudge_y);
         if (selected) {
             rawdraw_draw_styled_round_rect(fb, width, height,
                                            (rawdraw_rect_t){nav_pill_x, nav_pill_y, nav_pill_w, nav_pill_h},
@@ -450,13 +450,13 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
             {"序列号", serial_buf},    {"官方网站", "blog.lazyyoun.xyz"},
         };
         const int row_count = (int)(sizeof(rows) / sizeof(rows[0]));
-        int y = kSettingsTableTop;
+        int y = settings_table_top;
         for (int i = 0; i < row_count; ++i) {
             const int center_y = y + row_h / 2;
             const int label_x = content_x;
             rawdraw_draw_styled_text(
                 fb, width, height, label_x,
-                rawdraw_layout_ink_centered_text_top_y(r->font, rows[i].label, center_y, kTextOpticalNudgeY),
+                rawdraw_layout_ink_centered_text_top_y(r->font, rows[i].label, center_y, text_optical_nudge_y),
                 rows[i].label, r->font, &text_style);
             char display_value[SETTINGS_PAGE_ITEM_VALUE_LEN];
             ui_text_fit_to_width(rows[i].value, r->value_font, RD_MAX(0, content_right - (label_x + 112)),
@@ -464,7 +464,7 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
             const int value_w = rawdraw_measure_text_width(display_value, r->value_font);
             rawdraw_draw_styled_text(
                 fb, width, height, content_right - value_w,
-                rawdraw_layout_ink_centered_text_top_y(r->value_font, display_value, center_y, kValueOpticalNudgeY),
+                rawdraw_layout_ink_centered_text_top_y(r->value_font, display_value, center_y, value_optical_nudge_y),
                 display_value, r->value_font, &text_style);
             y += row_h;
         }
@@ -474,13 +474,13 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
             if (option_indices[i] == r->selected_index)
                 selected_pos = i;
         }
-        const int visible_count = RD_MIN(kVisibleOptionCount, option_count);
+        const int visible_count = RD_MIN(visible_option_count, option_count);
         int window_start = RD_MAX(0, selected_pos - visible_count / 2);
         if (window_start + visible_count > option_count) {
             window_start = RD_MAX(0, option_count - visible_count);
         }
-        int y = kSettingsTableTop;
-        const int available_h = RD_MAX(row_h, body_bottom - kSettingsTableTop - 2);
+        int y = settings_table_top;
+        const int available_h = RD_MAX(row_h, body_bottom - settings_table_top - 2);
         const int option_row_h = RD_MIN(row_h, RD_MAX(28, available_h / RD_MAX(1, visible_count)));
         for (int i = 0; i < visible_count; ++i) {
             const int item_index = option_indices[window_start + i];
@@ -488,9 +488,9 @@ void settings_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
             y += option_row_h;
         }
 
-        if (option_count > kVisibleOptionCount) {
+        if (option_count > visible_option_count) {
             const int track_x = width - 10;
-            const int track_y = kSettingsTableTop + 2;
+            const int track_y = settings_table_top + 2;
             const int track_h = RD_MAX(24, option_row_h * visible_count - 4);
             rawdraw_draw_vline(fb, width, height, track_x, track_y, track_y + track_h, border_style.border);
             const int thumb_h = RD_MAX(10, track_h * visible_count / option_count);
@@ -680,8 +680,8 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
         case BTN_DOWN_CLICK:
             if (r->server_list_selected < total - 1) {
                 r->server_list_selected++;
-                if (r->server_list_selected >= r->server_list_scroll_offset + kServerListVisibleRows) {
-                    r->server_list_scroll_offset = r->server_list_selected - kServerListVisibleRows + 1;
+                if (r->server_list_selected >= r->server_list_scroll_offset + server_list_visible_rows) {
+                    r->server_list_scroll_offset = r->server_list_selected - server_list_visible_rows + 1;
                 }
                 r->base.needs_full_refresh_flag = true;
             }
@@ -844,7 +844,7 @@ bool settings_page_handle_input(page_renderer_t *self, const ui_button_event_t *
         /* Scroll to bottom. */
         r->selected_index = get_last_selectable_index(r);
         r->first_visible_index = r->selected_index;
-        for (int shown = 1; shown < kVisibleOptionCount; ++shown) {
+        for (int shown = 1; shown < visible_option_count; ++shown) {
             int prev = find_prev_selectable(r, r->first_visible_index);
             if (prev == r->first_visible_index)
                 break;

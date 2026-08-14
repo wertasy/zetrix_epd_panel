@@ -23,8 +23,8 @@
 
 #define AP_TRANSFER_DEFAULT_AP_IP "192.168.4.1"
 
-static const lv_font_t *const kApTransferFont = &SourceHanSansSC_Regular_slim;
-static const lv_font_t *const kApTransferTitleFont = &SourceHanSansSC_Medium_slim;
+static const lv_font_t *const ap_transfer_font = &SourceHanSansSC_Regular_slim;
+static const lv_font_t *const ap_transfer_title_font = &SourceHanSansSC_Medium_slim;
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                             */
@@ -238,8 +238,8 @@ void ap_transfer_page_init(page_renderer_t *self, int width, int height)
     r->base.height = height;
     r->state = AP_TRANSFER_STATE_WAITING_CONNECTION;
     r->status_message[0] = '\0';
-    r->font = kApTransferFont;
-    r->title_font = kApTransferTitleFont;
+    r->font = ap_transfer_font;
+    r->title_font = ap_transfer_title_font;
     ap_transfer_page_use_default_instructions(self);
     r->exit_callback = NULL;
     r->exit_callback_ctx = NULL;
