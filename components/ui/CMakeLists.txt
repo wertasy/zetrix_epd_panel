@@ -1,7 +1,7 @@
 set(UI_SRCS
-    "src/data_refresh.c"
-    "src/ui_text_util.c"
-    "src/photo_blit.c"
+    "data_refresh.c"
+    "ui_text_util.c"
+    "photo_blit.c"
     "page_registry.c"
     "pages/weather_page.c"
     "pages/photo_gallery_page.c"
@@ -48,6 +48,6 @@ if(CONFIG_PAGE_YEARPROGRESS_ENABLE)
 endif()
 
 idf_component_register(WHOLE_ARCHIVE
-                       INCLUDE_DIRS "include" "pages" "src"
+                       INCLUDE_DIRS "." "include" "pages"
                        SRCS ${UI_SRCS}
                        REQUIRES rawdraw bsp_display bsp_storage app_state data_types network zetrix_fonts espressif__qrcode)

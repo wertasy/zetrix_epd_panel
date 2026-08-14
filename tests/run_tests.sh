@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 C11="-std=c11 -Wall -Werror -D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE"
-INCS="-Icomponents/ui/include -Icomponents/ui/pages \
+INCS="-Icomponents/ui -Icomponents/ui/include -Icomponents/ui/pages \
       -Icomponents/rawdraw/include -Icomponents/rawdraw/widgets \
       -Icomponents/network/include -Icomponents/bsp_display/include \
       -Icomponents/bsp_storage/include -Icomponents/bsp_connectivity/include \
@@ -34,7 +34,7 @@ run() {
 if [ $# -gt 0 ]; then
     TESTS=("$@")
 else
-    TESTS=(rawdraw layout theme framebuffer network nvs_state ui_text_util ui_pages_smoke audio)
+    TESTS=(rawdraw layout theme framebuffer network nvs_state ui_text_util photo_blit ui_pages_smoke audio)
 fi
 
 for t in "${TESTS[@]}"; do
@@ -64,16 +64,19 @@ for t in "${TESTS[@]}"; do
             ;;
         ui_text_util)
             run ui_text_util tests/test_ui_text_util.c \
-                components/ui/src/ui_text_util.c components/rawdraw/rawdraw_ext.c components/rawdraw/rawdraw.c
+                components/ui/ui_text_util.c components/rawdraw/rawdraw_ext.c components/rawdraw/rawdraw.c
+            ;;
+        photo_blit)
+            run photo_blit tests/test_photo_blit.c components/ui/photo_blit.c
             ;;
         ui_pages_smoke)
             run ui_pages_smoke tests/test_ui_pages_smoke.c \
                 components/ui/page_registry.c \
-                components/ui/src/data_refresh.c \
+                components/ui/data_refresh.c \
                 components/ui/pages/chat_page.c \
                 components/ui/pages/coding_plan_page.c \
                 components/rawdraw/widgets/progress_bar.c \
-                components/ui/src/ui_text_util.c \
+                components/ui/ui_text_util.c \
                 components/rawdraw/theme.c \
                 components/rawdraw/rawdraw.c components/rawdraw/rawdraw_ext.c components/rawdraw/layout.c -lm
             ;;
