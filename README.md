@@ -26,6 +26,7 @@ zetrix_epd_panel/
 │   ├── app_sync.c               # 数据同步编排（天气/套餐/节假日/SNTP 路由）
 │   ├── app_sleep.c              # 深睡管理：RTC 闹钟、外设下电、同步定时器
 │   ├── app_settings_menu.c      # 设置菜单构建与回调分发
+│   ├── app_page_runtime.c/.h    # 后台服务注册表（LAN/AP 所有权状态机）
 │   └── app_sntp.c               # SNTP 时间同步
 ├── components/
 │   ├── app_state/               # NVS 应用状态缓存（nvs_state）
@@ -42,11 +43,17 @@ zetrix_epd_panel/
 │   ├── rawdraw/                 # 2bpp 绘制引擎、布局、主题、时钟、帧缓冲
 │   │   └── widgets/             # 15 个 UI 控件
 │   ├── ui/                      # UI 管理器、页面注册表、状态栏、快捷切换
-│   │   ├── include/             # ui_manager / page_registry / data_refresh
+│   │   ├── include/             # ui_manager / page_registry / page_runtime
 │   │   └── pages/               # 19 个页面渲染器（*.c + 私有头）
 │   └── zetrix_fonts/            # 项目自有字体（思源黑体 slim、图标字体）
 └── tests/                       # 主机端测试 + run_tests.sh
 ```
+
+## 页面运行时框架
+
+页面通过 `PAGE_REGISTER_WITH_RUNTIME` 声明运行时策略（flash 常量 `page_runtime_policy_t`）：数据兴趣（拉什么）、唤醒间隔与对齐（多久醒 / 对准内容变化点）、唤醒是否联网、绑定的后台服务。前台页面策略生效，未声明字段回退系统默认（= 框架引入前的全局行为，未迁移页面零变化）。页面切换时旧页面被冻结：数据兴趣清零、页面所有服务释放。仲裁器 `components/ui/page_runtime.c`（纯逻辑，主机可测）+ `main/app_page_runtime.c`（服务所有权 ESP 胶水）。
+
+后台服务（LAN HTTP / AP 传输）由服务注册表管理所有权：页面所有（切页即停，传输中粘性升级防中断）或用户所有（跨页存活，30 分钟空闲自动关）。
 
 ## 编码规范
 
@@ -73,7 +80,7 @@ idf.py -p /dev/ttyACM2 flash monitor
 测试独立于 ESP-IDF，直接编译运行，覆盖 2bpp 像素打包、布局、主题、字体、网络 JSON 解析、NVS 状态、UI 页面渲染冒烟与音频管线：
 
 ```bash
-bash tests/run_tests.sh              # 全部 10 组
+bash tests/run_tests.sh              # 全部 12 组
 bash tests/run_tests.sh theme audio  # 指定组
 ```
 
