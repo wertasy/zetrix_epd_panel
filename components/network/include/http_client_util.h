@@ -64,6 +64,16 @@ int http_get_with_headers_cert(const char *url, const char **headers, const char
 int http_get_with_headers(const char *url, const char **headers, const char **values, int header_count, uint8_t *buf,
                           size_t max_size);
 
+/**
+ * @brief DELETE returning the response body as text (NUL-terminated).
+ *
+ * Fridge memo DELETE carries the authoritative full items[] for both 200
+ * and 404 (design doc §7.1), so the body matters, not just the status.
+ * Target-only; host stub returns -1.
+ * @return bytes read (excluding the NUL), or -1 on error.
+ */
+int http_delete_text(const char *url, char *buf, size_t max_size);
+
 #ifdef __cplusplus
 }
 #endif

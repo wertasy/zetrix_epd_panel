@@ -141,3 +141,69 @@ int http_get_with_headers_cert(const char *url, const char **headers, const char
 }
 
 #endif /* ESP_PLATFORM */
+
+/* Defined outside the ESP_PLATFORM block above: unlike the GET wrappers this
+ * one keeps a host-visible stub (fridge memo's host test link path compiles
+ * this file). The ESP branch reuses the private helpers from that block. */
+int http_delete_text(const char *url, char *buf, size_t max_size)
+{
+#ifdef ESP_PLATFORM
+    http_recv_ctx_t ctx;
+    esp_http_client_config_t config = {0};
+    esp_http_client_handle_t client;
+    esp_err_t err;
+    int status;
+
+    if (!url || !buf || max_size == 0) {
+        return -1;
+    }
+
+    ctx.buf = (uint8_t *)buf;
+    ctx.max_size = max_size;
+    ctx.len = 0;
+
+    config.url = url;
+    config.event_handler = http_event_handler;
+    config.user_data = &ctx;
+    config.timeout_ms = HTTP_UTIL_TIMEOUT_MS;
+    config.disable_auto_redirect = false;
+    config.crt_bundle_attach = esp_crt_bundle_attach;
+    /* Same tx-buffer rationale as the GET path (long URLs + headers). */
+    config.buffer_size_tx = 2048;
+    client = esp_http_client_init(&config);
+    if (!client) {
+        ESP_LOGE(TAG, "init failed: %s", url);
+        return -1;
+    }
+    esp_http_client_set_method(client, HTTP_METHOD_DELETE);
+
+    err = esp_http_client_perform(client);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "perform failed: %s (%s)", url, esp_err_to_name(err));
+        esp_http_client_cleanup(client);
+        return -1;
+    }
+
+    status = esp_http_client_get_status_code(client);
+    esp_http_client_cleanup(client);
+
+    /* 404 is a valid outcome, not an error: fridge memo DELETE returns the
+     * authoritative full items[] for both 200 and 404 (design doc §7.1). */
+    if (status != 200 && status != 404) {
+        ESP_LOGE(TAG, "HTTP %d: %s", status, url);
+        return -1;
+    }
+    if (ctx.len < (int)max_size) {
+        buf[ctx.len] = '\0';
+    } else if (max_size > 0) {
+        buf[max_size - 1] = '\0';
+        ctx.len = (int)max_size - 1;
+    }
+    return ctx.len;
+#else
+    (void)url;
+    (void)buf;
+    (void)max_size;
+    return -1;
+#endif
+}

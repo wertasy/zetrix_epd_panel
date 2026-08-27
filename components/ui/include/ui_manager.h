@@ -42,6 +42,7 @@ typedef enum {
     UI_PAGE_AP_TRANSFER,
     UI_PAGE_CAR_MOVE,
     UI_PAGE_CODING_PLAN,
+    UI_PAGE_FRIDGE_MEMO,
     UI_PAGE_COUNT,
 } ui_page_id_t;
 
@@ -135,6 +136,11 @@ void ui_manager_update_settings_checked(ui_manager_t *mgr, int index, bool check
 /* Theme. */
 void ui_manager_set_rawdraw_theme(ui_manager_t *mgr, int theme_id);
 int ui_manager_get_rawdraw_theme(const ui_manager_t *mgr);
+
+/* Fridge memo page. */
+void ui_manager_update_fridge_memo(ui_manager_t *mgr, const void *snapshot);
+void ui_manager_set_fridge_memo_footer(ui_manager_t *mgr, const char *msg);
+void ui_manager_set_fridge_memo_offline(ui_manager_t *mgr, bool offline);
 
 /* WiFi status. */
 void ui_manager_update_wifi_status(ui_manager_t *mgr, const void *status);
