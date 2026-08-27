@@ -539,4 +539,9 @@ const page_renderer_ops_t news_page_ops = {
     .end_stream = NULL,
 };
 
+/* P4 audit: the news page has NO fetch client — data is injected via
+ * news_page_set_items(), which currently has no production caller, and the
+ * page is compiled out (CONFIG_PAGE_NEWS_ENABLE=n). It therefore keeps the
+ * DEFAULT policy (= current global behaviour); when a news fetcher lands,
+ * migrate to PAGE_REGISTER_WITH_RUNTIME with a PAGE_DATA_NEWS interest. */
 PAGE_REGISTER(UI_PAGE_NEWS, "热点", FA_SETTINGS_NEWSPAPER, true, 90, &news_page_ops, &s_news_instance.base);

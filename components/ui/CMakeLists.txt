@@ -3,6 +3,7 @@ set(UI_SRCS
     "ui_text_util.c"
     "photo_blit.c"
     "page_registry.c"
+    "page_runtime.c"
     "pages/weather_page.c"
     "pages/photo_gallery_page.c"
     "pages/almanac_page.c"
@@ -12,6 +13,7 @@ set(UI_SRCS
     "pages/weather_detail_page.c"
     "pages/photo_detail_page.c"
     "pages/coding_plan_page.c"
+    "pages/fridge_memo_page.c"
     "pages/settings_page.c"
     "pages/settings_dialogs.c"
     "pages/settings_about.c"
@@ -50,4 +52,4 @@ endif()
 idf_component_register(WHOLE_ARCHIVE
                        INCLUDE_DIRS "." "include" "pages"
                        SRCS ${UI_SRCS}
-                       REQUIRES rawdraw bsp_display bsp_storage app_state data_types network zetrix_fonts espressif__qrcode)
+                       REQUIRES rawdraw bsp_display bsp_storage app_state data_types network zetrix_fonts bsp_peripherals espressif__qrcode)

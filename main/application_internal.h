@@ -28,6 +28,7 @@
 #include "ap_transfer_server.h"
 #include "coding_plan_api.h"
 #include "weather_api.h"
+#include "page_runtime.h"
 
 /* ------------------------------------------------------------------ */
 /* Event types (moved from application.c)                              */
@@ -81,9 +82,6 @@ typedef struct {
 typedef struct {
     device_state_t state;
     bool wifi_connected;
-    bool need_weather_fetch;
-    bool need_coding_plan_refresh;
-    bool need_holiday_fetch;
     ui_manager_t *ui_mgr;
     esp_timer_handle_t sleep_timer;
     protocol_t protocol;
@@ -114,7 +112,7 @@ extern int s_cp_refresh_counter;
 #define APP_SETTINGS_WIFI_INDEX 5
 #define APP_SETTINGS_HTTP_SERVER_INDEX 6
 #define APP_SETTINGS_LAN_IP_INDEX 7
-
+#define APP_SETTINGS_SYNC_INTERVAL_INDEX 11
 #define APP_DEFAULT_SYNC_INTERVAL_MIN 30
 
 /* 30-minute coding-plan refresh cadence (application_run ticks 1/s). */
@@ -127,6 +125,8 @@ extern int s_cp_refresh_counter;
 void app_sync_ensure_coding_plan_initialised(void);
 void app_sync_on_coding_plan_update(const coding_plan_api_data_t *data, void *user_data);
 void app_sync_refresh_coding_plan(void);
+void app_sync_ensure_fridge_memo_initialised(void);
+void app_sync_refresh_fridge_memo(void);
 void app_sync_on_weather_update(const weather_data_t *data, void *user_data);
 void app_sync_on_data_refresh_request(int page, void *ctx);
 void app_sync_on_sntp_sync(struct timeval *tv);
@@ -142,10 +142,11 @@ void app_sntp_start_once(void);
 /* ------------------------------------------------------------------ */
 
 void app_sleep_enter_scheduled(void);
+void app_sleep_deep_sleep_now(bool keep_rtc_alarm, int64_t timer_us);
 void app_sleep_arm_sync_timer(void);
 void app_sleep_enter_manual(void);
 bool app_sleep_is_local_http_running(void);
-
+void app_sleep_invalidate_sync_interval_cache(void);
 /* ------------------------------------------------------------------ */
 /* app_settings_menu.c — settings menu construction + dispatch        */
 /* ------------------------------------------------------------------ */

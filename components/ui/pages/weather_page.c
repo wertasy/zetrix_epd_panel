@@ -4,6 +4,7 @@
  */
 #include "weather_page.h"
 #include "page_registry.h"
+#include "page_runtime.h"
 #include "data_refresh.h"
 
 #include "rawdraw_ext.h"
@@ -367,4 +368,14 @@ const page_renderer_ops_t weather_page_ops = {
     .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_WEATHER, "天气", NULL, true, 20, &weather_page_ops, &s_weather_instance.base);
+static const page_runtime_policy_t s_weather_policy = {
+    .wake_interval_min = 30, /* Default sync interval */
+    .wake_align = PAGE_WAKE_ALIGN_NONE,
+    .data_interests = PAGE_DATA_WEATHER | PAGE_DATA_SNTP,
+    .needs_network_on_wake = true,
+    .services = 0,
+    .periodic_refresh_s = 1800, /* Refresh weather every 30 minutes */
+    .on_rtc_wake = NULL,
+};
+
+PAGE_REGISTER_WITH_RUNTIME(UI_PAGE_WEATHER, "天气", NULL, true, 20, &weather_page_ops, &s_weather_instance.base, &s_weather_policy);

@@ -1,7 +1,12 @@
 #pragma once
 
 #include <stdint.h>
-#include <lvgl.h>
+
+/* Include lvgl.h on the target only: host unit tests have no lv_conf.h;
+ * font_engine.h already provides the lv_font_t declarations there. */
+#ifdef ESP_PLATFORM
+#    include <lvgl.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

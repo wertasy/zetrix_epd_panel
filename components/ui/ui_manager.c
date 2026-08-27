@@ -8,6 +8,7 @@
  * so this component does not depend on main/.
  */
 #include "ui_manager.h"
+#include <assert.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +39,7 @@
 #endif
 #include "pages/calendar_page.h"
 #include "pages/ap_transfer_page.h"
+#include "pages/fridge_memo_page.h"
 
 #include <esp_log.h>
 #include <esp_timer.h>
@@ -325,12 +327,16 @@ void ui_manager_set_current_page_without_render(ui_manager_t *mgr, ui_page_id_t 
     mgr->current_page = page;
     s_rtc_last_page = (uint32_t)page;
     s_rtc_page_magic = RTC_PAGE_MAGIC;
+    if (mgr->page_switch_cb) {
+        mgr->page_switch_cb(page, mgr->page_switch_ctx);
+    }
     strncpy(mgr->status_bar.page_title, ui_manager_get_page_title(page), sizeof(mgr->status_bar.page_title) - 1);
 }
 
 ui_page_id_t ui_manager_get_current_page(const ui_manager_t *mgr)
 {
-    return mgr ? mgr->current_page : UI_PAGE_CHAT;
+    assert(mgr != NULL);
+    return mgr ? mgr->current_page : UI_PAGE_GALLERY;
 }
 
 ui_page_id_t ui_manager_get_rtc_saved_page(void)
@@ -708,6 +714,39 @@ void ui_manager_set_wifi_blinking(ui_manager_t *mgr, bool blinking)
     if (!mgr)
         return;
     wifi_page_set_blinking((page_renderer_t *)page_registry_get_instance(UI_PAGE_WIFI), blinking);
+}
+
+/* ------------------------------------------------------------------ */
+/* Fridge memo page                                                    */
+/* ------------------------------------------------------------------ */
+
+void ui_manager_update_fridge_memo(ui_manager_t *mgr, const void *snapshot)
+{
+    if (!mgr || !snapshot)
+        return;
+    fridge_memo_page_update((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO),
+                            (const fridge_memo_snapshot_t *)snapshot);
+    page_renderer_mark_full_refresh((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO));
+    if (mgr->current_page == UI_PAGE_FRIDGE_MEMO)
+        ui_manager_request_active_page_refresh(mgr); /* EPD full refresh only when visible (coding_plan pattern) */
+}
+
+void ui_manager_set_fridge_memo_footer(ui_manager_t *mgr, const char *msg)
+{
+    if (!mgr)
+        return;
+    fridge_memo_page_set_footer_message((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO), msg);
+    if (mgr->current_page == UI_PAGE_FRIDGE_MEMO)
+        ui_manager_request_active_page_refresh(mgr);
+}
+
+void ui_manager_set_fridge_memo_offline(ui_manager_t *mgr, bool offline)
+{
+    if (!mgr)
+        return;
+    fridge_memo_page_set_offline((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO), offline);
+    if (mgr->current_page == UI_PAGE_FRIDGE_MEMO)
+        ui_manager_request_active_page_refresh(mgr);
 }
 
 /* ------------------------------------------------------------------ */

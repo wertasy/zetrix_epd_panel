@@ -9,7 +9,7 @@
  */
 #include "ap_transfer_page.h"
 #include "page_registry.h"
-
+#include "page_runtime.h"
 #include "rawdraw_ext.h"
 #include "theme.h"
 #include "style.h"
@@ -399,4 +399,15 @@ const page_renderer_ops_t ap_transfer_page_ops = {
     .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_AP_TRANSFER, "传图模式", NULL, false, 999, &ap_transfer_page_ops, &s_ap_transfer_instance.base);
+static const page_runtime_policy_t s_ap_transfer_policy = {
+    .wake_interval_min = 0,
+    .wake_align = PAGE_WAKE_ALIGN_NONE,
+    .data_interests = PAGE_DATA_NONE,
+    .needs_network_on_wake = true,
+    .services = PAGE_SVC_AP_TRANSFER, /* PAGE-owned: enter starts, exit stops */
+    .periodic_refresh_s = 0,
+    .on_rtc_wake = NULL,
+};
+
+PAGE_REGISTER_WITH_RUNTIME(UI_PAGE_AP_TRANSFER, "传图模式", NULL, false, 999, &ap_transfer_page_ops,
+                           &s_ap_transfer_instance.base, &s_ap_transfer_policy);

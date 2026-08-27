@@ -5,6 +5,8 @@
  */
 #include "photo_gallery_page.h"
 #include "page_registry.h"
+#include "page_runtime.h"
+#include "settings.h"
 #include "fa_settings.h"
 #include "photo_storage.h"
 
@@ -741,4 +743,46 @@ const page_renderer_ops_t photo_gallery_ops = {
     .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_GALLERY, "相册", FA_SETTINGS_IMAGE, true, 10, &photo_gallery_ops, &s_gallery_instance.base);
+/* RTC wakeup hook: advance the slideshow one step. Called by application_init
+ * after a deep-sleep RTC alarm wake when this page's policy declares it. */
+static void gallery_rtc_wake(ui_page_id_t page)
+{
+    (void)page;
+    /* Slideshow disabled -> nothing to advance. */
+    settings_handle_t snvs = settings_open("gallery", false);
+    int slide_min = 5;
+    if (snvs) {
+        slide_min = (int)settings_get_int(snvs, "slide_min", 5);
+        settings_close(snvs);
+    }
+    if (slide_min <= 0)
+        return;
+    page_renderer_t *gallery = page_registry_get_instance(UI_PAGE_GALLERY);
+    if (!gallery)
+        return;
+    photo_gallery_page_t *g = (photo_gallery_page_t *)gallery;
+    g->mode = PHOTO_GALLERY_MODE_FULLSCREEN;
+    /* Restore the persisted slideshow position before advancing so deep
+     * sleep (which wipes RAM) does not reset to photo 2/3. */
+    settings_handle_t gnvs = settings_open("gallery", false);
+    if (gnvs) {
+        int saved_idx = (int)settings_get_int(gnvs, "current_idx", -1);
+        settings_close(gnvs);
+        if (saved_idx >= 0) {
+            photo_gallery_set_selected_index(gallery, saved_idx);
+        }
+    }
+    photo_gallery_select_next(gallery, true);
+}
+
+static const page_runtime_policy_t s_gallery_policy = {
+    .wake_interval_min = 0, /* supplied by the runtime override (slideshow) */
+    .wake_align = PAGE_WAKE_ALIGN_NONE,
+    .data_interests = PAGE_DATA_NONE,
+    .needs_network_on_wake = false, /* slideshow wake skips Wi-Fi */
+    .services = 0,
+    .periodic_refresh_s = 0,
+    .on_rtc_wake = gallery_rtc_wake,
+};
+
+PAGE_REGISTER_WITH_RUNTIME(UI_PAGE_GALLERY, "相册", FA_SETTINGS_IMAGE, true, 10, &photo_gallery_ops, &s_gallery_instance.base, &s_gallery_policy);

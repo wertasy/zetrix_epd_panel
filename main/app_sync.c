@@ -17,6 +17,10 @@
 #include "config.h"
 #include "coding_plan_page.h"
 #include "weather_page.h"
+#include "fridge_memo_api.h"
+#include "fridge_memo_page.h"
+#include "page_registry.h"
+#include "page_runtime.h"
 #include "rtc_pcf8563.h"
 
 #define TAG "Application"
@@ -123,10 +127,13 @@ void app_sync_on_data_refresh_request(int page, void *ctx)
     (void)ctx;
     switch ((ui_page_id_t)page) {
     case UI_PAGE_WEATHER:
-        s_app.need_weather_fetch = true;
+        page_runtime_set_pending(PAGE_DATA_WEATHER);
         break;
     case UI_PAGE_CODING_PLAN:
-        s_app.need_coding_plan_refresh = true;
+        page_runtime_set_pending(PAGE_DATA_CODING_PLAN);
+        break;
+    case UI_PAGE_FRIDGE_MEMO:
+        app_sync_refresh_fridge_memo();
         break;
     default:
         break;
@@ -154,4 +161,86 @@ void app_sync_on_sntp_sync(struct timeval *tv)
     if (s_app.event_queue) {
         xQueueSend(s_app.event_queue, &ev, 0);
     }
+}
+
+/* ------------------------------------------------------------------ */
+/* Fridge memo                                                         */
+/* ------------------------------------------------------------------ */
+
+static char s_fridge_pending_delete_name[FRIDGE_MEMO_NAME_LEN];
+
+static void app_sync_on_fridge_memo_update(const fridge_memo_snapshot_t *snap, void *user_data)
+{
+    (void)user_data;
+    if (!snap)
+        return;
+    ui_manager_update_fridge_memo(s_app.ui_mgr, snap);
+    ui_manager_set_fridge_memo_offline(s_app.ui_mgr, false);
+    if (s_fridge_pending_delete_name[0]) {
+        char msg[FRIDGE_MEMO_FOOTER_TEXT_LEN + FRIDGE_MEMO_NAME_LEN];
+        snprintf(msg, sizeof(msg), "已删除：%s", s_fridge_pending_delete_name);
+        ui_manager_set_fridge_memo_footer(s_app.ui_mgr, msg);
+        s_fridge_pending_delete_name[0] = '\0';
+    }
+}
+
+static void app_sync_on_fridge_memo_error(const char *message, void *user_data)
+{
+    (void)user_data;
+    ui_manager_set_fridge_memo_offline(s_app.ui_mgr, true);
+    ui_manager_set_fridge_memo_footer(s_app.ui_mgr, message);
+}
+
+static void app_sync_on_fridge_memo_delete(const char *item_id, void *user_data)
+{
+    (void)user_data;
+    /* Resolve the display name first (local, pre-acceptance) so the result
+     * footer can name the deleted item; the pending slot is only claimed
+     * once the request is actually accepted by the API. */
+    const fridge_memo_snapshot_t *snap = fridge_memo_api_get_cached_data();
+    char name[FRIDGE_MEMO_NAME_LEN] = {0};
+    if (snap) {
+        for (int i = 0; i < snap->count; ++i) {
+            if (strcmp(snap->items[i].id, item_id) == 0) {
+                snprintf(name, sizeof(name), "%s", snap->items[i].name);
+                break;
+            }
+        }
+    }
+    if (!fridge_memo_api_delete_async(item_id)) {
+        if (fridge_memo_api_is_busy()) {
+            /* A fetch/delete is already in flight — transient, not an outage. */
+            ui_manager_set_fridge_memo_footer(s_app.ui_mgr, "正在处理上一条，请稍候");
+        } else {
+            ui_manager_set_fridge_memo_offline(s_app.ui_mgr, true);
+            ui_manager_set_fridge_memo_footer(s_app.ui_mgr, "删除失败：后端不可达");
+        }
+        return;
+    }
+    snprintf(s_fridge_pending_delete_name, sizeof(s_fridge_pending_delete_name), "%s", name);
+}
+
+void app_sync_ensure_fridge_memo_initialised(void)
+{
+    static bool s_fm_inited = false;
+    if (s_fm_inited)
+        return;
+    fridge_memo_api_init(NULL); /* base_url from NVS "fridge" */
+    fridge_memo_api_set_callback(app_sync_on_fridge_memo_update, NULL);
+    fridge_memo_api_set_error_callback(app_sync_on_fridge_memo_error, NULL);
+    fridge_memo_page_set_delete_request_handler(page_registry_get_instance(UI_PAGE_FRIDGE_MEMO),
+                                                app_sync_on_fridge_memo_delete, NULL);
+    s_fm_inited = true;
+
+    /* Cache-first: render NVS snapshot immediately (design §4.4). */
+    if (fridge_memo_api_has_cached_data()) {
+        app_sync_on_fridge_memo_update(fridge_memo_api_get_cached_data(), NULL);
+        s_fridge_pending_delete_name[0] = '\0';
+    }
+}
+
+void app_sync_refresh_fridge_memo(void)
+{
+    app_sync_ensure_fridge_memo_initialised();
+    fridge_memo_api_fetch_async();
 }

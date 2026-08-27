@@ -251,6 +251,11 @@ bool holiday_fetcher_init(void)
 #endif
 }
 
+bool holiday_fetcher_is_year_cached(int year)
+{
+    return s_loaded && s_cache.year == year;
+}
+
 bool holiday_fetcher_fetch(int year)
 {
 #ifdef ESP_PLATFORM

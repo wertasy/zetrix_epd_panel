@@ -10,6 +10,7 @@
  */
 #include "coding_plan_page.h"
 #include "page_registry.h"
+#include "page_runtime.h"
 #include "data_refresh.h"
 
 #include "rawdraw_ext.h"
@@ -377,4 +378,14 @@ const page_renderer_ops_t coding_plan_page_ops = {
     .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_CODING_PLAN, "用量统计", NULL, true, 40, &coding_plan_page_ops, &s_coding_plan_instance.base);
+static const page_runtime_policy_t s_coding_plan_policy = {
+    .wake_interval_min = 30, /* Default sync interval */
+    .wake_align = PAGE_WAKE_ALIGN_NONE,
+    .data_interests = PAGE_DATA_CODING_PLAN | PAGE_DATA_SNTP,
+    .needs_network_on_wake = true,
+    .services = 0,
+    .periodic_refresh_s = 1800, /* Keep 30min cadence (plan item #3) */
+    .on_rtc_wake = NULL,
+};
+
+PAGE_REGISTER_WITH_RUNTIME(UI_PAGE_CODING_PLAN, "用量统计", NULL, true, 40, &coding_plan_page_ops, &s_coding_plan_instance.base, &s_coding_plan_policy);

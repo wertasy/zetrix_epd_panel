@@ -79,8 +79,16 @@ void ap_transfer_server_stop(ap_transfer_server_t *server);
 bool ap_transfer_server_is_running(const ap_transfer_server_t *server);
 bool ap_transfer_server_is_ap_mode(const ap_transfer_server_t *server);
 bool ap_transfer_server_is_lan_mode(const ap_transfer_server_t *server);
-ap_server_mode_t ap_transfer_server_get_mode(const ap_transfer_server_t *server);
 const char *ap_transfer_server_get_ap_ip(const ap_transfer_server_t *server);
+
+/* D3 idle auto-off support: every URI handler calls touch_activity();
+ * idle_ms() returns time since the last request (0 before first). */
+void ap_transfer_server_touch_activity(void);
+int64_t ap_transfer_server_idle_ms(void);
+
+/* D11 per-device auth token (8 hex chars, NVS-backed, generated on first
+ * use). Empty string only if NVS is unavailable. */
+const char *ap_transfer_server_get_token(void);
 
 /* Callbacks. Passing NULL for cb is allowed (callback cleared). */
 void ap_transfer_server_set_state_callback(ap_transfer_server_t *server, ap_server_state_cb_t cb, void *ctx);

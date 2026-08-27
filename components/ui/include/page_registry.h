@@ -12,6 +12,8 @@
 #include "page_renderer.h"
 #include "ui_manager.h"
 
+struct page_runtime_policy_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,6 +46,7 @@ typedef struct {
     int order; /* quick-switch sort key: smaller first */
     const page_renderer_ops_t *ops;
     page_renderer_t *instance; /* pointer to the page's instance */
+    const struct page_runtime_policy_t *runtime_policy;
 } page_entry_t;
 
 /* Internal: called by PAGE_REGISTER constructors. */
@@ -54,7 +57,14 @@ void page_registry_add(const page_entry_t *entry);
  * The constructor runs before main(), populating the internal array.
  */
 #define PAGE_REGISTER(id, name, icon, quick, order_val, ops_ptr, inst_ptr)                                             \
-    static const page_entry_t _page_entry_##id = {(id), (name), (icon), (quick), (order_val), (ops_ptr), (inst_ptr)};  \
+    static const page_entry_t _page_entry_##id = {(id), (name), (icon), (quick), (order_val), (ops_ptr), (inst_ptr), NULL};  \
+    void __attribute__((constructor(200))) _page_register_##id(void)                                                   \
+    {                                                                                                                  \
+        page_registry_add(&_page_entry_##id);                                                                          \
+    }
+
+#define PAGE_REGISTER_WITH_RUNTIME(id, name, icon, quick, order_val, ops_ptr, inst_ptr, policy_ptr)                    \
+    static const page_entry_t _page_entry_##id = {(id), (name), (icon), (quick), (order_val), (ops_ptr), (inst_ptr), (policy_ptr)}; \
     void __attribute__((constructor(200))) _page_register_##id(void)                                                   \
     {                                                                                                                  \
         page_registry_add(&_page_entry_##id);                                                                          \

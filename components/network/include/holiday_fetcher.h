@@ -51,6 +51,13 @@ bool holiday_fetcher_init(void);
 bool holiday_fetcher_fetch(int year);
 
 /**
+ * @brief Check whether the in-memory cache already covers @p year.
+ *
+ * Used by the wake pipeline to skip the HTTP fetch entirely when the NVS
+ * year cache was loaded at boot (zero-network calendar wake).
+ */
+bool holiday_fetcher_is_year_cached(int year);
+/**
  * @brief Parse a holiday API JSON payload into the in-memory cache.
  *
  * Host-testable: after this returns, the query helpers reflect @p json.

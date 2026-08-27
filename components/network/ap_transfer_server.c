@@ -32,8 +32,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define TAG "ApTransferServer"
+#include <esp_random.h>
 
+#define TAG "ApTransferServer"
 /* AP configuration */
 #define AP_SSID "InkScreen-AP"
 #define AP_PASSWORD "12345678"
@@ -49,6 +50,25 @@
 
 /* BOOT button on the ZecTrix-S3 board (see main/config.h BOOT_BUTTON_GPIO). */
 #define AP_BOOT_BUTTON_GPIO GPIO_NUM_0
+
+/* D3 idle auto-off: last HTTP activity timestamp (ms, esp_timer-based).
+ * Touched by every URI handler; application_run polls
+ * ap_transfer_server_idle_ms() and releases a USER-held LAN service after
+ * 30 minutes of silence (an active POST /upload keeps refreshing it). */
+static int64_t s_last_lan_activity_ms = 0;
+
+void ap_transfer_server_touch_activity(void)
+{
+    s_last_lan_activity_ms = esp_timer_get_time() / 1000;
+}
+
+int64_t ap_transfer_server_idle_ms(void)
+{
+    if (s_last_lan_activity_ms == 0) {
+        return 0;
+    }
+    return esp_timer_get_time() / 1000 - s_last_lan_activity_ms;
+}
 
 /* Embedded HTML. Kept self-contained because the ESP-IDF HTTP server serves
  * this page from flash while the device is in AP mode. */
@@ -137,9 +157,10 @@ static const char upload_html[] =
     "getElementById('preview'),fileEl=document.getElementById('file'),sendBtn=document.getElementById('send'),batchBtn="
     "document.getElementById('batch'),countEl=document.getElementById('count'),settingsPanel=document.getElementById('"
     "settingsPanel'),settingsState=document.getElementById('settingsState'),endpointEl=document.getElementById('"
-    "endpoint');let pending=null,pendingFmt='1bpp',items=[],selected=new Set(),active=null;\n"
+    "endpoint');let pending=null,pendingFmt='1bpp',items=[],selected=new Set(),active=null,authToken='';\n"
+    "function authHeaders(extra){return Object.assign({'Authorization':'Bearer '+authToken},extra||{})}\n"
     "async function loadStatus(){try{const j=await (await "
-    "fetch('/status')).json();endpointEl.textContent=`${j.mode==='lan'?'LAN':'InkScreen-AP'} / "
+    "fetch('/status')).json();authToken=j.token||'';endpointEl.textContent=`${j.mode==='lan'?'LAN':'InkScreen-AP'} / "
     "${j.ip}`;document.title=`墨水屏传图 ${j.ip}`}catch(e){endpointEl.textContent='服务地址读取失败'}}\n"
     "function fmt(){return document.querySelector('input[name=fmt]:checked').value}\n"
     "function rgba(c){return c===0?[0,0,0]:c===1?[255,255,255]:c===2?[255,217,0]:[220,0,0]}\n"
@@ -180,12 +201,12 @@ static const char upload_html[] =
     "querySelectorAll('input[name=fmt]').forEach(r=>r.onchange=()=>{if(fileEl.files[0])fileEl.onchange()});\n"
     "sendBtn.onclick=async()=>{if(!pending)return;sendBtn.disabled=true;statusEl.textContent='上传中...';try{const "
     "r=await "
-    "fetch('/upload?format='+encodeURIComponent(pendingFmt),{method:'POST',headers:{'Content-Type':'application/"
-    "octet-stream'},body:pending});const j=await r.json();statusEl.textContent=j.success?'已发送并保存':'失败: "
+    "fetch('/upload?format='+encodeURIComponent(pendingFmt),{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "octet-stream'}),body:pending});const j=await r.json();statusEl.textContent=j.success?'已发送并保存':'失败: "
     "'+(j.error||'unknown');await loadPhotos()}catch(e){statusEl.textContent='网络错误'}sendBtn.disabled=false};\n"
     "async function loadBin(p,c){const b=new Uint8Array(await (await "
     "fetch('/"
-    "photo?id='+encodeURIComponent(p.id),{cache:'no-store'})).arrayBuffer());(p.format==='bwry2bpp'||p.size>15000?"
+    "photo?id='+encodeURIComponent(p.id),{cache:'no-store',headers:authHeaders()})).arrayBuffer());(p.format==='bwry2bpp'||p.size>15000?"
     "draw2:draw1)(b,c)}\n"
     "function updateBatch(){batchBtn.disabled=selected.size===0}\n"
     "async function loadPhotos(){selected.clear();updateBatch();try{const j=await (await "
@@ -212,22 +233,22 @@ static const char upload_html[] =
     "document.getElementById('close').onclick=()=>document.getElementById('modal').classList.remove('open');document."
     "getElementById('modal').onclick=e=>{if(e.target.id==='modal')document.getElementById('modal').classList.remove('"
     "open')};\n"
-    "async function delOne(id){return fetch('/photo?id='+encodeURIComponent(id),{method:'DELETE'}).then(r=>r.json())}\n"
+    "async function delOne(id){return fetch('/photo?id='+encodeURIComponent(id),{method:'DELETE',headers:authHeaders()}).then(r=>r.json())}\n"
     "document.getElementById('mDelete').onclick=async()=>{if(!active)return;if(!confirm('确认删除这张图片？'))return;"
     "await delOne(active.id);document.getElementById('modal').classList.remove('open');loadPhotos()};\n"
     "async function movePhoto(id,delta){await "
-    "fetch('/photos/move',{method:'POST',headers:{'Content-Type':'application/"
-    "json'},body:JSON.stringify({id,delta})});await loadPhotos()}\n"
+    "fetch('/photos/move',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({id,delta})});await loadPhotos()}\n"
     "async function showPhoto(id){const j=await (await "
-    "fetch('/photo/show',{method:'POST',headers:{'Content-Type':'application/"
-    "json'},body:JSON.stringify({id})})).json();statusEl.textContent=j.success?'已切到设备大图':'展示失败'}\n"
+    "fetch('/photo/show',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({id})})).json();statusEl.textContent=j.success?'已切到设备大图':'展示失败'}\n"
     "document.getElementById('mUp').onclick=()=>active&&movePhoto(active.id,-1);\n"
     "document.getElementById('mDown').onclick=()=>active&&movePhoto(active.id,1);\n"
     "document.getElementById('mSave').onclick=async()=>{if(!active)return;const "
     "body={id:active.id,title:document.getElementById('mTitle').value,date:document.getElementById('mDate').value,"
     "location:document.getElementById('mLocation').value,body:document.getElementById('mBody').value};const r=await "
-    "fetch('/photo/meta',{method:'POST',headers:{'Content-Type':'application/"
-    "json'},body:JSON.stringify(body)});if((await "
+    "fetch('/photo/meta',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify(body)});if((await "
     "r.json()).success){document.getElementById('modal').classList.remove('open');await loadPhotos()}};\n"
     "document.getElementById('settingsBtn').onclick=()=>{settingsPanel.style.display=settingsPanel.style.display==='"
     "none'?'block':'none';loadSettings()};\n"
@@ -241,21 +262,21 @@ static const char upload_html[] =
     "${svc}`}catch(e){settingsState.textContent='读取失败'}}\n"
     "document.getElementById('saveSettings').onclick=async()=>{const "
     "v=Number(document.querySelector('input[name=slide]:checked')?.value||0);const j=await (await "
-    "fetch('/settings',{method:'POST',headers:{'Content-Type':'application/"
-    "json'},body:JSON.stringify({slideshow_interval:v})})).json();settingsState.textContent=j.success?(v?`已保存 "
+    "fetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({slideshow_interval:v})})).json();settingsState.textContent=j.success?(v?`已保存 "
     "${v}min`:'已关闭'):'保存失败'};\n"
     "document.getElementById('stopService').onclick=async()=>{if(!confirm('关闭本地传图服务？'))return;await "
-    "fetch('/settings',{method:'POST',headers:{'Content-Type':'application/"
-    "json'},body:JSON.stringify({service_enabled:false})});settingsState.textContent='服务正在关闭'};\n"
+    "fetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({service_enabled:false})});settingsState.textContent='服务正在关闭'};\n"
     "document.getElementById('sleepNow').onclick=async()=>{if(!confirm('关闭服务、WiFi 并进入省电模式？'))return;await "
-    "fetch('/settings',{method:'POST',headers:{'Content-Type':'application/"
-    "json'},body:JSON.stringify({service_enabled:false,wifi_enabled:false,sleep:true})});settingsState.textContent='"
+    "fetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({service_enabled:false,wifi_enabled:false,sleep:true})});settingsState.textContent='"
     "设备正在进入省电模式'};\n"
     "batchBtn.onclick=async()=>{const ids=[...selected];if(!ids.length)return;if(!confirm(`确认删除 ${ids.length} "
     "张图片？`))return;for(const id of ids)await "
     "delOne(id);loadPhotos()};document.getElementById('reload').onclick=loadPhotos;loadStatus();loadSettings();"
     "loadPhotos();\n"
-    "</script></body></html>\n";
+"</script></body></html>\n";
 
 /* Forward declaration (defined in the state-notification section below). */
 static void notify_state(ap_transfer_server_t *server, ap_server_state_t state, const char *message);
@@ -372,20 +393,90 @@ static void schedule_deferred_control(ap_transfer_server_t *server, bool stop_wi
 /* ------------------------------------------------------------------ */
 /* HTTP handlers                                                       */
 /* ------------------------------------------------------------------ */
+/* D11 per-device auth token: generated once on first use, stored in NVS
+ * namespace "auth" key "token" (8 hex chars from esp_random). Decoupled
+ * from the AP password; viewable via ap_transfer_server_get_token(). */
+static char s_auth_token[9] = {0};
+
+static void ensure_auth_token(void)
+{
+    if (s_auth_token[0] != '\0') {
+        return;
+    }
+    nvs_handle_t nvs = 0;
+    if (nvs_open("auth", NVS_READONLY, &nvs) == ESP_OK) {
+        size_t len = sizeof(s_auth_token);
+        if (nvs_get_str(nvs, "token", s_auth_token, &len) != ESP_OK) {
+            s_auth_token[0] = '\0';
+        }
+        nvs_close(nvs);
+    }
+    if (s_auth_token[0] == '\0') {
+        const uint32_t r = esp_random();
+        snprintf(s_auth_token, sizeof(s_auth_token), "%08lx", (unsigned long)r);
+        if (nvs_open("auth", NVS_READWRITE, &nvs) == ESP_OK) {
+            nvs_set_str(nvs, "token", s_auth_token);
+            nvs_commit(nvs);
+            nvs_close(nvs);
+        }
+        ESP_LOGI(TAG, "Generated new LAN auth token");
+    }
+}
+
+const char *ap_transfer_server_get_token(void)
+{
+    ensure_auth_token();
+    return s_auth_token;
+}
+
+/* Constant-time comparison (S4): runtime does not depend on match length. */
+static bool token_matches(const char *header_value)
+{
+    if (!header_value) {
+        return false;
+    }
+    /* Accept "Bearer <token>" or bare "<token>". */
+    const char *token = header_value;
+    if (strncmp(header_value, "Bearer ", 7) == 0) {
+        token = header_value + 7;
+    }
+    volatile uint8_t diff = (uint8_t)strlen(token) ^ (uint8_t)strlen(s_auth_token);
+    for (size_t i = 0; i < sizeof(s_auth_token) - 1; i++) {
+        uint8_t a = (uint8_t)(token[i] ? token[i] : 0);
+        uint8_t b = (uint8_t)s_auth_token[i]; /* NUL-padded compare */
+        diff |= (uint8_t)(a ^ b);
+        if (!token[i]) {
+            break; /* shorter input: remaining bytes only XOR NUL vs NUL */
+        }
+    }
+    return diff == 0;
+}
 
 static bool is_authorized(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     if (!self) {
         return false;
     }
     if (self->mode == AP_SERVER_MODE_AP) {
-        return true;
+        return true; /* AP mode keeps its WPA2 password semantics */
     }
+    ensure_auth_token();
     char auth_hdr[64] = {0};
     if (httpd_req_get_hdr_value_str(req, "Authorization", auth_hdr, sizeof(auth_hdr)) == ESP_OK) {
-        if (strcmp(auth_hdr, "Bearer 12345678") == 0 || strcmp(auth_hdr, "12345678") == 0) {
+        if (token_matches(auth_hdr)) {
             return true;
+        }
+    }
+    /* Also accept ?token= query parameter for browser URLs (GET only). */
+    char query[80] = {0};
+    if (req->method == HTTP_GET && httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
+        char supplied[32] = {0};
+        if (httpd_query_key_value(query, "token", supplied, sizeof(supplied)) == ESP_OK && supplied[0] != '\0') {
+            char bearer[48] = {0};
+            snprintf(bearer, sizeof(bearer), "Bearer %s", supplied);
+            return token_matches(bearer);
         }
     }
     return false;
@@ -393,6 +484,7 @@ static bool is_authorized(httpd_req_t *req)
 
 static esp_err_t index_handler(httpd_req_t *req)
 {
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     httpd_resp_set_type(req, "text/html");
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     httpd_resp_set_hdr(req, "Connection", "close");
@@ -404,7 +496,11 @@ static esp_err_t index_handler(httpd_req_t *req)
 static esp_err_t upload_handler(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
-
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive (active upload) */
+    if (!is_authorized(req)) { /* D11/S2: write endpoint must authenticate */
+        httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
+        return ESP_FAIL;
+    }
     if (self) {
         notify_state(self, AP_SERVER_STATE_K_RECEIVING_IMAGE, "Receiving image...");
     }
@@ -515,15 +611,17 @@ static esp_err_t upload_handler(httpd_req_t *req)
 static esp_err_t status_handler(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     const char *mode = "ap";
     const char *ip = AP_IP;
     if (self != NULL) {
         mode = self->mode == AP_SERVER_MODE_LAN ? "lan" : "ap";
         ip = self->ap_ip[0] != '\0' ? self->ap_ip : AP_IP;
     }
-    char response[128];
-    snprintf(response, sizeof(response), "{\"status\":\"ready\",\"mode\":\"%s\",\"ip\":\"%s\",\"url\":\"http://%s/\"}",
-             mode, ip, ip);
+    char response[160];
+    snprintf(response, sizeof(response),
+             "{\"status\":\"ready\",\"mode\":\"%s\",\"ip\":\"%s\",\"url\":\"http://%s/?token=%s\",\"token\":\"%s\"}",
+             mode, ip, ip, ap_transfer_server_get_token(), ap_transfer_server_get_token());
     send_json(req, response);
     return ESP_OK;
 }
@@ -531,6 +629,7 @@ static esp_err_t status_handler(httpd_req_t *req)
 static esp_err_t settings_handler(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     nvs_handle_t nvs = 0;
     bool nvs_open_ok =
         nvs_open(GALLERY_NAMESPACE, req->method == HTTP_POST ? NVS_READWRITE : NVS_READONLY, &nvs) == ESP_OK;
@@ -618,6 +717,7 @@ static esp_err_t settings_handler(httpd_req_t *req)
 
 static esp_err_t photos_handler(httpd_req_t *req)
 {
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     cJSON *root = cJSON_CreateObject();
     cJSON *photos = cJSON_CreateArray();
     if (!root || !photos) {
@@ -668,7 +768,7 @@ static esp_err_t photos_handler(httpd_req_t *req)
 static esp_err_t photo_handler(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
-
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     char query[64] = {0};
     char id[16] = {0};
     if (httpd_req_get_url_query_str(req, query, sizeof(query)) != ESP_OK ||
@@ -677,11 +777,11 @@ static esp_err_t photo_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
+    if (!is_authorized(req)) { /* D11/S3: GET branch was unauthenticated */
+        httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
+        return ESP_FAIL;
+    }
     if (req->method == HTTP_DELETE) {
-        if (!is_authorized(req)) {
-            httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
-            return ESP_FAIL;
-        }
         const bool deleted = photo_delete(id) == 0;
         if (deleted && self && self->photos_changed_cb) {
             self->photos_changed_cb(self->photos_changed_cb_ctx);
@@ -733,12 +833,16 @@ static esp_err_t photo_handler(httpd_req_t *req)
 
 static esp_err_t photo_meta_handler(httpd_req_t *req)
 {
+    if (!is_authorized(req)) { /* D11: writes metadata */
+        httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
+        return ESP_FAIL;
+    }
     cJSON *root = read_json_body(req);
     if (!root) {
         send_json(req, "{\"success\":false,\"error\":\"bad_json\"}");
         return ESP_FAIL;
     }
-
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     char id[16] = {0};
     copy_json_string(root, "id", id, sizeof(id));
     photo_info_t info;
@@ -800,11 +904,16 @@ static esp_err_t photo_move_handler(httpd_req_t *req)
 
 static esp_err_t photo_show_handler(httpd_req_t *req)
 {
+    if (!is_authorized(req)) { /* D11: triggers on-device action */
+        httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
+        return ESP_FAIL;
+    }
     cJSON *root = read_json_body(req);
     if (!root) {
         send_json(req, "{\"success\":false,\"error\":\"bad_json\"}");
         return ESP_FAIL;
     }
+    ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
     char id[16] = {0};
     copy_json_string(root, "id", id, sizeof(id));
     cJSON_Delete(root);

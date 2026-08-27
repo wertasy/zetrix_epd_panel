@@ -14,7 +14,8 @@
  */
 #include "application.h"
 #include "application_internal.h"
-
+#include "app_page_runtime.h"
+#include "page_runtime.h"
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
@@ -36,6 +37,7 @@
 #include "board.h"
 #include "sleep_manager.h"
 #include "rtc_pcf8563.h"
+#include "rtc_time_valid.h"
 #include "epd_driver.h"
 #include "config.h"
 #include "settings.h"
@@ -84,6 +86,44 @@ ap_transfer_server_t s_transfer_server;
  * icon would freeze at its boot value (often -1 while the ADC initialises)
  * and never appear unless a wifi/settings event happens to update it. */
 static int s_last_battery_pct = -999;
+
+static ui_page_id_t s_last_switch_page = UI_PAGE_GALLERY;
+
+static void app_on_page_switch(ui_page_id_t page, void *user_data)
+{
+    (void)user_data;
+    ESP_LOGI(TAG, "Page switch callback: page=%d (old=%d)", page, s_last_switch_page);
+    page_runtime_on_page_exited(s_last_switch_page);
+    app_page_runtime_on_page_switched(s_last_switch_page, page);
+    page_runtime_on_page_entered(page);
+    s_last_switch_page = page;
+}
+
+/* Dispatch the HOLIDAY data interest: NVS cache hit -> zero network;
+ * otherwise HTTP fetch. On success: record the served day (MIDNIGHT
+ * alignment bookkeeping), update the calendar staleness timestamp, and
+ * optionally request a page refresh (skipped during boot — the initial
+ * render follows immediately after application_init). */
+static void app_dispatch_holiday_interest(bool request_refresh)
+{
+    time_t t = time(NULL);
+    struct tm tmr;
+    localtime_r(&t, &tmr);
+    const int year = tmr.tm_year + 1900;
+    const bool landed = holiday_fetcher_is_year_cached(year) || holiday_fetcher_fetch(year);
+    if (!landed)
+        return;
+    const uint32_t ymd = (uint32_t)(tmr.tm_year + 1900) * 10000u + (uint32_t)(tmr.tm_mon + 1) * 100u +
+                         (uint32_t)tmr.tm_mday;
+    page_runtime_mark_day_served(ymd);
+    page_renderer_t *cal = page_registry_get_instance(UI_PAGE_CALENDAR);
+    if (cal) {
+        calendar_page_set_data_refresh_time(cal, (int32_t)t);
+    }
+    if (request_refresh && page_runtime_is_page_active(UI_PAGE_CALENDAR)) {
+        ui_manager_request_active_page_refresh(s_app.ui_mgr);
+    }
+}
 /* ------------------------------------------------------------------ */
 /* Static helpers                                                      */
 /* ------------------------------------------------------------------ */
@@ -104,11 +144,19 @@ static bool is_ap_transfer_mode_running(void)
     return ap_transfer_server_is_running(&s_transfer_server) && ap_transfer_server_is_ap_mode(&s_transfer_server);
 }
 
-/* AP transfer server state callback — updates the AP transfer page UI. */
+/* AP transfer server state callback — updates the AP transfer page UI and
+ * drives the D5 sticky upgrade: between "client connected" (2) and
+ * "saved/error" (5/6) a transfer is in progress, so PAGE ownership is
+ * upgraded to sticky — switching pages mid-upload keeps the server alive. */
 static void ap_server_state_cb(int state, const char *message, void *ctx)
 {
     (void)ctx;
     bool should_refresh = false;
+    if (state == 2) {
+        app_page_runtime_service_set_sticky(APP_SVC_AP_TRANSFER, true);
+    } else if (state == 5 || state == 6 || state == 0) {
+        app_page_runtime_service_set_sticky(APP_SVC_AP_TRANSFER, false);
+    }
     switch (state) {
     case 1: /* AP started */
         ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
@@ -162,9 +210,9 @@ static void process_wifi_event(wifi_manager_event_t event)
         }
         application_update_status_bar();
         app_sleep_arm_sync_timer();
-        s_app.need_coding_plan_refresh = true;
-        s_app.need_weather_fetch = true;
-        s_app.need_holiday_fetch = true;
+        page_runtime_set_pending(page_runtime_effective_interests(ui_manager_get_current_page(s_app.ui_mgr)));
+        ESP_LOGI(TAG, "WiFi connected: pending data interests set to 0x%lx",
+                 (unsigned long)page_runtime_effective_interests(ui_manager_get_current_page(s_app.ui_mgr)));
         break;
     case WIFI_EVENT_GOT_IP:
         application_update_status_bar();
@@ -173,9 +221,9 @@ static void process_wifi_event(wifi_manager_event_t event)
         ESP_LOGI(TAG, "WiFi disconnected");
         s_app.wifi_connected = false;
         sm_set_busy(SLEEP_BUSY_SRC_NET, false);
-        if (app_is_lan_http_running()) {
-            ap_transfer_server_stop(&s_transfer_server);
-        }
+        /* LAN HTTP depends on the station link; force-stop resets registry
+         * state alongside the server itself. */
+        app_page_runtime_service_force_stop(APP_SVC_LAN_HTTP);
         application_update_status_bar();
         break;
     case WIFI_EVENT_CONNECTING:
@@ -254,7 +302,9 @@ void application_init(void)
     s_app.state = DEVICE_STATE_STARTING;
     s_app.wifi_connected = false;
 
-    holiday_fetcher_init();
+    /* NOTE: holiday_fetcher_init() runs in app_main before the wake-path
+     * Wi-Fi decision (main.c) — the NVS year cache must be loaded before
+     * page_runtime_effective_network_on_wake can probe it. */
     s_app.event_queue = xQueueCreate(16, sizeof(app_event_t));
     if (!s_app.event_queue) {
         ESP_LOGE(TAG, "Failed to create event queue");
@@ -268,6 +318,26 @@ void application_init(void)
         return;
     }
     ui_manager_init(s_app.ui_mgr, NULL, NULL);
+    ui_manager_set_page_switch_callback(s_app.ui_mgr, app_on_page_switch, NULL);
+    page_runtime_init();
+    {
+        ui_page_id_t initial_page = ui_manager_get_current_page(s_app.ui_mgr);
+        s_last_switch_page = initial_page;
+        page_runtime_on_page_entered(initial_page);
+    }
+
+    /* Serve cacheable interests before the boot render so the initial EPD
+     * refresh already shows fresh data (cache hit only — a cache miss
+     * blocks on HTTP and is left to the 1s dispatch loop). */
+    if (page_runtime_pending_interests() & PAGE_DATA_HOLIDAY) {
+        time_t t = time(NULL);
+        struct tm tmr;
+        localtime_r(&t, &tmr);
+        if (holiday_fetcher_is_year_cached(tmr.tm_year + 1900)) {
+            page_runtime_clear_pending(PAGE_DATA_HOLIDAY);
+            app_dispatch_holiday_interest(false);
+        }
+    }
     /* AP/HTTP transfer server — lifecycle and callbacks owned by application. */
     ap_transfer_server_init(&s_transfer_server);
     ap_transfer_server_set_state_callback(&s_transfer_server, ap_server_state_cb, NULL);
@@ -275,6 +345,9 @@ void application_init(void)
     ap_transfer_server_set_settings_changed_callback(&s_transfer_server, handle_settings_changed_async, NULL);
     ap_transfer_server_set_photos_changed_callback(&s_transfer_server, handle_photos_changed_async, NULL);
     ap_transfer_server_set_show_photo_callback(&s_transfer_server, handle_show_photo_sync, NULL);
+    /* Service registry (P3): ownership state machine for the two server
+     * modes. Initialised after the server, before any acquire/release. */
+    app_page_runtime_init();
     /* Data refresh request channel — pages call data_refresh_request() instead
      * of directly invoking network API fetch functions (Phase 1.4 decoupling). */
     data_refresh_set_callback(app_sync_on_data_refresh_request, NULL);
@@ -301,37 +374,29 @@ void application_init(void)
     if (is_rtc_wakeup) {
         s_app.rtc_wakeup = true;
         ESP_LOGI(TAG, "RTC alarm wakeup detected");
-        /* Only run the slideshow fast-path when the last-viewed page before
-         * sleep was the gallery with the slideshow enabled. Otherwise keep
-         * the restored page (from RTC memory) and let the normal data sync
-         * refresh it — non-gallery pages need their network data after wake. */
+        /* Page-specific wake action declared via the runtime policy (e.g.
+         * the gallery slideshow advances one photo). Non-declaring pages
+         * keep the restored page and let the normal data sync refresh it. */
         const ui_page_id_t saved_page = ui_manager_get_rtc_saved_page();
-        if (slideshow_interval > 0 && saved_page == UI_PAGE_GALLERY) {
-            ESP_LOGI(TAG, "Slideshow RTC wakeup: switching to fullscreen gallery and advancing");
-            ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_GALLERY);
-            page_renderer_t *gallery = page_registry_get_instance(UI_PAGE_GALLERY);
-            if (gallery) {
-                photo_gallery_page_t *g = (photo_gallery_page_t *)gallery;
-                g->mode = PHOTO_GALLERY_MODE_FULLSCREEN;
-                /* Restore the persisted slideshow position before advancing so
-                 * deep sleep (which wipes RAM) does not reset to photo 2/3. */
-                settings_handle_t gnvs = settings_open(APP_GALLERY_NS, false);
-                if (gnvs) {
-                    int saved_idx = (int)settings_get_int(gnvs, "current_idx", -1);
-                    settings_close(gnvs);
-                    if (saved_idx >= 0) {
-                        photo_gallery_set_selected_index(gallery, saved_idx);
-                    }
-                }
-                photo_gallery_select_next(gallery, true);
-            }
+        const page_runtime_policy_t *pol = page_runtime_policy(saved_page);
+        if (pol->on_rtc_wake) {
+            ESP_LOGI(TAG, "RTC wake: running page-specific wake hook (page=%d)", (int)saved_page);
+            pol->on_rtc_wake(saved_page);
         }
     }
 
-    if (!(is_rtc_wakeup && slideshow_interval > 0)) {
+    const bool slideshow_wake =
+        is_rtc_wakeup && ui_manager_get_rtc_saved_page() == UI_PAGE_GALLERY && slideshow_interval > 0;
+    if (!slideshow_wake) {
         /* Pre-load coding plan NVS cache so the page renders instantly on
          * first view, even before WiFi connects. */
         app_sync_ensure_coding_plan_initialised();
+        /* Same eager init for fridge memo: a page-enter refresh request can
+         * fire before data_refresh_set_callback is registered above, and
+         * unlike weather/coding-plan there is no GOT_IP recovery flag to
+         * retry it — without this, an RTC-restored fridge page on deep-sleep
+         * wake shows the empty state despite a full NVS cache. */
+        app_sync_ensure_fridge_memo_initialised();
         if (esp_reset_reason() == ESP_RST_DEEPSLEEP) {
             ESP_LOGI(TAG, "Wake from deep sleep: showing persisted frame until fresh data arrives");
         }
@@ -364,9 +429,7 @@ void application_notify_wifi_if_connected(void)
         protocol_start(&s_app.protocol);
         protocol_open_audio_channel(&s_app.protocol);
         app_sntp_start_once();
-        s_app.need_coding_plan_refresh = true;
-        s_app.need_weather_fetch = true;
-        s_app.need_holiday_fetch = true;
+        page_runtime_set_pending(page_runtime_effective_interests(ui_manager_get_current_page(s_app.ui_mgr)));
         app_sleep_arm_sync_timer();
     }
 }
@@ -465,7 +528,7 @@ void application_run(void)
                 ESP_LOGI(TAG, "Processing UP+DOWN long press (wifi config)");
                 board_flash_activity_led();
                 if (app_is_lan_http_running()) {
-                    ap_transfer_server_stop(&s_transfer_server);
+                    app_page_runtime_service_release_user(APP_SVC_LAN_HTTP);
                 }
                 s_app.wifi_connected = false;
                 char ssid[32] = "ZecTrix-AP";
@@ -485,17 +548,18 @@ void application_run(void)
                 ui_page_id_t boot_page = ui_manager_get_current_page(s_app.ui_mgr);
                 if (boot_page == UI_PAGE_AP_TRANSFER || is_ap_transfer_mode_running()) {
                     ESP_LOGI(TAG, "BOOT long press - exiting AP transfer mode");
-                    ap_transfer_server_stop(&s_transfer_server);
+                    /* User intent is explicit: stop even mid-transfer. */
+                    app_page_runtime_service_force_stop(APP_SVC_AP_TRANSFER);
                     ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_GALLERY);
                 } else if (boot_page == UI_PAGE_GALLERY) {
                     if (app_is_lan_http_running()) {
                         ESP_LOGI(TAG, "Gallery long press BOOT - stopping LAN HTTP server");
-                        ap_transfer_server_stop(&s_transfer_server);
+                        app_page_runtime_service_release_user(APP_SVC_LAN_HTTP);
                     } else if (s_app.wifi_connected) {
                         ESP_LOGI(TAG, "Gallery long press BOOT - starting LAN HTTP server");
-                        char lan_ip[32] = {0};
-                        wifi_manager_get_ip(lan_ip, sizeof(lan_ip));
-                        ap_transfer_server_start_lan(&s_transfer_server, lan_ip);
+                        if (app_page_runtime_service_acquire(APP_SVC_LAN_HTTP, SVC_OWNER_USER, UI_PAGE_GALLERY)) {
+                            app_settings_update_http_server_item(true, NULL);
+                        }
                     } else {
                         ESP_LOGW(TAG, "Gallery long press BOOT - WiFi not connected, cannot start LAN server");
                     }
@@ -504,7 +568,9 @@ void application_run(void)
                     ESP_LOGI(TAG, "WiFi page long press BOOT - entering AP transfer mode");
                     ap_transfer_page_use_default_instructions(
                         (page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER));
-                    ap_transfer_server_start(&s_transfer_server);
+                    /* PAGE ownership: the page-switch handler adopts the
+                     * server when the AP transfer page becomes foreground. */
+                    app_page_runtime_service_acquire(APP_SVC_AP_TRANSFER, SVC_OWNER_USER, UI_PAGE_WIFI);
                     ui_manager_switch_page(s_app.ui_mgr, UI_PAGE_AP_TRANSFER);
                 } else {
                     ui_button_event_t button_ev = {BTN_BOOT_LONG_PRESS};
@@ -525,6 +591,12 @@ void application_run(void)
                     time_t now_t = time(NULL);
                     struct tm tm_buf;
                     localtime_r(&now_t, &tm_buf);
+                    if (!time_year_is_plausible(tm_buf.tm_year + 1900)) {
+                        /* Defensive: TIME_SYNC fires after SNTP so the time
+                         * should be sane, but never jump the calendar on an
+                         * implausible clock. */
+                        break;
+                    }
                     cal->today_year = tm_buf.tm_year + 1900;
                     cal->today_month = tm_buf.tm_mon + 1;
                     cal->today_day = tm_buf.tm_mday;
@@ -602,6 +674,19 @@ void application_run(void)
                 ESP_LOGW(TAG, "Battery low (%d%%) and not charging. Shutting down...", pct);
                 render_low_battery_warning();
                 board_power_vbat_off();
+#if CHARGE_GPIO_AFFECT_SLEEP
+                /* D12: enable charger plug-in wake before the shutdown
+                 * deep sleep so a dead device boots when plugged in.
+                 * [INFERENCE] hardware check pending: charge-detect circuit
+                 * must be powered with vbat rail off. */
+                {
+                    rtc_gpio_init(CHARGE_DETECT_GPIO);
+                    rtc_gpio_set_direction(CHARGE_DETECT_GPIO, RTC_GPIO_MODE_INPUT_ONLY);
+                    rtc_gpio_pullup_en(CHARGE_DETECT_GPIO);
+                    rtc_gpio_pulldown_dis(CHARGE_DETECT_GPIO);
+                    esp_sleep_enable_ext1_wakeup(1ULL << CHARGE_DETECT_GPIO, ESP_EXT1_WAKEUP_ANY_LOW);
+                }
+#endif
                 esp_deep_sleep_start();
             }
             /* Battery icon updates independently of wifi events: update the
@@ -612,44 +697,56 @@ void application_run(void)
             }
             ui_manager_pump_clock_refresh(s_app.ui_mgr);
 
+            /* HOLIDAY is servable offline from the NVS year cache (the
+             * calendar wake path may skip Wi-Fi entirely). */
+            if (page_runtime_pending_interests() & PAGE_DATA_HOLIDAY) {
+                page_runtime_clear_pending(PAGE_DATA_HOLIDAY);
+                app_dispatch_holiday_interest(true);
+            }
+
             if (s_app.wifi_connected) {
-                if (s_app.need_weather_fetch) {
-                    s_app.need_weather_fetch = false;
+                uint32_t pending = page_runtime_pending_interests();
+                if (pending & PAGE_DATA_WEATHER) {
+                    page_runtime_clear_pending(PAGE_DATA_WEATHER);
                     weather_api_fetch();
                 }
-                if (s_app.need_coding_plan_refresh) {
-                    s_app.need_coding_plan_refresh = false;
+                if (pending & PAGE_DATA_CODING_PLAN) {
+                    page_runtime_clear_pending(PAGE_DATA_CODING_PLAN);
                     app_sync_refresh_coding_plan();
                 }
-                if (s_app.need_holiday_fetch) {
-                    s_app.need_holiday_fetch = false;
-                    time_t t = time(NULL);
-                    struct tm tmr;
-                    localtime_r(&t, &tmr);
-                    int year = tmr.tm_year + 1900;
-                    if (holiday_fetcher_fetch(year)) {
-                        /* Holiday data feeds the calendar page; only refresh
-                         * the EPD when that page is visible (full refresh is
-                         * ~15 s — don't flash the current page otherwise). */
-                        if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_CALENDAR) {
-                            ui_manager_request_active_page_refresh(s_app.ui_mgr);
+
+                if (page_runtime_effective_periodic_refresh_s(ui_manager_get_current_page(s_app.ui_mgr)) > 0) {
+                    if (++s_cp_refresh_counter >=
+                        page_runtime_effective_periodic_refresh_s(ui_manager_get_current_page(s_app.ui_mgr))) {
+                        s_cp_refresh_counter = 0;
+                        if (page_runtime_effective_interests(ui_manager_get_current_page(s_app.ui_mgr)) &
+                            PAGE_DATA_CODING_PLAN) {
+                            app_sync_refresh_coding_plan();
                         }
                     }
                 }
-
-                if (++s_cp_refresh_counter >= APP_CODING_PLAN_REFRESH_SECONDS) {
-                    s_cp_refresh_counter = 0;
-                    app_sync_refresh_coding_plan();
-                }
             } else {
                 s_cp_refresh_counter = 0;
-                s_app.need_weather_fetch = false;
-                s_app.need_coding_plan_refresh = false;
-                s_app.need_holiday_fetch = false;
             }
 
+            /* D3: USER-held LAN HTTP with no request for 30 minutes is
+             * auto-released (user forgot to turn it off). Sticky/active
+             * transfers keep refreshing the timestamp, so they are immune. */
+            if (app_is_lan_http_running()) {
+                const int64_t idle = ap_transfer_server_idle_ms();
+                if (idle > 30LL * 60 * 1000) {
+                    ESP_LOGI(TAG, "LAN HTTP idle for %lld min — auto release (D3)", (long long)(idle / 60000));
+                    app_page_runtime_service_release_user(APP_SVC_LAN_HTTP);
+                    app_settings_update_http_server_item(false, NULL);
+                    application_update_status_bar();
+                }
+            }
+            /* D4 (revised): charging suppresses SCHEDULED sleep. The
+             * decision lives in app_sleep_enter_scheduled so every sleep
+             * entry path (1s idle loop, sync timer, postponed-retry timer)
+             * is covered; manual sleep and low-battery shutdown stay
+             * exempt. */
             if (sm_can_sleep_now() && !app_sleep_is_local_http_running()) {
-                ESP_LOGI(TAG, "System idle. Sleep manager allows sleep. Entering sleep...");
                 app_sleep_enter_scheduled();
             }
         }
