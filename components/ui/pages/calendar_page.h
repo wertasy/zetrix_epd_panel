@@ -14,6 +14,13 @@
 #include "page_renderer.h"
 #include "../../rawdraw/widgets/calendar.h"
 
+#include <time.h>
+
+/* Injectable clock source for host tests (rtc-time-validity plan): the
+ * page reads "today" through this hook so tests can simulate an epoch /
+ * invalid clock. Defaults to the real clock. */
+extern time_t (*calendar_page_time_source)(void);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +64,18 @@ typedef struct {
     const char *alm_solar_term;
     const char *alm_yi[4];
     const char *alm_ji[3];
+
+    /* Data staleness indicator: unix timestamp of the last successful data
+     * refresh (holiday/SNTP landing). 0 = never (label hidden). Persisted
+     * via nvs_state "cal_fresh" so it survives deep sleep. */
+    int32_t data_refresh_epoch;
+
+    /* [time-validity] True after a calendar service was skipped because
+     * the device had no valid time (latched via NVS "cal_time_invalid").
+     * The next successful render shows 「时间未同步」 in the footer and
+     * clears it — the e-paper keeps its old image during the outage, so
+     * this is the only user-visible explanation of the gap. */
+    bool time_invalid_latched;
 } calendar_page_t;
 
 /* PageRenderer vtable entry points. */
@@ -65,12 +84,13 @@ void calendar_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
 bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *event);
 
 /* Data interface. */
+void calendar_page_set_data_refresh_time(page_renderer_t *self, int32_t epoch);
 calendar_page_selected_date_t calendar_page_get_selected_date(const page_renderer_t *self);
+void calendar_page_note_time_invalid(void);
 int calendar_page_get_year(const page_renderer_t *self);
 int calendar_page_get_month(const page_renderer_t *self);
 
 /**
- * @brief Write the formatted voice query context string into @p out.
  * Returns "2026年4月15日 丙午年二月初一" style text when a date has been
  * selected, or an empty string otherwise.
  */

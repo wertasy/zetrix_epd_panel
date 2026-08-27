@@ -43,6 +43,7 @@ void charge_status_tick(charge_status_t *self, int64_t now_ms);
 charge_snapshot_t charge_status_get(const charge_status_t *self);
 int charge_status_get_battery_percent(void);
 bool charge_status_is_charging(void);
+bool charge_status_power_present(void);
 void charge_status_on_state_changed(charge_status_t *self, charge_state_changed_cb_t cb, void *user_data);
 
 #endif // MAIN_CHARGE_STATUS_H_

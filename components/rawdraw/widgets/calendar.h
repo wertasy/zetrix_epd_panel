@@ -70,6 +70,7 @@ void widget_calendar_set_holiday_provider(widget_calendar_t *c, const holiday_pr
 void widget_calendar_init(widget_calendar_t *c, int x, int y, int w, int h);
 void widget_calendar_set_bounds(widget_calendar_t *c, int x, int y, int w, int h);
 void widget_calendar_set_date(widget_calendar_t *c, int year, int month);
+void widget_calendar_set_today(widget_calendar_t *c, int year, int month, int day);
 void widget_calendar_set_show_lunar(widget_calendar_t *c, bool show);
 void widget_calendar_set_show_overflow_days(widget_calendar_t *c, bool show);
 void widget_calendar_set_show_header(widget_calendar_t *c, bool show);

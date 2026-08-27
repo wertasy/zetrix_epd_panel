@@ -262,3 +262,10 @@ bool charge_status_is_charging(void)
         return false;
     return charge_status_get(g_board.charge_status).charging;
 }
+
+bool charge_status_power_present(void)
+{
+    if (!g_board.charge_status)
+        return false;
+    return charge_status_get(g_board.charge_status).power_present;
+}

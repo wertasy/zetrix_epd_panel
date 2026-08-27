@@ -1,6 +1,8 @@
 #include "rtc_pcf8563.h"
+#include "rtc_time_valid.h"
 #include "board.h"
 #include <esp_log.h>
+#include <string.h>
 
 #define REG_CTRL1 0x00
 #define REG_CTRL2 0x01
@@ -80,6 +82,17 @@ bool pcf8563_get_time(struct tm *out_local_tm)
         return false;
     uint8_t buf[7] = {0};
     if (board_i2c_read_regs(g_board.rtc_device, REG_SECONDS, buf, sizeof(buf)) != ESP_OK) {
+        memset(out_local_tm, 0, sizeof(*out_local_tm));
+        return false;
+    }
+    if (!pcf8563_regs_time_plausible(buf)) {
+        /* VL set or implausible year: the registers hold the power-on
+         * reset date (2000-01-01) or garbage. Zero the output so a
+         * bogus date can never leak into the system clock. Failure
+         * stays bool: I2C failure and invalid data are handled
+         * identically by both callers (main.c trust chain and
+         * app_sleep.c alarm arming). */
+        memset(out_local_tm, 0, sizeof(*out_local_tm));
         return false;
     }
     out_local_tm->tm_sec = from_bcd(buf[0] & 0x7F);
@@ -90,6 +103,13 @@ bool pcf8563_get_time(struct tm *out_local_tm)
     out_local_tm->tm_mon = from_bcd(buf[5] & 0x1F) - 1;
     out_local_tm->tm_year = from_bcd(buf[6]) + 100;
     return true;
+}
+
+bool pcf8563_get_raw(uint8_t regs[7])
+{
+    if (!g_board.rtc_device)
+        return false;
+    return board_i2c_read_regs(g_board.rtc_device, REG_SECONDS, regs, 7) == ESP_OK;
 }
 
 bool pcf8563_set_alarm(const struct tm *target_local_tm)

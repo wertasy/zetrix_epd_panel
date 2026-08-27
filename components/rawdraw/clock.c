@@ -4,6 +4,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "rtc_time_valid.h"
+
 void epd_clock_init(epd_clock_t *c, int x, int y, const lv_font_t *font)
 {
     if (!c)
@@ -86,7 +88,7 @@ const char *epd_clock_get_time_string(void)
     time_t now = time(NULL);
     struct tm tm;
     localtime_r(&now, &tm);
-    if (tm.tm_year + 1900 < 2020) {
+    if (!time_year_is_plausible(tm.tm_year + 1900)) {
         snprintf(buf, sizeof(buf), "--:--");
     } else {
         snprintf(buf, sizeof(buf), "%02d:%02d", tm.tm_hour, tm.tm_min);
@@ -101,8 +103,7 @@ void epd_clock_get_date_string(char *buf, int buf_size, bool iso_format)
     time_t now = time(NULL);
     struct tm tm;
     localtime_r(&now, &tm);
-
-    if (tm.tm_year + 1900 < 2020) {
+    if (!time_year_is_plausible(tm.tm_year + 1900)) {
         snprintf(buf, buf_size, "--");
         return;
     }

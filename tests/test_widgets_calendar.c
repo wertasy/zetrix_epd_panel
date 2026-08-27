@@ -114,8 +114,10 @@ static void test_calendar_state(void)
     widget_calendar_t c;
     widget_calendar_init(&c, 0, 0, 400, 240);
 
-    CHECK(c.year > 2000);
-    CHECK(c.month >= 1 && c.month <= 12);
+    /* P1 contract: no date until the owner injects it (set_date/set_today) —
+     * the widget must not read any clock itself. */
+    CHECK(c.year == 0);
+    CHECK(c.month == 1);
     CHECK(c.show_lunar == false);
     CHECK(c.show_overflow == false);
     CHECK(c.show_header == true);
@@ -146,6 +148,8 @@ static void test_calendar_selection(void)
     widget_calendar_t c;
     widget_calendar_init(&c, 0, 0, 400, 240);
     widget_calendar_set_date(&c, 2026, 4);
+    /* P1 contract: "today" is owner-injected; selection anchors on it. */
+    widget_calendar_set_today(&c, 2026, 4, 15);
 
     CHECK(widget_calendar_in_selection_mode(&c) == false);
 

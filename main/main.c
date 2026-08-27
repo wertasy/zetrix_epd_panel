@@ -14,13 +14,14 @@
 #include <iot_button.h>
 #include <button_gpio.h>
 #include "nvs_state.h"
-
+#include "holiday_fetcher.h"
 #include "config.h"
 #include "board.h"
 #include "charge_status.h"
 #include "epd_driver.h"
 #include "rawdraw.h"
 #include "rtc_pcf8563.h"
+#include "rtc_time_valid.h"
 #include "zectrix_nfc.h"
 #include "settings.h"
 #include "audio_player.h"
@@ -29,7 +30,9 @@
 #include "ble_gatt_service.h"
 #include "ble_image_receiver.h"
 #include "application.h"
-#include "ui_manager.h"
+#include "page_runtime.h"
+#include "calendar_page.h"
+#include "application_internal.h"
 static const char *TAG = "main_app";
 
 static charge_status_t s_charge_status;
@@ -227,17 +230,102 @@ void app_main(void)
 
     pcf8563_init(RTC_INT_GPIO);
 
+    /* ---- Time trust chain (rtc-time-validity plan §3.2) ----
+     * The RTC is the time authority on every boot (deep sleep wake =
+     * reboot), but its registers can hold the power-on reset value
+     * (2000-01-01, VL flag set) or I2C garbage. Boot sequence:
+     *   1. RTC valid            -> settimeofday (unchanged behavior)
+     *   2. RTC invalid, system continuation time plausible (maintained
+     *      across deep sleep) -> SELF-HEAL: write it back to the RTC
+     *      (clears VL), then adopt it. The alarm day field matches the
+     *      RTC's own counter, so healing must precede any alarm arming.
+     *   3. Both invalid         -> keep epoch; a calendar wake skips
+     *      rendering and retries via timer (max 3). */
+    const uint32_t wake_causes_early = esp_sleep_get_wakeup_causes();
+    bool time_ok = false;
     struct tm rtc_tm = {0};
-    if (pcf8563_get_time(&rtc_tm)) {
-        time_t t = mktime(&rtc_tm);
-        if (t != -1) {
-            struct timeval tv = {.tv_sec = t, .tv_usec = 0};
-            settimeofday(&tv, NULL);
-            ESP_LOGI(TAG, "System time synchronized with RTC: %02d:%02d:%02d", rtc_tm.tm_hour, rtc_tm.tm_min,
-                     rtc_tm.tm_sec);
+    {
+        uint8_t raw[7] = {0};
+        const bool raw_ok = pcf8563_get_raw(raw);
+        const bool vl = raw_ok && (raw[0] & 0x80);
+        ESP_LOGI(TAG, "RTC raw: %s VL=%d regs=%02X %02X %02X %02X %02X %02X %02X wake_timer=%d wake_ext1=%d",
+                 raw_ok ? "ok" : "I2C_FAIL", vl, raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6],
+                 (int)(wake_causes_early & BIT(ESP_SLEEP_WAKEUP_TIMER)),
+                 (int)(wake_causes_early & BIT(ESP_SLEEP_WAKEUP_EXT1)));
+        if (pcf8563_get_time(&rtc_tm)) {
+            time_t t = mktime(&rtc_tm);
+            if (t != (time_t)-1) {
+                struct timeval tv = {.tv_sec = t, .tv_usec = 0};
+                settimeofday(&tv, NULL);
+                time_ok = true;
+                page_runtime_time_retry_clear();
+                ESP_LOGI(TAG, "System time synchronized with RTC: %02d:%02d:%02d", rtc_tm.tm_hour, rtc_tm.tm_min,
+                         rtc_tm.tm_sec);
+            }
         }
-    } else {
-        ESP_LOGW(TAG, "RTC read failed; using system time");
+        if (!time_ok) {
+            time_t now = time(NULL);
+            struct tm cont_tm;
+            localtime_r(&now, &cont_tm);
+            if (time_year_is_plausible(cont_tm.tm_year + 1900)) {
+                ESP_LOGW(TAG, "RTC invalid; self-healing from system continuation time %04d-%02d-%02d %02d:%02d:%02d",
+                         cont_tm.tm_year + 1900, cont_tm.tm_mon + 1, cont_tm.tm_mday, cont_tm.tm_hour, cont_tm.tm_min,
+                         cont_tm.tm_sec);
+                if (pcf8563_set_time(&cont_tm)) {
+                    /* Re-read so later consumers see one consistent source. */
+                    if (pcf8563_get_time(&rtc_tm)) {
+                        time_t t = mktime(&rtc_tm);
+                        if (t != (time_t)-1) {
+                            struct timeval tv = {.tv_sec = t, .tv_usec = 0};
+                            settimeofday(&tv, NULL);
+                            time_ok = true;
+                            page_runtime_time_retry_clear();
+                        }
+                    }
+                } else {
+                    ESP_LOGE(TAG, "RTC self-heal write failed");
+                }
+                if (time_ok)
+                    ESP_LOGI(TAG, "RTC self-healed; alarms will match the day field");
+                else
+                    ESP_LOGW(TAG, "RTC still invalid; continuing on system time");
+            } else {
+                ESP_LOGW(TAG, "No valid time source (RTC invalid, system epoch); calendar wake will retry via timer");
+            }
+        }
+    }
+
+    /* ---- Time-invalid early exit (plan §3.2/§3.4) ----
+     * Unattended wake (RTC alarm or its timer retry) with no valid time
+     * source: keep the old EPD image, stay offline, latch the C-1
+     * explanation flag, and retry via deep-sleep timer (bounded). A BOOT
+     * button or charger wake is interactive/powered — continue booting so
+     * Wi-Fi + SNTP can heal the clock. */
+    {
+        const bool timer_wake = (wake_causes_early & BIT(ESP_SLEEP_WAKEUP_TIMER)) != 0;
+        uint64_t ext1_pins = 0;
+        if (wake_causes_early & BIT(ESP_SLEEP_WAKEUP_EXT1))
+            ext1_pins = esp_sleep_get_ext1_wakeup_status();
+        const bool boot_btn_wake = (ext1_pins & (1ULL << BOOT_BUTTON_GPIO)) != 0;
+        const bool rtc_alarm_wake = (ext1_pins & (1ULL << RTC_INT_GPIO)) != 0;
+        if (!time_ok && (timer_wake || rtc_alarm_wake) && !boot_btn_wake &&
+            !charge_status_is_charging() && !charge_status_power_present()) {
+            /* Charger present: suppress the early exit — sleeping here
+             * would be re-woken instantly by the charge pin (it is in the
+             * ext1 mask and held low while plugged in). Continuing boot
+             * lets Wi-Fi/SNTP heal the clock, strictly better. */
+            if (page_runtime_time_retry_count() >= PAGE_RUNTIME_TIME_RETRY_MAX) {
+                ESP_LOGW(TAG, "Time retry budget exhausted; sleeping until button/charger wake");
+                app_sleep_deep_sleep_now(false, 0);
+            }
+            page_runtime_time_retry_increment();
+            calendar_page_note_time_invalid();
+            const int64_t retry_us = (int64_t)TIME_INVALID_RETRY_MINUTES * 60 * 1000 * 1000;
+            ESP_LOGW(TAG, "No valid time on unattended wake; retry %lu/%d in %d min (offline, no refresh)",
+                     (unsigned long)page_runtime_time_retry_count(), PAGE_RUNTIME_TIME_RETRY_MAX,
+                     TIME_INVALID_RETRY_MINUTES);
+            app_sleep_deep_sleep_now(false, retry_us);
+        }
     }
 
     nfc_init(NFC_PWR_GPIO, NFC_FD_GPIO, NFC_FD_ACTIVE_LEVEL);
@@ -248,6 +336,9 @@ void app_main(void)
     bluetooth_manager_publish_touch_and_go();
     audio_player_init();
     wifi_manager_init();
+    /* Load the holiday NVS cache before the wake-path network decision so a
+     * calendar wake can skip Wi-Fi when the year cache already hits. */
+    holiday_fetcher_init();
 
     audio_player_play_tone(1000, 100);
 
@@ -279,32 +370,56 @@ void app_main(void)
         }
     }
 
-    /* Check if this is an RTC slideshow wakeup (to save massive battery by skipping WiFi).
-     * Only skip WiFi when the last-viewed page before sleep was the gallery with the
-     * slideshow enabled — other pages (weather/calendar/etc.) need WiFi to refresh data
-     * after wake, so they must connect normally. */
-    bool is_rtc_slideshow_wakeup = false;
-    const uint32_t wakeup_causes = esp_sleep_get_wakeup_causes();
+    /* RTC wakeup: decide via the restored page's runtime policy whether Wi-Fi
+     * is needed at all. Gallery-with-slideshow (policy: needs_network_on_wake
+     * = false, slideshow override active) skips Wi-Fi entirely to save
+     * battery; every other page connects normally. Cold boot always
+     * connects. */
+    bool skip_wifi = false;
+    const uint32_t wakeup_causes = wake_causes_early;
+    /* Unattended wake = RTC alarm (EXT1 pin) or its timer retry. Both
+     * restore the saved page and run the offline network policy; a BOOT
+     * button wake boots interactively like a cold boot. */
+    const bool timer_wake2 = (wakeup_causes & BIT(ESP_SLEEP_WAKEUP_TIMER)) != 0;
+    uint64_t pin_mask = 0;
     if (wakeup_causes & BIT(ESP_SLEEP_WAKEUP_EXT1)) {
         /* Fast multi-pulse activity blink: signals that the device is waking up. */
         board_flash_activity_led_blink(3);
-        uint64_t pin_mask = esp_sleep_get_ext1_wakeup_status();
-        if (pin_mask & (1ULL << RTC_INT_GPIO)) {
+        pin_mask = esp_sleep_get_ext1_wakeup_status();
+    }
+    const bool rtc_alarm_wake2 = (pin_mask & (1ULL << RTC_INT_GPIO)) != 0;
+    if (rtc_alarm_wake2 || timer_wake2) {
+        const ui_page_id_t restore = ui_manager_get_rtc_saved_page();
+        /* Replay the gallery slideshow override from NVS into the runtime
+         * override array (deep sleep wipes RAM). */
+        if (restore == UI_PAGE_GALLERY) {
             settings_handle_t gallery_nvs = settings_open("gallery", false);
             int32_t slideshow_interval = 5;
             if (gallery_nvs) {
                 slideshow_interval = (int32_t)settings_get_int(gallery_nvs, "slide_min", 5);
                 settings_close(gallery_nvs);
             }
-            const bool last_page_is_gallery = ui_manager_get_rtc_saved_page() == UI_PAGE_GALLERY;
-            if (slideshow_interval > 0 && last_page_is_gallery) {
-                is_rtc_slideshow_wakeup = true;
-                ESP_LOGI(TAG, "RTC slideshow wakeup: skipping Wi-Fi connection to save battery.");
+            page_runtime_set_wake_interval_override(UI_PAGE_GALLERY, (int)slideshow_interval);
+        }
+        if (!page_runtime_effective_network_on_wake(restore)) {
+            skip_wifi = true;
+            ESP_LOGI(TAG, "RTC wakeup: policy says no network needed; skipping Wi-Fi.");
+        } else if (restore == UI_PAGE_CALENDAR) {
+            /* Dynamic calendar probe: holiday cache hit (and not year
+             * end) -> the wake refresh needs no network either. */
+            time_t now = time(NULL);
+            struct tm tmr;
+            localtime_r(&now, &tmr);
+            const int year = tmr.tm_year + 1900;
+            const bool year_end = (tmr.tm_mon == 11) && (tmr.tm_mday >= 30);
+            if (holiday_fetcher_is_year_cached(year) && !year_end) {
+                skip_wifi = true;
+                ESP_LOGI(TAG, "RTC wakeup: calendar holiday cache hit; skipping Wi-Fi.");
             }
         }
     }
 
-    if (strlen(ssid) > 0 && !is_rtc_slideshow_wakeup) {
+    if (strlen(ssid) > 0 && !skip_wifi) {
         wifi_manager_connect(ssid, password);
     }
 
@@ -326,7 +441,7 @@ void app_main(void)
      * 3–11 s after boot — during the ~23 s first physical refresh. Extend
      * the first-merge window so all that data lands in the framebuffer
      * before the single first refresh, avoiding a second flash. */
-    if (strlen(ssid) > 0 && !is_rtc_slideshow_wakeup) {
+    if (strlen(ssid) > 0 && !skip_wifi) {
         epd_driver_set_boot_merge_ms(10000);
     }
 

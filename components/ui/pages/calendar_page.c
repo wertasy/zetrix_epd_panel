@@ -8,6 +8,7 @@
  */
 #include "calendar_page.h"
 #include "page_registry.h"
+#include "page_runtime.h"
 #include "fa_settings.h"
 
 #include "rawdraw_ext.h"
@@ -20,8 +21,69 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+#include <stdbool.h>
+#include "rtc_time_valid.h"
 
+/* Injectable clock source (host tests simulate epoch/invalid clocks). */
+time_t (*calendar_page_time_source)(void) = NULL;
+
+static time_t cal_now(void)
+{
+    return calendar_page_time_source ? calendar_page_time_source() : time(NULL);
+}
+
+/* Today from the clock, guarded by the shared plausibility window.
+ * Returns false and zeroes the outputs when the clock is untrustworthy
+ * (epoch after cold boot, RTC holding its 2000-01-01 reset value). */
+static bool cal_today_from_clock(int *y, int *m, int *d)
+{
+    time_t t = cal_now();
+    struct tm tm_buf;
+    localtime_r(&t, &tm_buf);
+    const int year = tm_buf.tm_year + 1900;
+    if (!time_year_is_plausible(year)) {
+        *y = 0;
+        *m = 0;
+        *d = 0;
+        return false;
+    }
+    *y = year;
+    *m = tm_buf.tm_mon + 1;
+    *d = tm_buf.tm_mday;
+    return true;
+}
+
+/* Placeholder view when no valid date is displayable at all (no clock,
+ * no valid NVS month). One message, no fake dates. */
+static void render_time_unknown(calendar_page_t *r, uint8_t *fb, int width, int height)
+{
+    const rawdraw_paint_style_t bg_style = rawdraw_theme_style(THEME_TOKEN_BACKGROUND_PRIMARY);
+    const int content_top = STYLE_STATUS_BAR_HEIGHT;
+    const int footer_h = STYLE_FOOTER_BAR_HEIGHT;
+    rawdraw_draw_styled_rect(fb, width, height,
+                             (rawdraw_rect_t){0, content_top, width, height - content_top - footer_h}, &bg_style);
+
+    const rawdraw_color_t text = rawdraw_theme_color_for(THEME_TOKEN_TEXT_PRIMARY);
+    const char *msg1 = "时间未同步";
+    const char *msg2 = "联网后自动校准";
+    const int area_h = height - content_top - footer_h;
+    const int block_h = r->title_font->line_height + 12 + r->body_font->line_height;
+    int y = content_top + (area_h - block_h) / 2;
+    if (y < content_top)
+        y = content_top;
+    int x1 = (width - rawdraw_measure_text_width(msg1, r->title_font)) / 2;
+    int x2 = (width - rawdraw_measure_text_width(msg2, r->body_font)) / 2;
+    if (x1 < 0)
+        x1 = 0;
+    if (x2 < 0)
+        x2 = 0;
+    rawdraw_draw_text(fb, width, height, x1, y, msg1, r->title_font, text);
+    rawdraw_draw_text(fb, width, height, x2, y + r->title_font->line_height + 12, msg2, r->body_font, text);
+
+    widget_footer_bar_t footer;
+    widget_footer_bar_init(&footer, width, height);
+    widget_footer_bar_render(&footer, fb, width, height);
+}
 static const lv_font_t *const calendar_title_font = &SourceHanSansSC_Medium_slim;
 static const lv_font_t *const calendar_body_font = &SourceHanSansSC_Regular_slim;
 
@@ -62,8 +124,10 @@ static const char *const ji_table[][3] = {
 /* Almanac sub-view helpers                                            */
 /* ------------------------------------------------------------------ */
 
-static void refresh_almanac_data(calendar_page_t *r)
+static bool refresh_almanac_data(calendar_page_t *r)
 {
+    if (r->today_year == 0)
+        return false; /* no valid clock: never enter the almanac view */
     r->alm_year = r->today_year;
     r->alm_month = r->today_month;
     r->alm_day = r->today_day;
@@ -79,6 +143,7 @@ static void refresh_almanac_data(calendar_page_t *r)
         r->alm_yi[i] = yi_table[yi_idx][i];
     for (int i = 0; i < 3; ++i)
         r->alm_ji[i] = ji_table[ji_idx][i];
+    return true;
 }
 
 static int days_in_month_g(int year, int month)
@@ -204,16 +269,14 @@ void calendar_page_init(page_renderer_t *self, int width, int height)
     r->base.height = height;
     r->base.needs_full_refresh_flag = true;
 
-    /* Get today's date. */
-    time_t now = time(NULL);
-    struct tm tm_buf;
-    localtime_r(&now, &tm_buf);
-    r->today_year = tm_buf.tm_year + 1900;
-    r->today_month = tm_buf.tm_mon + 1;
-    r->today_day = tm_buf.tm_mday;
+    /* Today's date, guarded: implausible clock (epoch / RTC reset value)
+     * leaves today_* at 0 — no fake date may reach the widget or NVS. */
+    cal_today_from_clock(&r->today_year, &r->today_month, &r->today_day);
 
+    /* Reserve a footer strip for the staleness indicator ("更新于 …"). */
     const int content_top = STYLE_STATUS_BAR_HEIGHT;
-    widget_calendar_init(&r->cal, 0, content_top, width, height - content_top);
+    const int footer_h = STYLE_FOOTER_BAR_HEIGHT;
+    widget_calendar_init(&r->cal, 0, content_top, width, height - content_top - footer_h);
     widget_calendar_set_holiday_provider(&r->cal, &s_holiday_provider);
 
     r->title_font = calendar_title_font;
@@ -223,28 +286,48 @@ void calendar_page_init(page_renderer_t *self, int width, int height)
     widget_calendar_set_show_lunar(&r->cal, true);
     widget_calendar_set_show_overflow_days(&r->cal, false);
     widget_calendar_set_show_header(&r->cal, false);
-
-    /* Sync state. */
-    /* P1: Restore navigated month from NVS on wake (deep sleep wipes RAM). */
+    /* Inject the guarded "today" (0,0,0 when implausible → no highlight). */
+    widget_calendar_set_today(&r->cal, r->today_year, r->today_month, r->today_day);
+    /* Sync state: restore navigated month from NVS on wake (deep sleep
+     * wipes RAM). Out-of-window entries (e.g. a pre-guard 2000/1970
+     * pollution) are rejected; with no valid clock AND no valid NVS
+     * entry, year stays 0 → render shows the time-unknown placeholder. */
     int32_t saved_y = 0, saved_m = 0;
-    if (nvs_state_get_i32("cal_year", &saved_y) && nvs_state_get_i32("cal_month", &saved_m)) {
-        if (saved_y >= 2020 && saved_y <= 2050 && saved_m >= 1 && saved_m <= 12) {
-            r->year = saved_y;
-            r->month = saved_m;
-        } else {
-            r->year = r->today_year;
-            r->month = r->today_month;
-        }
+    if (nvs_state_get_i32("cal_year", &saved_y) && nvs_state_get_i32("cal_month", &saved_m) &&
+        calendar_nav_year_is_valid((int)saved_y) && saved_m >= 1 && saved_m <= 12) {
+        r->year = (int)saved_y;
+        r->month = (int)saved_m;
     } else {
-        r->year = r->today_year;
+        r->year = r->today_year; /* 0 when the clock is implausible */
         r->month = r->today_month;
     }
     r->selected_date.year = 0;
     r->selected_date.month = 0;
     r->selected_date.day = 0;
     r->show_almanac = false;
+
+    /* Freshness label timestamp (0 = never, label hidden). */
+    int32_t fresh = 0;
+    r->data_refresh_epoch = nvs_state_get_i32("cal_fresh", &fresh) ? fresh : 0;
+
+    /* Latched "time was invalid" flag (C-1): set by main.c's early-exit
+     * path when a calendar wake is skipped for lack of a valid clock. */
+    int32_t inv = 0;
+    r->time_invalid_latched = nvs_state_get_i32("cal_time_invalid", &inv) && inv != 0;
 }
 
+/* C-1 latch: main.c calls this when an unattended calendar wake is skipped
+ * because no valid time source exists. The next successful render shows
+ * 「时间未同步」 in the footer (once) so the stale image is explainable. */
+void calendar_page_note_time_invalid(void)
+{
+    page_renderer_t *cal = page_registry_get_instance(UI_PAGE_CALENDAR);
+    if (!cal)
+        return;
+    calendar_page_t *r = (calendar_page_t *)cal;
+    r->time_invalid_latched = true;
+    nvs_state_set_i32("cal_time_invalid", 1);
+}
 /* Page gained focus: request a redraw but keep the navigated month. */
 static void calendar_page_enter(page_renderer_t *self)
 {
@@ -262,14 +345,45 @@ void calendar_page_render(page_renderer_t *self, uint8_t *fb, int width, int hei
 
     if (r->show_almanac) {
         render_almanac_view(r, fb, width, height);
-    } else {
-        widget_calendar_set_date(&r->cal, r->year, r->month);
-        widget_calendar_render(&r->cal, fb, width, height);
+        return;
     }
+    if (r->year == 0) {
+        /* No valid displayable date (bad clock, no valid NVS month). */
+        render_time_unknown(r, fb, width, height);
+        return;
+    }
+    widget_calendar_set_date(&r->cal, r->year, r->month);
+    widget_calendar_render(&r->cal, fb, width, height);
 
-    r->base.needs_full_refresh_flag = false;
+    /* Staleness footer: "时间未同步" takes precedence for one render
+     * after a time-invalid outage (C-1); otherwise "更新于 MM-DD HH:MM"
+     * when data has landed at least once; hidden on a fresh install. */
+    widget_footer_bar_t footer;
+    widget_footer_bar_init(&footer, width, height);
+    char label[32] = {0};
+    if (r->time_invalid_latched) {
+        snprintf(label, sizeof(label), "时间未同步");
+        r->time_invalid_latched = false;
+        nvs_state_set_i32("cal_time_invalid", 0);
+    } else if (r->data_refresh_epoch > 0) {
+        time_t t = (time_t)r->data_refresh_epoch;
+        struct tm tmr;
+        localtime_r(&t, &tmr);
+        snprintf(label, sizeof(label), "更新于 %02d-%02d %02d:%02d", tmr.tm_mon + 1, tmr.tm_mday, tmr.tm_hour,
+                 tmr.tm_min);
+    }
+    widget_footer_bar_set_text(&footer, label, "", "BOOT老黄历");
+    widget_footer_bar_render(&footer, fb, width, height);
 }
 
+void calendar_page_set_data_refresh_time(page_renderer_t *self, int32_t epoch)
+{
+    calendar_page_t *r = (calendar_page_t *)self;
+    if (!r)
+        return;
+    r->data_refresh_epoch = epoch;
+    nvs_state_set_i32("cal_fresh", epoch);
+}
 bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *event)
 {
     calendar_page_t *r = (calendar_page_t *)self;
@@ -289,10 +403,11 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
             r->show_almanac = false;
             r->base.needs_full_refresh_flag = true;
             return true;
-        case BTN_BOOT_LONG_PRESS:
-            refresh_almanac_data(r);
-            r->base.needs_full_refresh_flag = true;
-            return true;
+    case BTN_BOOT_LONG_PRESS:
+        if (!refresh_almanac_data(r))
+            return false;
+        r->base.needs_full_refresh_flag = true;
+        return true;
         default:
             return false;
         }
@@ -301,6 +416,10 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
     /* Normal calendar mode (not in selection). */
     switch (event->type) {
     case BTN_UP_CLICK:
+        /* Clamp navigation to the persistence window (2020-2050): what
+         * we render here is also what gets written to NVS below. */
+        if (r->year <= CALENDAR_NAV_YEAR_MIN)
+            return false;
         widget_calendar_prev_month(&r->cal);
         r->year = r->cal.year;
         r->month = r->cal.month;
@@ -308,7 +427,9 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
         nvs_state_set_i32("cal_month", r->month);
         r->base.needs_full_refresh_flag = true;
         return true;
-
+    case BTN_DOWN_CLICK:
+        if (r->year > CALENDAR_NAV_YEAR_MAX || (r->year == CALENDAR_NAV_YEAR_MAX && r->month >= 12))
+            return false;
         widget_calendar_next_month(&r->cal);
         r->year = r->cal.year;
         r->month = r->cal.month;
@@ -318,8 +439,10 @@ bool calendar_page_handle_input(page_renderer_t *self, const ui_button_event_t *
         return true;
 
     case BTN_BOOT_CLICK:
-        /* Enter almanac sub-view for today. */
-        refresh_almanac_data(r);
+        /* Enter almanac sub-view for today (no-op without a valid clock:
+        no state change → no 15 s refresh wasted). */
+        if (!refresh_almanac_data(r))
+            return false;
         r->show_almanac = true;
         r->base.needs_full_refresh_flag = true;
         return true;
@@ -386,7 +509,6 @@ void calendar_page_get_voice_query_context(const page_renderer_t *self, char *ou
 /* ------------------------------------------------------------------ */
 /* vtable instance                                                     */
 /* ------------------------------------------------------------------ */
-
 EXT_RAM_BSS_ATTR calendar_page_t s_calendar_instance;
 
 const page_renderer_ops_t calendar_page_ops = {
@@ -403,4 +525,14 @@ const page_renderer_ops_t calendar_page_ops = {
     .end_stream = NULL,
 };
 
-PAGE_REGISTER(UI_PAGE_CALENDAR, "日历", FA_SETTINGS_CALENDAR, true, 30, &calendar_page_ops, &s_calendar_instance.base);
+static const page_runtime_policy_t s_calendar_policy = {
+    .wake_interval_min = 0, /* Controlled by wake_align below */
+    .wake_align = PAGE_WAKE_ALIGN_MIDNIGHT, /* Align to next 00:01 */
+    .data_interests = PAGE_DATA_HOLIDAY | PAGE_DATA_SNTP,
+    .needs_network_on_wake = true, /* Only needed if holiday NVS cache miss */
+    .services = 0,
+    .periodic_refresh_s = 0, /* Content changes only at day boundary */
+    .on_rtc_wake = NULL,
+};
+
+PAGE_REGISTER_WITH_RUNTIME(UI_PAGE_CALENDAR, "日历", FA_SETTINGS_CALENDAR, true, 30, &calendar_page_ops, &s_calendar_instance.base, &s_calendar_policy);

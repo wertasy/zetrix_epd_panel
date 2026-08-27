@@ -34,7 +34,7 @@ run() {
 if [ $# -gt 0 ]; then
     TESTS=("$@")
 else
-    TESTS=(rawdraw layout theme framebuffer network nvs_state ui_text_util photo_blit ui_pages_smoke audio)
+    TESTS=(rawdraw layout theme widgets_calendar framebuffer network nvs_state ui_text_util photo_blit page_runtime fridge_memo ui_pages_smoke audio time_validity)
 fi
 
 for t in "${TESTS[@]}"; do
@@ -47,6 +47,12 @@ for t in "${TESTS[@]}"; do
             ;;
         theme)
             run theme tests/test_theme.c components/rawdraw/theme.c components/rawdraw/rawdraw.c components/rawdraw/rawdraw_ext.c
+            ;;
+        widgets_calendar)
+            run widgets_calendar tests/test_widgets_calendar.c \
+                components/rawdraw/widgets/calendar.c \
+                components/rawdraw/theme.c \
+                components/rawdraw/rawdraw.c components/rawdraw/rawdraw_ext.c components/rawdraw/layout.c -lm
             ;;
         framebuffer)
             run framebuffer tests/test_framebuffer.c components/rawdraw/framebuffer.c components/rawdraw/rawdraw.c components/rawdraw/rawdraw_ext.c
@@ -68,6 +74,55 @@ for t in "${TESTS[@]}"; do
             ;;
         photo_blit)
             run photo_blit tests/test_photo_blit.c components/ui/photo_blit.c
+            ;;
+        fridge_memo)
+            run fridge_memo tests/test_fridge_memo.c \
+                components/network/fridge_memo_api.c \
+                components/network/http_client_util.c components/network/cjson_util.c \
+                components/ui/page_registry.c \
+                components/ui/pages/fridge_memo_page.c \
+                components/ui/ui_text_util.c components/ui/data_refresh.c \
+                components/rawdraw/theme.c components/rawdraw/rawdraw.c components/rawdraw/rawdraw_ext.c \
+                components/rawdraw/layout.c \
+                managed_components/espressif__cjson/cJSON/cJSON.c -lm
+            ;;
+        page_runtime)
+            run page_runtime tests/test_page_runtime.c \
+                components/ui/page_registry.c \
+                components/ui/page_runtime.c \
+                components/ui/pages/calendar_page.c \
+                components/ui/pages/weather_page.c \
+                components/ui/pages/coding_plan_page.c \
+                components/ui/data_refresh.c \
+                components/ui/ui_text_util.c \
+                components/rawdraw/widgets/calendar.c \
+                components/rawdraw/widgets/footer_bar.c \
+                components/rawdraw/widgets/progress_bar.c \
+                components/rawdraw/widgets/weather_card.c \
+                components/network/holiday_fetcher.c \
+                components/network/cjson_util.c \
+                managed_components/espressif__cjson/cJSON/cJSON.c \
+                components/app_state/nvs_state.c \
+                components/rawdraw/theme.c \
+                components/rawdraw/rawdraw.c components/rawdraw/rawdraw_ext.c components/rawdraw/layout.c -lm
+            ;;
+        time_validity)
+            run time_validity tests/test_time_validity.c \
+                components/ui/page_registry.c \
+                components/ui/page_runtime.c \
+                components/ui/pages/calendar_page.c \
+                components/ui/data_refresh.c \
+                components/ui/ui_text_util.c \
+                components/rawdraw/widgets/calendar.c \
+                components/rawdraw/widgets/footer_bar.c \
+                components/rawdraw/widgets/progress_bar.c \
+                components/rawdraw/widgets/weather_card.c \
+                components/network/holiday_fetcher.c \
+                components/network/cjson_util.c \
+                managed_components/espressif__cjson/cJSON/cJSON.c \
+                components/app_state/nvs_state.c \
+                components/rawdraw/theme.c \
+                components/rawdraw/rawdraw.c components/rawdraw/rawdraw_ext.c components/rawdraw/layout.c -lm
             ;;
         ui_pages_smoke)
             run ui_pages_smoke tests/test_ui_pages_smoke.c \

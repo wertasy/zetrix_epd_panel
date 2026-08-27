@@ -8,6 +8,7 @@
 void pcf8563_init(gpio_num_t int_gpio);
 bool pcf8563_set_time(const struct tm *local_tm);
 bool pcf8563_get_time(struct tm *out_local_tm);
+bool pcf8563_get_raw(uint8_t regs[7]);
 bool pcf8563_set_alarm(const struct tm *target_local_tm);
 bool pcf8563_disable_alarm(void);
 bool pcf8563_clear_alarm_flag(void);

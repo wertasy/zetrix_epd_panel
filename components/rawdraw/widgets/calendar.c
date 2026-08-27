@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 /* ============================================================
  * Solar term lookup table (approximate fixed dates, ±1 day)
@@ -264,7 +263,7 @@ void widget_calendar_init(widget_calendar_t *c, int x, int y, int w, int h)
     c->y = y;
     c->w = w;
     c->h = h;
-    c->year = 2026;
+    c->year = 0;
     c->month = 1;
     c->title_font = NULL;
     c->body_font = NULL;
@@ -279,14 +278,25 @@ void widget_calendar_init(widget_calendar_t *c, int x, int y, int w, int h)
     c->sel_col = -1;
     c->selected_day = 0;
 
-    time_t now = time(NULL);
-    struct tm tm_buf;
-    localtime_r(&now, &tm_buf);
-    c->today_year = tm_buf.tm_year + 1900;
-    c->today_month = tm_buf.tm_mon + 1;
-    c->today_day = tm_buf.tm_mday;
-    c->year = c->today_year;
-    c->month = c->today_month;
+    /* No clock read here: "today" is injected by the owner via
+     * widget_calendar_set_today() so the plausibility decision (the
+     * clock can be an unsynced epoch or an RTC reset value) stays with
+     * the caller. Zero = no today highlight until injected. */
+    c->today_year = 0;
+    c->today_month = 0;
+    c->today_day = 0;
+}
+
+void widget_calendar_set_today(widget_calendar_t *c, int year, int month, int day)
+{
+    if (!c)
+        return;
+    if (c->today_year == year && c->today_month == month && c->today_day == day)
+        return;
+    c->today_year = year;
+    c->today_month = month;
+    c->today_day = day;
+    c->needs_full_refresh = true;
 }
 
 void widget_calendar_set_bounds(widget_calendar_t *c, int x, int y, int w, int h)
@@ -726,7 +736,12 @@ static void draw_grid(const widget_calendar_t *c, uint8_t *fb, int width, int he
             continue;
 
         if (is_today) {
-            rawdraw_rect_t hl = {cx + 5, cy + 1, c->cell_w - 10, c->cell_h - 2};
+            /* Height +2 vs the generic cell_h-2: lunar label ink spans cell
+             * rows [+22,+38) (16px font, ink-centered in the 16px label box),
+             * so a cell_h-2 box puts its bottom border at +36 — two rows
+             * inside the label. cell_h lands the border at +38 with a 1px
+             * gap below the ink and still 2px above the next row's number. */
+            rawdraw_rect_t hl = {cx + 5, cy + 1, c->cell_w - 10, c->cell_h};
             if (hl.x + hl.w > c->x + c->w)
                 hl.w = c->x + c->w - hl.x;
             if (hl.y + hl.h > c->y + c->h)
