@@ -112,7 +112,8 @@ extern int s_cp_refresh_counter;
 #define APP_SETTINGS_WIFI_INDEX 5
 #define APP_SETTINGS_HTTP_SERVER_INDEX 6
 #define APP_SETTINGS_LAN_IP_INDEX 7
-#define APP_SETTINGS_SYNC_INTERVAL_INDEX 11
+#define APP_SETTINGS_TOKEN_INDEX 8
+#define APP_SETTINGS_SYNC_INTERVAL_INDEX 12
 #define APP_DEFAULT_SYNC_INTERVAL_MIN 30
 
 /* 30-minute coding-plan refresh cadence (application_run ticks 1/s). */

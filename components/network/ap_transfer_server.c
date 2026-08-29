@@ -151,16 +151,31 @@ static const char upload_html[] =
     "style=\"margin-top:8px\"><button class=\"btn yellow\" id=\"mSave\">保存信息</button><button class=\"btn "
     "secondary\" id=\"mUp\">上移</button><button class=\"btn secondary\" id=\"mDown\">下移</button><button class=\"btn "
     "danger\" id=\"mDelete\">删除这张</button></div></div></div></div>\n"
+    "<div class=\"modal\" id=\"tokenModal\"><div class=\"dialog\" style=\"max-width:360px\"><b>访问令牌</b><div "
+    "class=\"muted\" id=\"tokenMsg\" style=\"margin:6px 0\">令牌错误或缺失</div><div class=\"row\"><input "
+    "id=\"tokenInput\" placeholder=\"8 位设备令牌\" style=\"flex:1;padding:7px;border:2px solid #111\"><button "
+    "class=\"btn yellow\" id=\"tokenOk\">确定</button></div><div class=\"muted\" style=\"margin-top:6px\">令牌显示在设备"
+    "屏幕：设置 → 网络 → 访问令牌；AP 模式在传图页。</div></div></div>\n"
     "<script>\n"
     "const "
     "W=400,H=300,photosEl=document.getElementById('photos'),statusEl=document.getElementById('status'),pv=document."
     "getElementById('preview'),fileEl=document.getElementById('file'),sendBtn=document.getElementById('send'),batchBtn="
     "document.getElementById('batch'),countEl=document.getElementById('count'),settingsPanel=document.getElementById('"
     "settingsPanel'),settingsState=document.getElementById('settingsState'),endpointEl=document.getElementById('"
-    "endpoint');let pending=null,pendingFmt='1bpp',items=[],selected=new Set(),active=null,authToken='';\n"
+    "endpoint');let pending=null,pendingFmt='1bpp',items=[],selected=new Set(),active=null,authToken=localStorage."
+    "getItem('inkscreen_token')||'';\n"
     "function authHeaders(extra){return Object.assign({'Authorization':'Bearer '+authToken},extra||{})}\n"
+    "let authRetry=null;function needToken(){document.getElementById('tokenMsg').textContent='令牌错误或缺失';document."
+    "getElementById('tokenModal').classList.add('open');const t=document.getElementById('tokenInput');t.value='';t."
+    "focus()}\n"
+    "function authFetch(u,o,retry){return fetch(u,o).then(r=>{if(r.status===401){authRetry=retry||null;needToken();"
+    "throw{auth:1}}return r})}\n"
+    "document.getElementById('tokenInput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('tokenOk')."
+    "click()};document.getElementById('tokenOk').onclick=()=>{const v=document.getElementById('tokenInput').value."
+    "trim();if(!v)return;authToken=v;try{localStorage.setItem('inkscreen_token',v)}catch(e){}document."
+    "getElementById('tokenModal').classList.remove('open');const f=authRetry;authRetry=null;if(f)f();loadPhotos()};\n"
     "async function loadStatus(){try{const j=await (await "
-    "fetch('/status')).json();authToken=j.token||'';endpointEl.textContent=`${j.mode==='lan'?'LAN':'InkScreen-AP'} / "
+    "fetch('/status')).json();endpointEl.textContent=`${j.mode==='lan'?'LAN':'InkScreen-AP'} / "
     "${j.ip}`;document.title=`墨水屏传图 ${j.ip}`}catch(e){endpointEl.textContent='服务地址读取失败'}}\n"
     "function fmt(){return document.querySelector('input[name=fmt]:checked').value}\n"
     "function rgba(c){return c===0?[0,0,0]:c===1?[255,255,255]:c===2?[255,217,0]:[220,0,0]}\n"
@@ -199,18 +214,20 @@ static const char upload_html[] =
     "convert(f);sendBtn.disabled=false;statusEl.textContent=`已预览 ${pendingFmt==='bwry2bpp'?'2 BP 四色':'1 BP "
     "黑白'}，确认后点击发送`}catch(e){statusEl.textContent='图片处理失败';sendBtn.disabled=true}};document."
     "querySelectorAll('input[name=fmt]').forEach(r=>r.onchange=()=>{if(fileEl.files[0])fileEl.onchange()});\n"
-    "sendBtn.onclick=async()=>{if(!pending)return;sendBtn.disabled=true;statusEl.textContent='上传中...';try{const "
+    "async function sendPhoto(){if(!pending)return;sendBtn.disabled=true;statusEl.textContent='上传中...';try{const "
     "r=await "
-    "fetch('/upload?format='+encodeURIComponent(pendingFmt),{method:'POST',headers:authHeaders({'Content-Type':'application/"
-    "octet-stream'}),body:pending});const j=await r.json();statusEl.textContent=j.success?'已发送并保存':'失败: "
-    "'+(j.error||'unknown');await loadPhotos()}catch(e){statusEl.textContent='网络错误'}sendBtn.disabled=false};\n"
+    "authFetch('/upload?format='+encodeURIComponent(pendingFmt),{method:'POST',headers:authHeaders({'Content-Type':'"
+    "application/octet-stream'}),body:pending},sendPhoto);const j=await r.json();statusEl.textContent=j.success?'已发送并"
+    "保存':'失败: '+(j.error||'unknown');await loadPhotos()}catch(e){statusEl.textContent=e&&e.auth?'令牌错误或缺失':'"
+    "网络错误'}sendBtn.disabled=false};sendBtn.onclick=sendPhoto;\n"
     "async function loadBin(p,c){const b=new Uint8Array(await (await "
-    "fetch('/"
-    "photo?id='+encodeURIComponent(p.id),{cache:'no-store',headers:authHeaders()})).arrayBuffer());(p.format==='bwry2bpp'||p.size>15000?"
-    "draw2:draw1)(b,c)}\n"
+    "authFetch('/"
+    "photo?id='+encodeURIComponent(p.id),{cache:'no-store',headers:authHeaders()},()=>loadBin(p,c))).arrayBuffer());(p."
+    "format==='bwry2bpp'||p.size>15000?draw2:draw1)(b,c)}\n"
     "function updateBatch(){batchBtn.disabled=selected.size===0}\n"
     "async function loadPhotos(){selected.clear();updateBatch();try{const j=await (await "
-    "fetch('/photos',{cache:'no-store'})).json();items=j.photos||[];countEl.textContent=`${items.length} "
+    "authFetch('/photos',{cache:'no-store',headers:authHeaders()},loadPhotos)).json();items=j.photos||[];countEl."
+    "textContent=`${items.length} "
     "张`;photosEl.innerHTML=items.length?'':'<div class=\"empty\">暂无图片</div>';const thumbs=[];for(const p of "
     "items){const card=document.createElement('div');card.className='card';card.innerHTML=`<input class=\"check\" "
     "type=\"checkbox\"><span class=\"tag\">${p.format==='bwry2bpp'?'2BP':'1BP'}</span><canvas class=\"thumb\" "
@@ -223,7 +240,8 @@ static const char upload_html[] =
     ");showPhoto(p.id)};card.querySelector('.up').onclick=e=>{e.stopPropagation();movePhoto(p.id,-1)};card."
     "querySelector('.down').onclick=e=>{e.stopPropagation();movePhoto(p.id,1)};card.onclick=()=>openModal(p);photosEl."
     "appendChild(card);thumbs.push([p,c])}for(const [p,c] of thumbs){await "
-    "loadBin(p,c).catch(()=>{})}}catch(e){photosEl.innerHTML='<div class=\"empty\">读取失败</div>'}}\n"
+    "loadBin(p,c).catch(()=>{})}}catch(e){photosEl.innerHTML=e&&e.auth?'<div class=\"empty\">令牌错误或缺失</"
+    "div>':'<div class=\"empty\">读取失败</div>'}}\n"
     "function "
     "openModal(p){active=p;document.getElementById('modal').classList.add('open');document.getElementById('mTitle')."
     "value=p.title||'';document.getElementById('mDate').value=p.date||'';document.getElementById('mLocation').value=p."
@@ -233,23 +251,29 @@ static const char upload_html[] =
     "document.getElementById('close').onclick=()=>document.getElementById('modal').classList.remove('open');document."
     "getElementById('modal').onclick=e=>{if(e.target.id==='modal')document.getElementById('modal').classList.remove('"
     "open')};\n"
-    "async function delOne(id){return fetch('/photo?id='+encodeURIComponent(id),{method:'DELETE',headers:authHeaders()}).then(r=>r.json())}\n"
-    "document.getElementById('mDelete').onclick=async()=>{if(!active)return;if(!confirm('确认删除这张图片？'))return;"
-    "await delOne(active.id);document.getElementById('modal').classList.remove('open');loadPhotos()};\n"
-    "async function movePhoto(id,delta){await "
-    "fetch('/photos/move',{method:'POST',headers:authHeaders({'Content-Type':'application/"
-    "json'}),body:JSON.stringify({id,delta})});await loadPhotos()}\n"
-    "async function showPhoto(id){const j=await (await "
-    "fetch('/photo/show',{method:'POST',headers:authHeaders({'Content-Type':'application/"
-    "json'}),body:JSON.stringify({id})})).json();statusEl.textContent=j.success?'已切到设备大图':'展示失败'}\n"
+    "async function delOne(id,retry){return "
+    "authFetch('/photo?id='+encodeURIComponent(id),{method:'DELETE',headers:authHeaders()},retry).then(r=>r.json())."
+    "catch(e=>({success:false,auth:e&&e.auth}))}\n"
+    "async function doDelete(){if(!active)return;const j=await delOne(active.id,doDelete);if(!j||j.success||!j."
+    "auth){document.getElementById('modal').classList.remove('open');loadPhotos()}}\n"
+    "document.getElementById('mDelete').onclick=()=>{if(!active)return;if(!confirm('确认删除这张图片？'))return;"
+    "doDelete()};\n"
+    "async function movePhoto(id,delta){const r=await "
+    "authFetch('/photos/move',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({id,delta})},()=>movePhoto(id,delta)).catch(()=>{});if(!r)return;await loadPhotos()}\n"
+    "async function showPhoto(id){const r=await "
+    "authFetch('/photo/show',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({id})},()=>showPhoto(id)).catch(()=>{});if(!r)return;const j=await r."
+    "json();statusEl.textContent=j.success?'已切到设备大图':'展示失败'}\n"
     "document.getElementById('mUp').onclick=()=>active&&movePhoto(active.id,-1);\n"
     "document.getElementById('mDown').onclick=()=>active&&movePhoto(active.id,1);\n"
-    "document.getElementById('mSave').onclick=async()=>{if(!active)return;const "
+    "async function saveMeta(){if(!active)return;const "
     "body={id:active.id,title:document.getElementById('mTitle').value,date:document.getElementById('mDate').value,"
     "location:document.getElementById('mLocation').value,body:document.getElementById('mBody').value};const r=await "
-    "fetch('/photo/meta',{method:'POST',headers:authHeaders({'Content-Type':'application/"
-    "json'}),body:JSON.stringify(body)});if((await "
-    "r.json()).success){document.getElementById('modal').classList.remove('open');await loadPhotos()}};\n"
+    "authFetch('/photo/meta',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify(body)},saveMeta).catch(()=>{});if(!r)return;if((await "
+    "r.json()).success){document.getElementById('modal').classList.remove('open');await loadPhotos()}};document."
+    "getElementById('mSave').onclick=saveMeta;\n"
     "document.getElementById('settingsBtn').onclick=()=>{settingsPanel.style.display=settingsPanel.style.display==='"
     "none'?'block':'none';loadSettings()};\n"
     "document.getElementById('helpBtn').onclick=()=>{const "
@@ -260,22 +284,25 @@ static const char upload_html[] =
     "slideshow_interval);const slide=j.slideshow_interval?`轮播 ${j.slideshow_interval}min`:'轮播关闭';const "
     "svc=j.service_running?`服务开启 ${j.url||''}`:'服务将关闭';settingsState.textContent=`${slide} · "
     "${svc}`}catch(e){settingsState.textContent='读取失败'}}\n"
-    "document.getElementById('saveSettings').onclick=async()=>{const "
-    "v=Number(document.querySelector('input[name=slide]:checked')?.value||0);const j=await (await "
-    "fetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
-    "json'}),body:JSON.stringify({slideshow_interval:v})})).json();settingsState.textContent=j.success?(v?`已保存 "
-    "${v}min`:'已关闭'):'保存失败'};\n"
-    "document.getElementById('stopService').onclick=async()=>{if(!confirm('关闭本地传图服务？'))return;await "
-    "fetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
-    "json'}),body:JSON.stringify({service_enabled:false})});settingsState.textContent='服务正在关闭'};\n"
-    "document.getElementById('sleepNow').onclick=async()=>{if(!confirm('关闭服务、WiFi 并进入省电模式？'))return;await "
-    "fetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
-    "json'}),body:JSON.stringify({service_enabled:false,wifi_enabled:false,sleep:true})});settingsState.textContent='"
-    "设备正在进入省电模式'};\n"
-    "batchBtn.onclick=async()=>{const ids=[...selected];if(!ids.length)return;if(!confirm(`确认删除 ${ids.length} "
-    "张图片？`))return;for(const id of ids)await "
-    "delOne(id);loadPhotos()};document.getElementById('reload').onclick=loadPhotos;loadStatus();loadSettings();"
-    "loadPhotos();\n"
+    "async function saveSettings(){const "
+    "v=Number(document.querySelector('input[name=slide]:checked')?.value||0);const r=await "
+    "authFetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({slideshow_interval:v})},saveSettings).catch(()=>{});if(!r)return;const j=await r."
+    "json();settingsState.textContent=j.success?(v?`已保存 ${v}min`:'已关闭'):'保存失败'};document."
+    "getElementById('saveSettings').onclick=saveSettings;\n"
+    "async function stopService(){if(!confirm('关闭本地传图服务？'))return;const r=await "
+    "authFetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({service_enabled:false})},stopService).catch(()=>{});if(r)settingsState."
+    "textContent='服务正在关闭'};document.getElementById('stopService').onclick=stopService;\n"
+    "async function sleepNow(){if(!confirm('关闭服务、WiFi 并进入省电模式？'))return;const r=await "
+    "authFetch('/settings',{method:'POST',headers:authHeaders({'Content-Type':'application/"
+    "json'}),body:JSON.stringify({service_enabled:false,wifi_enabled:false,sleep:true})},sleepNow).catch(()=>{});"
+    "if(r)settingsState.textContent='设备正在进入省电模式'};document.getElementById('sleepNow').onclick=sleepNow;\n"
+    "async function batchDelete(ids){let ok=true;for(const id of ids){const j=await delOne(id,()=>batchDelete(ids));"
+    "if(!j||!j.success)ok=false}if(ok)loadPhotos()}\n"
+    "batchBtn.onclick=()=>{const ids=[...selected];if(!ids.length)return;if(!confirm(`确认删除 ${ids.length} "
+    "张图片？`))return;batchDelete(ids)};document.getElementById('reload').onclick=loadPhotos;loadStatus();"
+    "loadSettings();loadPhotos();\n"
 "</script></body></html>\n";
 
 /* Forward declaration (defined in the state-notification section below). */
@@ -451,7 +478,9 @@ static bool token_matches(const char *header_value)
     }
     return diff == 0;
 }
-
+/* D2: authorization is via the "Authorization" header only ("Bearer <token>"
+ * or bare token). The former ?token= URL query channel was removed — URLs
+ * leak into browser history and intermediary device logs. */
 static bool is_authorized(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
@@ -467,16 +496,6 @@ static bool is_authorized(httpd_req_t *req)
     if (httpd_req_get_hdr_value_str(req, "Authorization", auth_hdr, sizeof(auth_hdr)) == ESP_OK) {
         if (token_matches(auth_hdr)) {
             return true;
-        }
-    }
-    /* Also accept ?token= query parameter for browser URLs (GET only). */
-    char query[80] = {0};
-    if (req->method == HTTP_GET && httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
-        char supplied[32] = {0};
-        if (httpd_query_key_value(query, "token", supplied, sizeof(supplied)) == ESP_OK && supplied[0] != '\0') {
-            char bearer[48] = {0};
-            snprintf(bearer, sizeof(bearer), "Bearer %s", supplied);
-            return token_matches(bearer);
         }
     }
     return false;
@@ -620,8 +639,7 @@ static esp_err_t status_handler(httpd_req_t *req)
     }
     char response[160];
     snprintf(response, sizeof(response),
-             "{\"status\":\"ready\",\"mode\":\"%s\",\"ip\":\"%s\",\"url\":\"http://%s/?token=%s\",\"token\":\"%s\"}",
-             mode, ip, ip, ap_transfer_server_get_token(), ap_transfer_server_get_token());
+             "{\"status\":\"ready\",\"mode\":\"%s\",\"ip\":\"%s\",\"url\":\"http://%s/\"}", mode, ip, ip);
     send_json(req, response);
     return ESP_OK;
 }
@@ -630,6 +648,10 @@ static esp_err_t settings_handler(httpd_req_t *req)
 {
     ap_transfer_server_t *self = (ap_transfer_server_t *)req->user_ctx;
     ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
+    if (req->method == HTTP_POST && !is_authorized(req)) { /* D2: POST mutates, authenticate */
+        httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
+        return ESP_FAIL;
+    }
     nvs_handle_t nvs = 0;
     bool nvs_open_ok =
         nvs_open(GALLERY_NAMESPACE, req->method == HTTP_POST ? NVS_READWRITE : NVS_READONLY, &nvs) == ESP_OK;
@@ -677,16 +699,6 @@ static esp_err_t settings_handler(httpd_req_t *req)
             stop_wifi = true;
             enter_sleep = true;
         }
-        if (close_service || stop_wifi || enter_sleep) {
-            if (!is_authorized(req)) {
-                cJSON_Delete(root);
-                if (nvs_open_ok) {
-                    nvs_close(nvs);
-                }
-                httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
-                return ESP_FAIL;
-            }
-        }
         cJSON_Delete(root);
     }
     if (nvs_open_ok) {
@@ -718,6 +730,10 @@ static esp_err_t settings_handler(httpd_req_t *req)
 static esp_err_t photos_handler(httpd_req_t *req)
 {
     ap_transfer_server_touch_activity(); /* D3 idle keep-alive */
+    if (!is_authorized(req)) { /* D2: photo listing leaks device content, authenticate */
+        httpd_resp_send_err(req, HTTPD_401_UNAUTHORIZED, "Unauthorized");
+        return ESP_FAIL;
+    }
     cJSON *root = cJSON_CreateObject();
     cJSON *photos = cJSON_CreateArray();
     if (!root || !photos) {
@@ -943,6 +959,10 @@ static bool start_http_server(ap_transfer_server_t *self)
         self->server = NULL;
         return false;
     }
+    /* D6: pre-generate the per-device token before handlers can run.
+     * Concurrent first requests would otherwise race inside ensure_auth_token();
+     * handlers keep their idempotent calls as fallback. */
+    ensure_auth_token();
 
     /* Register handlers */
     httpd_uri_t index_uri = {

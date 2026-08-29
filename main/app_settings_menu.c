@@ -19,6 +19,7 @@
 #include "settings_page.h"
 #include "ui_manager.h"
 #include "wifi_manager.h"
+#include "ap_transfer_server.h"
 
 #ifndef PROJECT_VER
 #    define PROJECT_VER "3.8.0"
@@ -238,7 +239,7 @@ void app_settings_menu_build(void)
     ui_manager_set_gallery_slideshow_interval_minutes(s_app.ui_mgr, slideshow_interval);
 
     /* Declarative settings menu (C port of the C++ items vector). */
-    settings_page_item_t items[12];
+    settings_page_item_t items[13];
     int n = 0;
     memset(items, 0, sizeof(items));
 
@@ -292,6 +293,13 @@ void app_settings_menu_build(void)
     /* 局域网IP (normal) */
     strcpy(items[n].label, "局域网IP");
     strcpy(items[n].value, "未获取");
+    items[n].type = SETTINGS_ITEM_NORMAL;
+    ++n;
+    /* 访问令牌 (normal, read-only): LAN transfer auth token, always shown
+     * (D1). Fetching it here also triggers first-boot generation & NVS
+     * persistence. No on_click. */
+    strcpy(items[n].label, "访问令牌");
+    strcpy(items[n].value, ap_transfer_server_get_token());
     items[n].type = SETTINGS_ITEM_NORMAL;
     ++n;
 

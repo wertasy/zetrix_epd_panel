@@ -60,7 +60,10 @@ static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t 
     const rawdraw_color_t accent = rawdraw_theme_color_for(THEME_TOKEN_ACCENT);
     const rawdraw_color_t border = rawdraw_theme_color_for(THEME_TOKEN_BORDER);
     const int content_top = 35;
-    const int line_spacing = 28;
+    /* Seven instruction rows incl. the token row: 24px spacing keeps the last
+     * row's ink above the bottom separator (measured ink 241..257 vs hline
+     * at 260; at 28px the 7th row would collide with the exit hint). */
+    const int line_spacing = 24;
     const int left_margin = 20;
 
     int y = content_top;
@@ -117,11 +120,20 @@ static void ap_transfer_page_render_instructions(ap_transfer_page_t *r, uint8_t 
         snprintf(pwd_line, sizeof(pwd_line), "密码: %s", r->password_text);
     }
 
+    /* D1: auth token row. The AP-mode web UI requires the token, so it must
+     * be readable from this screen; hidden only when empty (NVS missing). */
+    char token_line[AP_TRANSFER_TOKEN_LEN + 8];
+    const char *token_row = "";
+    if (r->token_text[0] != '\0') {
+        snprintf(token_line, sizeof(token_line), "令牌 %s", r->token_text);
+        token_row = token_line;
+    }
+
     const char *lines[] = {
-        ssid_line, pwd_line, "", "浏览器访问", url, state_hint,
+        ssid_line, pwd_line, "", "浏览器访问", url, token_row, state_hint,
     };
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < (int)(sizeof(lines) / sizeof(lines[0])); i++) {
         const char *line = lines[i];
         if (line[0] != '\0') {
             /* Highlight URL */
@@ -238,6 +250,7 @@ void ap_transfer_page_init(page_renderer_t *self, int width, int height)
     r->base.height = height;
     r->state = AP_TRANSFER_STATE_WAITING_CONNECTION;
     r->status_message[0] = '\0';
+    r->token_text[0] = '\0';
     r->font = ap_transfer_font;
     r->title_font = ap_transfer_title_font;
     ap_transfer_page_use_default_instructions(self);
@@ -369,6 +382,20 @@ void ap_transfer_page_set_instruction_content(page_renderer_t *self, const char 
 
     r->base.needs_full_refresh_flag = true;
     ESP_LOGI(TAG, "SetInstructionContent title='%s' ssid='%s' url='%s'", r->title_text, r->ssid_text, r->url_text);
+}
+
+void ap_transfer_page_set_token(page_renderer_t *self, const char *token)
+{
+    ap_transfer_page_t *r = (ap_transfer_page_t *)self;
+    if (!r)
+        return;
+    if (token != NULL && token[0] != '\0') {
+        strncpy(r->token_text, token, sizeof(r->token_text) - 1);
+        r->token_text[sizeof(r->token_text) - 1] = '\0';
+    } else {
+        r->token_text[0] = '\0';
+    }
+    r->base.needs_full_refresh_flag = true;
 }
 
 void ap_transfer_page_set_exit_callback(page_renderer_t *self, void (*callback)(void *ctx), void *ctx)

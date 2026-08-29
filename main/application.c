@@ -159,6 +159,12 @@ static void ap_server_state_cb(int state, const char *message, void *ctx)
     }
     switch (state) {
     case 1: /* AP started */
+        /* Refresh the token shown on the instructions screen on every server
+         * (re)start, including LAN-mode startup (same state reported), so
+         * the page always carries the current token whichever path started
+         * the server. */
+        ap_transfer_page_set_token((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                   ap_transfer_server_get_token());
         ap_transfer_page_set_state((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
                                    AP_TRANSFER_STATE_WAITING_CONNECTION, message);
         should_refresh = true;
@@ -535,6 +541,8 @@ void application_run(void)
                 char pwd[32] = "12345678";
                 char url[32] = "http://192.168.4.1";
                 wifi_manager_get_ssid(ssid, sizeof(ssid));
+                ap_transfer_page_set_token((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                           ap_transfer_server_get_token());
                 ui_manager_show_wifi_config_page(s_app.ui_mgr, ssid, pwd, url);
                 application_update_status_bar();
                 break;
@@ -568,6 +576,8 @@ void application_run(void)
                     ESP_LOGI(TAG, "WiFi page long press BOOT - entering AP transfer mode");
                     ap_transfer_page_use_default_instructions(
                         (page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER));
+                    ap_transfer_page_set_token((page_renderer_t *)page_registry_get_instance(UI_PAGE_AP_TRANSFER),
+                                                ap_transfer_server_get_token());
                     /* PAGE ownership: the page-switch handler adopts the
                      * server when the AP transfer page becomes foreground. */
                     app_page_runtime_service_acquire(APP_SVC_AP_TRANSFER, SVC_OWNER_USER, UI_PAGE_WIFI);

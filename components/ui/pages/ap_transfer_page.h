@@ -17,6 +17,7 @@ extern "C" {
 
 #define AP_TRANSFER_MSG_LEN 128 /* status message buffer */
 #define AP_TRANSFER_TEXT_LEN 64 /* instruction field buffer */
+#define AP_TRANSFER_TOKEN_LEN 16 /* auth token buffer (8 hex chars in use) */
 
 typedef enum {
     AP_TRANSFER_STATE_WAITING_CONNECTION = 0, /* AP started, waiting for client */
@@ -36,6 +37,7 @@ typedef struct {
     char ssid_text[AP_TRANSFER_TEXT_LEN];
     char password_text[AP_TRANSFER_TEXT_LEN];
     char url_text[AP_TRANSFER_TEXT_LEN];
+    char token_text[AP_TRANSFER_TOKEN_LEN];
     char hint_text[AP_TRANSFER_TEXT_LEN];
     char exit_hint_text[AP_TRANSFER_TEXT_LEN];
 
@@ -59,6 +61,7 @@ void ap_transfer_page_use_default_instructions(page_renderer_t *self);
 void ap_transfer_page_set_instruction_content(page_renderer_t *self, const char *title, const char *ssid,
                                               const char *password, const char *url, const char *hint,
                                               const char *exit_hint);
+void ap_transfer_page_set_token(page_renderer_t *self, const char *token);
 void ap_transfer_page_set_exit_callback(page_renderer_t *self, void (*callback)(void *ctx), void *ctx);
 
 #ifdef __cplusplus
