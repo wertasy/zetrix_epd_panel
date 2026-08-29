@@ -2,7 +2,7 @@
 
 > 入口：B（追溯实例化）——源起 2026-08-29 架构评审（对 b99586f 工作区的结构/可维护性/可扩展性评审，结论见仓库会话记录）。
 > 平台：ESP32-S3 / ESP-IDF 6.0.2 / SSD2683 四色 EPD。
-> 状态：**v4 已冻结（2026-08-29），可实施**。
+> 状态：**v4.1 已冻结（2026-08-29），实施中按 §8 纪律回写**。
 
 ## 修订日志
 
@@ -13,6 +13,7 @@
 | v2 | B1 系统专家 + B2 安全专家 | B1：ensure_auth_token 并发竞态→预生成；AP 模式 token 可达性→传图页显示；fm_fetch 任务上下文确认为既有债务。B2：?token= URL 通道收紧；settings/photos 残余面。拒绝 2 项（token 轮换、AP 密码本轮改） |
 | v3 | C（PM/UX） | 手册漂移清单；网页 401 可见反馈；设置菜单扩容确认（visible_option_count=8 容得下）；拒绝二维码显示 |
 | v4 | D（Product Owner） | 决策 D1–D9；发布门禁；[ASSUMPTION] 复核；切分 P1 安全先行 |
+| v4.1 | 实施期修订（P2 执行中） | S3「network 幽灵依赖」被实施证伪：`#    include`（# 后缩进）与无组件前缀头（style.h/nvs_state.h）导致 v1 取证漏检，network→rawdraw/app_state 为真实依赖——§3.2.3/D5 撤销、判据 4 修订、附录 A-3 增补（级联自 v1 取证错误）。§3.2.2 增补：epd_refresh.c 对 rawdraw_ext 的真实依赖以「几何助手下沉 display_types.h 为单一事实源 + rawdraw_ext.c 公开函数委托」断边，替代原「仅移类型头」方案 |
 
 ---
 
@@ -44,7 +45,7 @@
   1. LAN 模式 curl 矩阵：`GET /status` 响应体无 `token` 字段；无/错 token 的 `POST /upload`、`GET|DELETE /photo`、`POST /photo/meta`、`POST /photos/move`、`POST /photo/show`、`POST /settings`、`GET /photos` 全部 HTTP 401；持正确 token 全部 2xx；
   2. 设置页「访问令牌」项显示 8 位 token，与 NVS `auth/token` 一致（串口日志核对）；AP 传图页显示同一 token；
   3. 浏览器无缓存首访：出现令牌输入提示；输入正确后上传/删除/轮播设置全流程可用；二次访问免输（localStorage）；
-  4. CMake 断言：`rawdraw/CMakeLists.txt` 无 `bsp_peripherals`；`bsp_display` 无 `rawdraw`；`network` 无 `rawdraw`、`app_state`；`idf.py build` 零 warning；
+  4. CMake 断言：`rawdraw/CMakeLists.txt` 无 `bsp_peripherals`；`bsp_display` 无 `rawdraw`；`idf.py build` 零 warning。[v4.1 修订：删「network 无 rawdraw、app_state」——该两项为真实依赖（ble_image_receiver.c:32 用 style.h 屏宽常量、weather_api/coding_plan_api 用 nvs_state 读写配置），S3 证伪，见 D5]
   5. `grep -c fridge_memo components/ui/ui_manager.c` = 0；app_sync 经 `page_registry_get_instance` 直调页面 API；host 13 套件全绿；
   6. 手册描述与实测行为一致（token 获取/输入流程逐条对）。
 - **硬约束**：
@@ -64,7 +65,7 @@
   - `ap_transfer_server.c:472-481` `?token=` query 认证通道；
   - `rawdraw/clock.c:7,91,106` include `rtc_time_valid.h`，仅用 `time_year_is_plausible`；
   - `rawdraw/include/display_types.h`（33 行纯几何类型）+ `rawdraw.h:7`、`epd_refresh.h:6` 双方 include；`bsp_display/CMakeLists.txt:3` `REQUIRES rawdraw`；`epd_driver.c` 无 rawdraw 引用；
-  - `network/CMakeLists.txt:6` `REQUIRES ... rawdraw app_state`，network 代码零引用两者；
+  - `network/CMakeLists.txt:6` `REQUIRES ... rawdraw app_state`。[v4.1 修正：v1 判断「代码零引用」为取证错误——`#    include` 缩进形式与无组件前缀头（ble_image_receiver.c:32 `style.h`、weather_api.c:30 `nvs_state.h`）漏检；两项均为真实依赖，REQUIRES 保留]
   - `ui_manager.c:567-753` chat×8/settings×3/wifi×2/fridge_memo×3 转发；`:779-847` gallery slideshow；
   - `application.c:162-183,653` 已用 `page_registry_get_instance` 直调页面 setter（ap_transfer、photo_gallery）——新约定已事实存在；
   - `app_settings_menu.c:240` `settings_page_item_t items[12]` 已满；`settings_page.c:47` `visible_option_count 8`；
@@ -90,7 +91,7 @@
 | ensure_auth_token 并发 [v2] | §3.1.7 server start + 菜单构建时预生成 | P1 |
 | S1 谓词下沉 | §3.2.1 data_types/time_window.h | P2 |
 | S2 display_types 归位 | §3.2.2 移文件 + 三方 CMake 调整 | P2 |
-| S3 幽灵 REQUIRES | §3.2.3 network 清理 | P2 |
+| S3 幽灵 REQUIRES | ~~§3.2.3 network 清理~~ [v4.1 证伪撤销：真实依赖，不清理] | — |
 | M1 立规 + 示范迁移 | §3.3 规则落点 + fridge_memo 直调改造 | P3 |
 | 手册同步 | §3.4 三处修订 | P1（随行为变化） |
 
@@ -137,7 +138,7 @@
 
 **3.2.2 display_types 归位**：`git mv components/rawdraw/include/display_types.h components/data_types/include/`；`rawdraw/CMakeLists.txt` 增 `data_types`；`bsp_display/CMakeLists.txt:3` 删 `rawdraw` 增 `data_types`（`epd_refresh.h:6` 与 `rawdraw.h:7` 的 include 语句不变）。
 
-**3.2.3 幽灵清理**：`network/CMakeLists.txt:6` 删 `rawdraw`、`app_state`。
+**3.2.3 幽灵清理**（[v4.1] 撤销）：v1 取证断言「network 代码零引用 rawdraw/app_state」被实施证伪——`ble_image_receiver.c:32` include rawdraw 的 `style.h`（用 `STYLE_SCREEN_WIDTH`）、`weather_api.c:30`/`coding_plan_api.c` 经 `nvs_state.h` 读写应用配置（均为 `#ifdef ESP_PLATFORM` 内的 `#    include` 缩进形式，头名不带组件前缀，前缀式 grep 漏检）。删除 REQUIRES 实测构建失败。结论：REQUIRES 保留；network→rawdraw 的常量借用记附录 A-3 遗留。
 
 ### 3.3 P3 扩展规则固化（M1）
 
@@ -222,7 +223,7 @@
 - **落点**：§3.2.1–3.2.2。
 
 ### D5 CMake 依赖清理清单（P2）
-- `network` 删 `rawdraw`、`app_state`；`rawdraw` 删 `bsp_peripherals` 增 `data_types`；`bsp_display` 删 `rawdraw` 增 `data_types`。验收 = 判据 4 的 grep 断言 + build 零 warning。
+- ~~`network` 删 `rawdraw`、`app_state`~~（[v4.1] 证伪撤销：真实依赖，理由见 §3.2.3，级联自 v1 取证错误）；`rawdraw` 删 `bsp_peripherals` 增 `data_types`；`bsp_display` 删 `rawdraw` 增 `data_types`。验收 = 判据 4 的 grep 断言 + build 零 warning。[v4.1 增补：epd_refresh.c 对 rawdraw_ext.c 的链接依赖以「display_types.h 内联 display_rect_area/union/align_x8 单一事实源 + rawdraw_ext.c 公开函数一行委托」断边，公开 API 零变化]
 
 ### D6 ensure_auth_token 预生成时机：server start + 设置菜单构建（P1）
 - **规则**：两处显式调用 `ap_transfer_server_get_token()`；handler 内保留幂等兜底。
@@ -264,6 +265,9 @@
 
 ### A-3 network→sleep_manager 语义越界（遗留）
 `coding_plan_api.c:10`、`weather_api.c:12`。方向合法、零行为影响。编排层时序重构时顺带清理。
+
+### A-3b network→rawdraw 常量借用（遗留，[v4.1] 新增）
+`ble_image_receiver.c:32,281-282` include rawdraw `style.h` 借用 `STYLE_SCREEN_WIDTH`。数据服务层感知图形层屏宽常量属语义越界；屏宽属设备物理属性，应源于 bsp_board/config。下次触碰 BLE 图片接收时改为 config 常量注入。
 
 ### A-4 settings_page.c 拆分（另立项）
 1251 行，最大页面。about/themes 已拆，余列表+对话框+设备信息。

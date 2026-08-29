@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "rtc_time_valid.h"
+#include "time_window.h"
 
 void epd_clock_init(epd_clock_t *c, int x, int y, const lv_font_t *font)
 {

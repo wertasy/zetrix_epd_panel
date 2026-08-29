@@ -12,7 +12,7 @@ static inline void set_pixel(uint8_t *fb, int width, int height, int x, int y, r
 
 int rawdraw_rect_area(rawdraw_rect_t r)
 {
-    return (r.w > 0 && r.h > 0) ? (r.w * r.h) : 0;
+    return display_rect_area(r);
 }
 
 rawdraw_rect_t rawdraw_clamp_rect(rawdraw_rect_t r, int width, int height)
@@ -27,26 +27,12 @@ rawdraw_rect_t rawdraw_clamp_rect(rawdraw_rect_t r, int width, int height)
 
 rawdraw_rect_t rawdraw_align_x8(rawdraw_rect_t r)
 {
-    int x0 = (r.x / 8) * 8;
-    int x1 = ((r.x + r.w + 7) / 8) * 8;
-    return (rawdraw_rect_t){x0, r.y, x1 - x0, r.h};
+    return display_align_x8(r);
 }
 
 rawdraw_rect_t rawdraw_rect_union(rawdraw_rect_t a, rawdraw_rect_t b)
 {
-    if (rawdraw_rect_area(a) == 0)
-        return b;
-    if (rawdraw_rect_area(b) == 0)
-        return a;
-    int x1 = a.x < b.x ? a.x : b.x;
-    int y1 = a.y < b.y ? a.y : b.y;
-    int ax2 = a.x + a.w;
-    int bx2 = b.x + b.w;
-    int x2 = ax2 > bx2 ? ax2 : bx2;
-    int ay2 = a.y + a.h;
-    int by2 = b.y + b.h;
-    int y2 = ay2 > by2 ? ay2 : by2;
-    return (rawdraw_rect_t){x1, y1, x2 - x1, y2 - y1};
+    return display_rect_union(a, b);
 }
 
 bool rawdraw_point_in_rounded_rect(int px, int py, rawdraw_rect_t r, int radius)

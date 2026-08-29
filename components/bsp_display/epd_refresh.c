@@ -1,5 +1,4 @@
 #include "epd_refresh.h"
-#include "rawdraw_ext.h"
 #include <string.h>
 
 static void refresh_task_fn(void *arg)
@@ -88,7 +87,7 @@ void epd_refresh_mark_dirty(epd_refresh_scheduler_t *s, rawdraw_rect_t rect)
     if (s->mutex)
         xSemaphoreTake(s->mutex, portMAX_DELAY);
     if (s->has_dirty) {
-        s->dirty_rect = rawdraw_rect_union(s->dirty_rect, rect);
+        s->dirty_rect = display_rect_union(s->dirty_rect, rect);
     } else {
         s->dirty_rect = rect;
         s->has_dirty = true;
@@ -151,7 +150,7 @@ void epd_refresh_process(epd_refresh_scheduler_t *s)
         rect_to_refresh = (rawdraw_rect_t){0, 0, s->screen_width, s->screen_height};
         s->partial_count = 0;
     } else if (s->has_dirty) {
-        rect_to_refresh = rawdraw_align_x8(s->dirty_rect);
+        rect_to_refresh = display_align_x8(s->dirty_rect);
         s->has_dirty = false;
         s->dirty_rect = (rawdraw_rect_t){0, 0, 0, 0};
         s->partial_count++;

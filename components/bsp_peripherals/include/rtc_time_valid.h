@@ -3,13 +3,18 @@
  * @brief Shared time-plausibility windows (docs/rtc-time-validity-plan.md §3.1).
  *
  * Standalone header (no ESP includes) so host tests and every component
- * (bsp_peripherals / main / ui / rawdraw) share ONE definition of
- * "is this time trustworthy". Formerly scattered as bare literals in
- * rawdraw/clock.c (< 2020) and calendar_page.c (2020..2050 inline).
+ * (bsp_peripherals / main / ui) share ONE definition of "is this time
+ * trustworthy". Formerly scattered as bare literals in rawdraw/clock.c
+ * (< 2020) and calendar_page.c (2020..2050 inline).
  *
- * Two windows, on purpose (plan v2, B1-3):
- *   - TIME_PLAUSIBLE_*  — when a time SOURCE may be trusted at all.
- *     Upper bound 2099 is the PCF8563 two-digit-year hardware limit.
+ * The generic trust predicate (time_year_is_plausible, TIME_PLAUSIBLE_*)
+ * moved to the neutral leaf data_types/include/time_window.h
+ * (docs/arch-hardening-plan.md §3.2.1) and is included here so existing
+ * consumers keep working. What stays in this header is bsp/RTC-specific
+ * by semantics: the PCF8563 register check and the calendar navigation
+ * window. Two windows, on purpose (plan v2, B1-3):
+ *   - TIME_PLAUSIBLE_*  — when a time SOURCE may be trusted at all
+ *     (window values and rationale live in time_window.h).
  *   - CALENDAR_NAV_*    — which years the calendar page may navigate to
  *     and persist to NVS (pre-existing 2020-2050 window). The upper
  *     bounds are deliberately NOT merged: trusting a clock source and
@@ -21,17 +26,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define TIME_PLAUSIBLE_YEAR_MIN 2020
-#define TIME_PLAUSIBLE_YEAR_MAX 2099 /* PCF8563 year register ends at 99 */
+#include "time_window.h"
 
 #define CALENDAR_NAV_YEAR_MIN 2020
 #define CALENDAR_NAV_YEAR_MAX 2050
-
-/** Trust window for a time source (RTC registers, system continuation time). */
-static inline bool time_year_is_plausible(int year)
-{
-    return year >= TIME_PLAUSIBLE_YEAR_MIN && year <= TIME_PLAUSIBLE_YEAR_MAX;
-}
 
 /** Navigation/persistence window for the calendar page (NVS cal_year etc.). */
 static inline bool calendar_nav_year_is_valid(int year)
