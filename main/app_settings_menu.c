@@ -82,7 +82,8 @@ void app_settings_update_lan_ip_item(const char *ip)
 /*                                                                     */
 /* The on_click ctx value carries an action tag:                       */
 /*   1 = slideshow interval cycle, 2 = wifi toggle,                    */
-/*   3 = LAN HTTP server toggle, 4 = manual sleep, 5 = reboot          */
+/*   3 = LAN HTTP server toggle, 4 = manual sleep, 5 = reboot,         */
+/*   6 = sync interval cycle                                           */
 /* ------------------------------------------------------------------ */
 
 void app_settings_menu_cb(void *ctx)
@@ -299,6 +300,7 @@ void app_settings_menu_build(void)
     strcpy(items[n].value, "手动进入");
     items[n].type = SETTINGS_ITEM_ACTION;
     items[n].on_click = app_settings_menu_cb;
+    items[n].on_click_ctx = (void *)(intptr_t)4; /* manual sleep (was missing: ctx=0 hit the reboot default) */
     ++n;
 
     /* 固件 (normal) */
