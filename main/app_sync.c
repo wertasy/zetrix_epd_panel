@@ -174,21 +174,37 @@ static void app_sync_on_fridge_memo_update(const fridge_memo_snapshot_t *snap, v
     (void)user_data;
     if (!snap)
         return;
-    ui_manager_update_fridge_memo(s_app.ui_mgr, snap);
-    ui_manager_set_fridge_memo_offline(s_app.ui_mgr, false);
+
+    page_renderer_t *page = page_registry_get_instance(UI_PAGE_FRIDGE_MEMO);
+    if (!page)
+        return;
+
+    fridge_memo_page_update(page, snap);
+    page_renderer_mark_full_refresh(page); /* full refresh on this page's next render */
+    fridge_memo_page_set_offline(page, false);
     if (s_fridge_pending_delete_name[0]) {
         char msg[FRIDGE_MEMO_FOOTER_TEXT_LEN + FRIDGE_MEMO_NAME_LEN];
         snprintf(msg, sizeof(msg), "已删除：%s", s_fridge_pending_delete_name);
-        ui_manager_set_fridge_memo_footer(s_app.ui_mgr, msg);
+        fridge_memo_page_set_footer_message(page, msg);
         s_fridge_pending_delete_name[0] = '\0';
     }
+    /* Data lands regardless of visibility; the EPD only flashes when the
+     * fridge page is actually on screen (coding_plan pattern). */
+    if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_FRIDGE_MEMO)
+        ui_manager_request_active_page_refresh(s_app.ui_mgr);
 }
 
 static void app_sync_on_fridge_memo_error(const char *message, void *user_data)
 {
     (void)user_data;
-    ui_manager_set_fridge_memo_offline(s_app.ui_mgr, true);
-    ui_manager_set_fridge_memo_footer(s_app.ui_mgr, message);
+    page_renderer_t *page = page_registry_get_instance(UI_PAGE_FRIDGE_MEMO);
+    if (!page)
+        return;
+
+    fridge_memo_page_set_offline(page, true); /* error path: offline banner */
+    fridge_memo_page_set_footer_message(page, message);
+    if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_FRIDGE_MEMO)
+        ui_manager_request_active_page_refresh(s_app.ui_mgr);
 }
 
 static void app_sync_on_fridge_memo_delete(const char *item_id, void *user_data)
@@ -208,13 +224,18 @@ static void app_sync_on_fridge_memo_delete(const char *item_id, void *user_data)
         }
     }
     if (!fridge_memo_api_delete_async(item_id)) {
+        page_renderer_t *page = page_registry_get_instance(UI_PAGE_FRIDGE_MEMO);
+        if (!page)
+            return;
         if (fridge_memo_api_is_busy()) {
             /* A fetch/delete is already in flight — transient, not an outage. */
-            ui_manager_set_fridge_memo_footer(s_app.ui_mgr, "正在处理上一条，请稍候");
+            fridge_memo_page_set_footer_message(page, "正在处理上一条，请稍候");
         } else {
-            ui_manager_set_fridge_memo_offline(s_app.ui_mgr, true);
-            ui_manager_set_fridge_memo_footer(s_app.ui_mgr, "删除失败：后端不可达");
+            fridge_memo_page_set_offline(page, true);
+            fridge_memo_page_set_footer_message(page, "删除失败：后端不可达");
         }
+        if (ui_manager_get_current_page(s_app.ui_mgr) == UI_PAGE_FRIDGE_MEMO)
+            ui_manager_request_active_page_refresh(s_app.ui_mgr);
         return;
     }
     snprintf(s_fridge_pending_delete_name, sizeof(s_fridge_pending_delete_name), "%s", name);

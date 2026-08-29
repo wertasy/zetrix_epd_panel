@@ -36,6 +36,10 @@ extern "C" {
  *   1. Add enum value to ui_page_id_t (ui_manager.h)
  *   2. Write the page .c/.h; end the .c with PAGE_REGISTER(...)
  *   3. Add the .c to CMakeLists.txt SRCS
+ *   4. For page-specific data setters, wire them from the orchestration layer
+ *      (main/) by calling the page's public API directly via
+ *      page_registry_get_instance() — never add per-page forwarding wrappers
+ *      to ui_manager (M1 rule, docs/arch-hardening-plan.md §3.3).
  */
 
 typedef struct {

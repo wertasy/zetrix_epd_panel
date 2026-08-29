@@ -117,7 +117,12 @@ void ui_manager_render_all(ui_manager_t *mgr, uint8_t *fb, int width, int height
 void ui_manager_update_status_bar(ui_manager_t *mgr, const ui_manager_status_bar_t *data);
 void ui_manager_get_status_bar_data(ui_manager_t *mgr, ui_manager_status_bar_t *out);
 
-/* Page data update APIs (forwarded to the page renderers). */
+/* Page data update APIs — LEGACY per-page forwarding layer (chat, settings,
+ * wifi, gallery, ...). New pages MUST NOT add wrappers here: orchestration
+ * code calls page setters directly via page_registry_get_instance()
+ * (M1 rule, docs/arch-hardening-plan.md §3.3). fridge_memo has already
+ * migrated (see app_sync.c).
+ */
 void ui_manager_add_chat_message(ui_manager_t *mgr, const char *text, int role);
 void ui_manager_clear_chat(ui_manager_t *mgr);
 void ui_manager_begin_chat_stream(ui_manager_t *mgr);
@@ -136,11 +141,6 @@ void ui_manager_update_settings_checked(ui_manager_t *mgr, int index, bool check
 /* Theme. */
 void ui_manager_set_rawdraw_theme(ui_manager_t *mgr, int theme_id);
 int ui_manager_get_rawdraw_theme(const ui_manager_t *mgr);
-
-/* Fridge memo page. */
-void ui_manager_update_fridge_memo(ui_manager_t *mgr, const void *snapshot);
-void ui_manager_set_fridge_memo_footer(ui_manager_t *mgr, const char *msg);
-void ui_manager_set_fridge_memo_offline(ui_manager_t *mgr, bool offline);
 
 /* WiFi status. */
 void ui_manager_update_wifi_status(ui_manager_t *mgr, const void *status);

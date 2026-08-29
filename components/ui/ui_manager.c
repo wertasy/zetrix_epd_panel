@@ -39,7 +39,6 @@
 #endif
 #include "pages/calendar_page.h"
 #include "pages/ap_transfer_page.h"
-#include "pages/fridge_memo_page.h"
 
 #include <esp_log.h>
 #include <esp_timer.h>
@@ -714,39 +713,6 @@ void ui_manager_set_wifi_blinking(ui_manager_t *mgr, bool blinking)
     if (!mgr)
         return;
     wifi_page_set_blinking((page_renderer_t *)page_registry_get_instance(UI_PAGE_WIFI), blinking);
-}
-
-/* ------------------------------------------------------------------ */
-/* Fridge memo page                                                    */
-/* ------------------------------------------------------------------ */
-
-void ui_manager_update_fridge_memo(ui_manager_t *mgr, const void *snapshot)
-{
-    if (!mgr || !snapshot)
-        return;
-    fridge_memo_page_update((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO),
-                            (const fridge_memo_snapshot_t *)snapshot);
-    page_renderer_mark_full_refresh((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO));
-    if (mgr->current_page == UI_PAGE_FRIDGE_MEMO)
-        ui_manager_request_active_page_refresh(mgr); /* EPD full refresh only when visible (coding_plan pattern) */
-}
-
-void ui_manager_set_fridge_memo_footer(ui_manager_t *mgr, const char *msg)
-{
-    if (!mgr)
-        return;
-    fridge_memo_page_set_footer_message((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO), msg);
-    if (mgr->current_page == UI_PAGE_FRIDGE_MEMO)
-        ui_manager_request_active_page_refresh(mgr);
-}
-
-void ui_manager_set_fridge_memo_offline(ui_manager_t *mgr, bool offline)
-{
-    if (!mgr)
-        return;
-    fridge_memo_page_set_offline((page_renderer_t *)page_registry_get_instance(UI_PAGE_FRIDGE_MEMO), offline);
-    if (mgr->current_page == UI_PAGE_FRIDGE_MEMO)
-        ui_manager_request_active_page_refresh(mgr);
 }
 
 /* ------------------------------------------------------------------ */
