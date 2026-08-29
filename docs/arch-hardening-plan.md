@@ -46,14 +46,14 @@
   2. 设置页「访问令牌」项显示 8 位 token，与 NVS `auth/token` 一致（串口日志核对）；AP 传图页显示同一 token；
   3. 浏览器无缓存首访：出现令牌输入提示；输入正确后上传/删除/轮播设置全流程可用；二次访问免输（localStorage）；
   4. CMake 断言：`rawdraw/CMakeLists.txt` 无 `bsp_peripherals`；`bsp_display` 无 `rawdraw`；`idf.py build` 零 warning。[v4.1 修订：删「network 无 rawdraw、app_state」——该两项为真实依赖（ble_image_receiver.c:32 用 style.h 屏宽常量、weather_api/coding_plan_api 用 nvs_state 读写配置），S3 证伪，见 D5]
-  5. `grep -c fridge_memo components/ui/ui_manager.c` = 0；app_sync 经 `page_registry_get_instance` 直调页面 API；host 13 套件全绿；
+  5. `grep -c fridge_memo components/ui/ui_manager.c` = 0；app_sync 经 `page_registry_get_instance` 直调页面 API；host 14 套件全绿（[v4.1 勘误]：基线即 14，v1 误记 13）；
   6. 手册描述与实测行为一致（token 获取/输入流程逐条对）。
 - **硬约束**：
   - SSD2683 全刷 ~15s、无局部刷新——设置页新增项不得引入额外刷新轮次；
   - 不允许变：AP 模式进入/退出流程、传图功能、30min 空闲自动关、传输中粘性、每设备 token 机制本身；
   - 分层不变式：bsp_* 不依赖 rawdraw/network/ui；rawdraw 不依赖 bsp_*/network/ui；audio 不依赖 ui；
   - 手册是行为契约：任何用户可见变化同步 user-manual.md；
-  - host 测试体系（tests/run_tests.sh，13 套件）必须持续全绿。
+  - host 测试体系（tests/run_tests.sh，14 套件）必须持续全绿（[v4.1 勘误]：基线即 14）。
 - **[ASSUMPTION] 未决项**：
   - A1: 无路由器（AP 模式）场景用户可接受「从传图页屏幕读 token → 手输网页」一步。[v2] 已通过传图页显示令牌把该成本最小化；复核条件：上板实测 AP 模式完整传图一次。
   - A2: 家庭 LAN 信任模型下静态 token（无轮换）足够。复核条件：出现多住户/办公环境需求时重开。
@@ -71,7 +71,7 @@
   - `app_settings_menu.c:240` `settings_page_item_t items[12]` 已满；`settings_page.c:47` `visible_option_count 8`；
   - `user-manual.md:334`「网页自动从设备获取本机唯一 token 并携带，无需手动输入」为文档化现状；`:271-275` 设置表网络节三项；`:341` AP 模式描述；
   - `fridge_memo_api.c:506,526` fetch/delete 走独立任务 `fm_fetch`/`fm_del`（16KB 栈，优先级 5）；
-  - host 测试 13 套件 3.6s 全绿（2026-08-29 实测）。
+  - host 测试 14 套件 3.4–3.6s 全绿（2026-08-29 实测；[v4.1 勘误] 原 v1 误记 13）。
 - **ask 问答记录**（2026-08-29，原样入档）：
   - Q1 token 交付渠道 → 答：**设置页只读项显示**（推荐项）；网页首访输入 + localStorage；/status 不再返回 token。
   - Q2 M1 实施范围 → 答：**立规 + 迁 fridge_memo 作示范**（推荐项）；其余存量标记遗留。
@@ -193,7 +193,7 @@
 
 ## 8. 测试与验收
 
-- **host**：`tests/run_tests.sh` 13 套件全绿（P2 触及 rtc_time_valid 传递包含、P3 触及 app_sync——若 app_sync 无 host 覆盖则以编译+板测覆盖）。
+- **host**：`tests/run_tests.sh` 14 套件全绿（[v4.1 勘误]；P2 触及 rtc_time_valid 传递包含、P3 触及 app_sync——若 app_sync 无 host 覆盖则以编译+板测覆盖）。
 - **target**：`source ~/.espressif/v6.0.2/esp-idf/export.sh && idf.py build` 零 warning。
 - **板测脚本**（判据 1/2/3）：curl 矩阵（7 端点 × 无/错/对 token）；设置页与传图页目检；浏览器首访/二次访问/输错重试三路径。
 - **回归**（门禁 1）：切页双刷新不复发（input_refresh_locked）；充电插入刷屏循环不复发（P1 验证时插拔充电器操作设置页）。
@@ -248,7 +248,7 @@
 2. **v0 成功判据 1–6 逐条核对**（口径已在判据内写死：curl 矩阵端点清单、grep 断言、host 套件数）。
 3. **核心价值指标**：LAN 模式下无 token 设备对 7 个写/读端点 100% 收到 401（判据 1 的统计口径）。
 4. **既有功能不劣化**：LAN+AP 双模式传图全流程（上传/列表/删除/元数据/移动/设为展示/轮播设置/关服务）；30min 空闲自动关；传输中切页粘性。
-5. **构建与测试门禁**：host 13 套件全绿；`idf.py build` 零 warning；手册 diff 审阅（§3.4 三处）。
+5. **构建与测试门禁**：host 14 套件全绿（[v4.1 勘误]）；`idf.py build` 零 warning；手册 diff 审阅（§3.4 三处）。
 
 ---
 
