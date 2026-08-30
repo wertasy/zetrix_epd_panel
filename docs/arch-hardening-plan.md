@@ -14,6 +14,7 @@
 | v3 | C（PM/UX） | 手册漂移清单；网页 401 可见反馈；设置菜单扩容确认（visible_option_count=8 容得下）；拒绝二维码显示 |
 | v4 | D（Product Owner） | 决策 D1–D9；发布门禁；[ASSUMPTION] 复核；切分 P1 安全先行 |
 | v4.1 | 实施期修订（P2 执行中） | S3「network 幽灵依赖」被实施证伪：`#    include`（# 后缩进）与无组件前缀头（style.h/nvs_state.h）导致 v1 取证漏检，network→rawdraw/app_state 为真实依赖——§3.2.3/D5 撤销、判据 4 修订、附录 A-3 增补（级联自 v1 取证错误）。§3.2.2 增补：epd_refresh.c 对 rawdraw_ext 的真实依赖以「几何助手下沉 display_types.h 为单一事实源 + rawdraw_ext.c 公开函数委托」断边，替代原「仅移类型头」方案 |
+| v4.2 | 用户决策 + 实施期修订（P1 合并前） | D10：认证功能编译开关 CONFIG_TRANSFER_AUTH_ENABLE 默认不启用（用户 2026-08-29 指示；风险已告知——默认构建 LAN 端点无认证）。同轮证伪 [v2] 前提：is_authorized 的 AP 模式旁路（b99586f 既有，WPA2 密码即门槛）使 AP 模式永不查 token，而传图页仅 AP 模式可见 → §3.1.3 令牌行/三注入在所有配置下均为死代码，撤销并移除；手册 §6.2 表述随实还原 |
 
 ---
 
@@ -26,7 +27,7 @@
   3. `ui_manager` 以「每页 N 个 setter 转发」模式随页面数线性膨胀，且仓库已同时存在新旧两种调用约定（可扩展性）。
 - **主场景**： 单人维护的家用墨水屏面板固件；局域网内手机/电脑浏览器传图与管理（高频、日常）；维护者本人新增页面/数据源（每次功能迭代）。
 - **范围内**：
-  1. SEC1：token 撤出 `/status`；设置页新增「访问令牌」只读项；AP 传图页显示令牌；网页首访手输 + localStorage 持久化；
+  1. SEC1：token 撤出 `/status`；设置页新增「访问令牌」只读项；网页首访手输 + localStorage 持久化（[v4.2] 原「AP 传图页显示令牌」随 D11 撤销）；
   2. 认证补齐：`POST /settings` 全字段、`GET /photos` 纳入认证；删除 `?token=` URL query 认证通道；
   3. S1：`time_year_is_plausible` 纯谓词下沉 data_types，斩断 rawdraw→bsp_peripherals；
   4. S2：`display_types.h` 移入 data_types，bsp_display 摘除 `REQUIRES rawdraw`；
@@ -42,9 +43,9 @@
   - AP 密码强度/随机化（附录 A-2，需配置通道，另立项）；
   - token 轮换/TOTP（明确不做，见附录 B-B1）。
 - **成功判据**（可观测、含口径）：
-  1. LAN 模式 curl 矩阵：`GET /status` 响应体无 `token` 字段；无/错 token 的 `POST /upload`、`GET|DELETE /photo`、`POST /photo/meta`、`POST /photos/move`、`POST /photo/show`、`POST /settings`、`GET /photos` 全部 HTTP 401；持正确 token 全部 2xx；
-  2. 设置页「访问令牌」项显示 8 位 token，与 NVS `auth/token` 一致（串口日志核对）；AP 传图页显示同一 token；
-  3. 浏览器无缓存首访：出现令牌输入提示；输入正确后上传/删除/轮播设置全流程可用；二次访问免输（localStorage）；
+  1. LAN 模式 curl 矩阵（CONFIG_TRANSFER_AUTH_ENABLE=y 构建下）：`GET /status` 响应体无 `token` 字段；无/错 token 的 `POST /upload`、`GET|DELETE /photo`、`POST /photo/meta`、`POST /photos/move`、`POST /photo/show`、`POST /settings`、`GET /photos` 全部 HTTP 401；持正确 token 全部 2xx。默认构建（=n）：同矩阵全部 2xx（无认证）。[v4.2 修订：口径随 D10 配置化]
+  2. 设置页「访问令牌」项：CONFIG_TRANSFER_AUTH_ENABLE=y 时显示 8 位 token（与 NVS `auth/token` 一致，串口日志核对）；默认（=n）显示「未启用」且零 token 生成路径。[v4.2 修订：删「AP 传图页显示同一 token」——AP 模式旁路使然，见 §3.1.3 撤销]
+  3. 浏览器无缓存首访（CONFIG_TRANSFER_AUTH_ENABLE=y 构建下）：出现令牌输入提示；输入正确后上传/删除/轮播设置全流程可用；二次访问免输（localStorage）。默认构建（=n）：全程无令牌提示。[v4.2 修订：判据随 D10 配置化]
   4. CMake 断言：`rawdraw/CMakeLists.txt` 无 `bsp_peripherals`；`bsp_display` 无 `rawdraw`；`idf.py build` 零 warning。[v4.1 修订：删「network 无 rawdraw、app_state」——该两项为真实依赖（ble_image_receiver.c:32 用 style.h 屏宽常量、weather_api/coding_plan_api 用 nvs_state 读写配置），S3 证伪，见 D5]
   5. `grep -c fridge_memo components/ui/ui_manager.c` = 0；app_sync 经 `page_registry_get_instance` 直调页面 API；host 14 套件全绿（[v4.1 勘误]：基线即 14，v1 误记 13）；
   6. 手册描述与实测行为一致（token 获取/输入流程逐条对）。
@@ -84,7 +85,7 @@
 |---|---|---|
 | SEC1 token 撤出 /status | §3.1.1 /status 响应删 token 字段与 url 的 query 串 | P1 |
 | 设置页「访问令牌」项 | §3.1.2 app_settings_menu 网络节新增 NORMAL 项 + APP_SETTINGS_TOKEN_INDEX | P1 |
-| AP 传图页显示令牌 [v2] | §3.1.3 ap_transfer 指引页增加令牌行 | P1 |
+| AP 传图页显示令牌 [v2] | ~~§3.1.3 ap_transfer 指引页增加令牌行~~ [v4.2 撤销：前提证伪，见 D11] | — |
 | 网页手输 + localStorage | §3.1.4 内嵌 HTML bootstrap 改造 + 401 可见反馈 [v3] | P1 |
 | /settings、/photos 认证补齐 | §3.1.5 两个 handler 补 is_authorized | P1 |
 | 删 ?token= query 通道 [v2] | §3.1.6 is_authorized 去掉 query 分支 | P1 |
@@ -113,8 +114,7 @@
 - 值来源 `ap_transfer_server_get_token()`（菜单构建时调用即触发 D6 预生成）。
 - `application_internal.h` 增加 `APP_SETTINGS_TOKEN_INDEX`；LAN 服务开关回调处同步该项可见性不需要——token 常显（见 D1 理由）。
 
-**3.1.3 AP 传图页令牌行 [v2]**（`ap_transfer_page.c:120-122`）
-默认指引行数组 `{"连接 InkScreen-AP","密码: 12345678","","浏览器访问",url,state_hint}` → 在 url 行后插入 `"令牌 <token>"` 行（6→7 行）；注意渲染循环为硬编码 `for (int i = 0; i < 6; i++)`（`ap_transfer_page.c:124`），需同步改为数组长度或 7。令牌经 `ap_transfer_page_use_default_instructions` 调用侧（`ap_transfer_page.c:341`）或新 setter 注入——由 application 在进入传图页时调 `ap_transfer_server_get_token()` 取值。[v2] 来源：AP 模式网页同样要求 token（`upload_handler:500` 不分模式），若不在传图页显示，AP 用户无处获取。
+**3.1.3 AP 传图页令牌行 [v2]（[v4.2] 撤销）**：原判断「AP 模式网页同样要求 token（upload_handler:500 不分模式）」为前提错误——handler 层确不分模式调 is_authorized，但 is_authorized 内部对 AP_SERVER_MODE_AP 直接放行（b99586f 基线既有：「AP mode keeps its WPA2 password semantics」），且传图页仅 AP 模式下可见。故令牌行与三处注入在所有配置下均为死代码，已实施后整体移除（渲染循环 sizeof 修正保留）。AP 直连模式的安全门槛=热点 WPA2 密码（与 D10 无关的无条件既有语义）。
 
 **3.1.4 网页 bootstrap 改造**（`ap_transfer_server.c` 内嵌 HTML，:162-239 区域）
 - `authToken` 初始化改为 `localStorage.getItem('inkscreen_token') || ''`；
@@ -241,6 +241,17 @@
 
 ### D9 发布切分：P1 先行独立上板验证（发布批次 P1 → P2+P3）
 - **理由**：P1 是唯一用户可感知批次（安全+手册），价值拐点在 P1 交付；P2/P3 零行为变化，风险隔离后可合并交付。被否：三批次一次合入（P1 网页改造出问题时无法单独回退依赖移动）。
+
+### D10 认证功能编译开关：CONFIG_TRANSFER_AUTH_ENABLE，默认不启用（发布批次 P1 增补，2026-08-29 用户指示）
+- **规则**：Kconfig bool（menu 路径 ZecTrix E-Paper Panel → Server & API → Require token auth for the image transfer web server），default n。开启时恢复 P1 全部 LAN 认证语义（7 端点 401、token 预生成、网页手输、设置页显示 8 位令牌）；关闭（默认）时 LAN 端点信任同网段、零 token 生成/NVS 写、设置页令牌项显示「未启用」、网页无令牌提示。AP 直连模式维持既有旁路（WPA2 密码即门槛），与开关状态无关。
+- **理由**：用户取舍——家庭局域网信任模型下降低使用摩擦（IP 变更/换浏览器需重输令牌），安全增强保留为可选编译项。风险已明示并接受：默认固件 LAN 端点无认证。被否：默认开启（违背用户指示）；运行时 NVS 开关（认证被绕过时开关本身无保护，且需默认凭据引导）。
+- **实现落点**：`main/Kconfig.projbuild`（TRANSFER_AUTH_ENABLE）；`ap_transfer_server.c`（is_authorized 双态/token_matches 条件编译/start 预生成包裹）；`app_settings_menu.c`（令牌项双态，关闭时不调 get_token）；`application.c`（原三处注入已随 §3.1.3 撤销移除）；`user-manual.md` §4.2/§6.1/§6.2 双态描述。
+- **回退**：menuconfig 打开即恢复；代码级 revert 本增补提交。
+- **门禁联动**：发布门禁 2/3 的 curl 矩阵与核心价值指标仅在 =y 构建下适用；默认构建的门禁=双配置均零 warning 构建 + host 全绿 + 默认态 nm 零 token 符号引用。
+
+### D11 [v2]「AP 模式需要 token」前提修正（级联自 v2，v4.2 收口）
+- **规则**：AP 直连模式永不要求 token——`is_authorized` 对 `AP_SERVER_MODE_AP` 无条件放行（b99586f 基线既有语义，热点 WPA2 密码即门槛），与 D10 开关状态无关。§3.1.3 传图页令牌行与三处注入据此撤销移除；手册 §6.2 按「AP 模式免令牌」表述。
+- **理由**：v2 B1 的发现基于「upload_handler:500 不分模式」的表面读法，未穿透到 is_authorized 内部旁路；传图页仅在 AP 模式可见，故该特性在所有配置下均为死代码。经验教训入册：handler 层「检查不分模式」≠语义层「要求不分模式」。
 
 ## 10. 发布门禁（一票否决）
 

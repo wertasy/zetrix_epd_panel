@@ -6,6 +6,8 @@
  * Extracted from application.c (Phase 2.1 module split). All functions
  * access the shared s_app singleton via application_internal.h.
  */
+#include "sdkconfig.h"
+
 #include "application_internal.h"
 #include "app_page_runtime.h"
 #include <string.h>
@@ -296,10 +298,16 @@ void app_settings_menu_build(void)
     items[n].type = SETTINGS_ITEM_NORMAL;
     ++n;
     /* 访问令牌 (normal, read-only): LAN transfer auth token, always shown
-     * (D1). Fetching it here also triggers first-boot generation & NVS
-     * persistence. No on_click. */
+     * (D1). With CONFIG_TRANSFER_AUTH_ENABLE=y the fetch here also triggers
+     * first-boot generation & NVS persistence. When auth is compiled out
+     * (default) the item reads "未启用" and get_token() is never called —
+     * no token is generated, nothing is written to NVS. No on_click. */
     strcpy(items[n].label, "访问令牌");
+#if defined(CONFIG_TRANSFER_AUTH_ENABLE)
     strcpy(items[n].value, ap_transfer_server_get_token());
+#else
+    strcpy(items[n].value, "未启用");
+#endif /* CONFIG_TRANSFER_AUTH_ENABLE */
     items[n].type = SETTINGS_ITEM_NORMAL;
     ++n;
 

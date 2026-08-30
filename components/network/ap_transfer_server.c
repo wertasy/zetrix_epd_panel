@@ -13,6 +13,8 @@
  * during AP mode fails with a tolerated error (same tolerant style as the
  * original C++), and the station reconnects normally after Stop().
  */
+#include "sdkconfig.h"
+
 #include "ap_transfer_server.h"
 
 #include "photo_storage.h"
@@ -427,6 +429,9 @@ static char s_auth_token[9] = {0};
 
 static void ensure_auth_token(void)
 {
+#if !defined(CONFIG_TRANSFER_AUTH_ENABLE)
+    return; /* auth compiled out: no token lifecycle */
+#else
     if (s_auth_token[0] != '\0') {
         return;
     }
@@ -448,6 +453,7 @@ static void ensure_auth_token(void)
         }
         ESP_LOGI(TAG, "Generated new LAN auth token");
     }
+#endif /* CONFIG_TRANSFER_AUTH_ENABLE */
 }
 
 const char *ap_transfer_server_get_token(void)
@@ -456,7 +462,10 @@ const char *ap_transfer_server_get_token(void)
     return s_auth_token;
 }
 
-/* Constant-time comparison (S4): runtime does not depend on match length. */
+/* Constant-time comparison (S4): runtime does not depend on match length.
+ * Guarded: only reachable when auth is compiled in; compiling it out of
+ * the default (auth-off) build avoids an unused-static warning. */
+#if defined(CONFIG_TRANSFER_AUTH_ENABLE)
 static bool token_matches(const char *header_value)
 {
     if (!header_value) {
@@ -478,6 +487,7 @@ static bool token_matches(const char *header_value)
     }
     return diff == 0;
 }
+#endif /* CONFIG_TRANSFER_AUTH_ENABLE */
 /* D2: authorization is via the "Authorization" header only ("Bearer <token>"
  * or bare token). The former ?token= URL query channel was removed — URLs
  * leak into browser history and intermediary device logs. */
@@ -491,6 +501,12 @@ static bool is_authorized(httpd_req_t *req)
     if (self->mode == AP_SERVER_MODE_AP) {
         return true; /* AP mode keeps its WPA2 password semantics */
     }
+#if !defined(CONFIG_TRANSFER_AUTH_ENABLE)
+    /* Transfer auth compiled out (default): the LAN endpoints trust the
+     * home network — any device on the subnet may use them directly and
+     * no token is ever generated or persisted. */
+    return true;
+#else
     ensure_auth_token();
     char auth_hdr[64] = {0};
     if (httpd_req_get_hdr_value_str(req, "Authorization", auth_hdr, sizeof(auth_hdr)) == ESP_OK) {
@@ -499,6 +515,7 @@ static bool is_authorized(httpd_req_t *req)
         }
     }
     return false;
+#endif /* CONFIG_TRANSFER_AUTH_ENABLE */
 }
 
 static esp_err_t index_handler(httpd_req_t *req)
@@ -961,7 +978,8 @@ static bool start_http_server(ap_transfer_server_t *self)
     }
     /* D6: pre-generate the per-device token before handlers can run.
      * Concurrent first requests would otherwise race inside ensure_auth_token();
-     * handlers keep their idempotent calls as fallback. */
+     * handlers keep their idempotent calls as fallback. With auth compiled
+     * out ensure_auth_token() returns immediately (no token lifecycle). */
     ensure_auth_token();
 
     /* Register handlers */

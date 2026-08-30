@@ -87,7 +87,9 @@ void ap_transfer_server_touch_activity(void);
 int64_t ap_transfer_server_idle_ms(void);
 
 /* D11 per-device auth token (8 hex chars, NVS-backed, generated on first
- * use). Empty string only if NVS is unavailable. */
+ * use). Empty string only if NVS is unavailable. With
+ * CONFIG_TRANSFER_AUTH_ENABLE disabled (default build) it returns "" and
+ * never generates or persists a token. */
 const char *ap_transfer_server_get_token(void);
 
 /* Callbacks. Passing NULL for cb is allowed (callback cleared). */

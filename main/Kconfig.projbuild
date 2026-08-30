@@ -85,6 +85,20 @@ config SERVER_ADDRESS
         assets, etc.). Used by the photo downloader and AP transfer
         server.
 
+config TRANSFER_AUTH_ENABLE
+    bool "Require token auth for the image transfer web server"
+    default n
+    help
+        When enabled, the authenticated endpoints of the image transfer
+        web server (upload / delete / settings / photo list) require an
+        "Authorization: Bearer <token>" header; the 8-char token is shown
+        under Settings → Network → Access Token (设置 → 网络 → 访问令牌).
+        AP direct-connect mode is protected by the hotspot password and
+        needs no token. When disabled (default), any device on the same
+        LAN can access those endpoints directly (trusted home network
+        model); no token is generated or stored, and the settings token
+        item shows "未启用".
+
 config WEATHER_API_KEY
     string "QWeather (和风天气) v1 API key"
     default "$(WEATHER_API_KEY)"
